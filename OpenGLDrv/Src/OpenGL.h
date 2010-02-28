@@ -28,7 +28,9 @@
 #define UTGLR_USE_ASM_CODE
 
 //Optional SSE code
+#ifndef __GNUC__
 #define UTGLR_INCLUDE_SSE_CODE
+#endif
 
 #ifdef UTGLR_INCLUDE_SSE_CODE
 #include <xmmintrin.h>
