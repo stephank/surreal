@@ -14,6 +14,12 @@
 	Includes.
 -----------------------------------------------------------------------------*/
 
+#include <math.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
 #ifdef WIN32
 #include <windows.h>
 #else
@@ -26,8 +32,6 @@
 #else
 #include <GL/glext.h>
 #endif
-
-#include <stdlib.h>
 
 #ifndef UTGLR_DONT_DEBUG_AT_ALL
 #define UTGLR_NO_APP_MALLOC

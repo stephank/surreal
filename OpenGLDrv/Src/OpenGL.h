@@ -6,11 +6,6 @@
 
 =============================================================================*/
 
-#include <math.h>
-#include <string.h>
-#include <stdio.h>
-
-
 #include <map>
 #pragma warning(disable : 4663)
 #pragma warning(disable : 4018)
