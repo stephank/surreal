@@ -236,6 +236,9 @@ BACKUP_DIR		= $(UNREAL_DIR)/backup
 XLIBS			= -L/usr/X11/lib -L/usr/X11R6/lib -lX11 -lXext -lXmu \
 			  -lXt -lXi -lSM -lICE -lXpm
 
+SDL_LIBS		= $(shell sdl-config --libs)
+SDL_CFLAGS		= $(shell sdl-config --cflags)
+
 # GL libs.
 GLIDEINC		= -I/usr/include/glide -I../Inc
 GLIDELIBS		= -lglide2x
