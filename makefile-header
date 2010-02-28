@@ -150,6 +150,12 @@ XDRV_INC		= $(UNREAL_DIR)/XDrv/Inc
 XDRV_BUILD		= $(UNREAL_DIR)/XDrv/$(BUILD_SUBDIR)
 XDRV_OUT		= $(UNREAL_DIR)/System
 
+# SDLDrv directories.
+SDLDRV_SRC		= $(UNREAL_DIR)/SDLDrv/Src
+SDLDRV_INC		= $(UNREAL_DIR)/SDLDrv/Inc
+SDLDRV_BUILD		= $(UNREAL_DIR)/SDLDrv/$(BUILD_SUBDIR)
+SDLDRV_OUT		= $(UNREAL_DIR)/System
+
 # NullDrv directories.
 NULLDRV_SRC		= $(UNREAL_DIR)/NullDrv/Src
 NULLDRV_INC		= $(UNREAL_DIR)/NullDrv/Inc
@@ -224,6 +230,7 @@ ALL_SRC_DIRS 	= $(CORE_INC) $(CORE_SRC) \
 		  $(XMESAGLDRV_SRC) $(XMESAGLDRV_INC) \
 		  $(GLIDEDRV_SRC) $(GLIDEDRV_INC) \
 		  $(XDRV_SRC) $(XDRV_INC) \
+		  $(SDLDRV_SRC) $(SDLDRV_INC) \
 		  $(XLAUNCH_SRC) $(XLAUNCH_INC) \
 		  $(AUDIO_SRC) $(AUDIO_INC) \
 		  $(UWEB_SRC) $(UWEB_INC) \
@@ -291,6 +298,10 @@ XMESAGLDRV_SONAME	= XMesaGLDrv.so
 # XDrv library
 XDRV			= $(XDRV_OUT)/XDrv.$(LIBSUFFIX)
 XDRV_SONAME		= XDrv.so
+
+# XDrv library
+SDLDRV			= $(SDLDRV_OUT)/SDLDrv.$(LIBSUFFIX)
+SDLDRV_SONAME		= SDLDrv.so
 
 # GlideDrv library
 GLIDEDRV		= $(GLIDEDRV_OUT)/GlideDrv.$(LIBSUFFIX)
@@ -377,6 +388,7 @@ OPENGLDRV_TAG	= $(OPENGLDRV_INC)/*.h $(OPENGLDRV_SRC)/*.h $(OPENGLDRV_SRC)/*.cpp
 XMESAGLDRV_TAG	= $(XMESAGLDRV_INC)/*.h $(XMESAGLDRV_SRC)/*.h $(XMESAGLDRV_SRC)/*.cpp
 GLIDEDRV_TAG	= $(GLIDEDRV_INC)/*.h $(GLIDEDRV_SRC)/*.h $(GLIDEDRV_SRC)/*.cpp
 XDRV_TAG	= $(XDRV_INC)/*.h $(XDRV_INC)/*.h $(XDRV_SRC)/*.cpp
+SDLDRV_TAG	= $(SDLDRV_INC)/*.h $(SDLDRV_INC)/*.h $(SDLDRV_SRC)/*.cpp
 XLAUNCH_TAG	= $(XLAUNCH_INC)/*.h $(XLAUNCH_SRC)/*.h $(XLAUNCH_SRC)/*.cpp
 AUDIO_TAG	= $(AUDIO_INC)/*.h $(AUDIO_SRC)/*.h $(AUDIO_SRC)/*.cpp
 UWEB_TAG	= $(UWEB_INC)/*.h $(UWEB_SRC)/*.h $(UWEB_SRC)/*.cpp
@@ -387,8 +399,8 @@ STD_TAG		= /usr/include/*.h /usr/include/sys/*.h /usr/include/arpa/*.h \
 ALL_TAGS	= $(CORE_TAG) $(ENGINE_TAG) $(IPDRV_TAG) $(FIRE_TAG) \
 			$(EDITOR_TAG) $(UCC_TAG) $(RENDER_TAG) \
 			$(OPENGLDRV_TAG) $(XMESAGLDRV_TAG) $(XLAUNCH_TAG) \
-			$(XDRV_TAG) $(GLIDEDRV_TAG) $(AUDIO_TAG) \
-			$(UWEB_TAG) $(NULLRENDER_TAG) $(STD_TAG)
+			$(XDRV_TAG) $(SDLDRV_TAG) $(GLIDEDRV_TAG) \
+			$(AUDIO_TAG) $(UWEB_TAG) $(NULLRENDER_TAG) $(STD_TAG)
 
 #-----------------------------------------------------------------------------
 # The End.
