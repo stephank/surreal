@@ -34,7 +34,7 @@ FPlane One4(1,1,1,1);				/* 4 consecutive floats for OpenGL */
 //
 class UXMesaGLRenderDevice : public URenderDevice
 {
-	DECLARE_CLASS(UXMesaGLRenderDevice,URenderDevice,CLASS_Config)
+	DECLARE_CLASS(UXMesaGLRenderDevice,URenderDevice,CLASS_Config,XMesaGLDrv)
 
 	// Information about a cached texture.
 	struct FCachedTexture
