@@ -239,6 +239,8 @@ inline INT appFloor( FLOAT f )
 #endif
 }
 
+#include <time.h>
+
 //
 // CPU cycles, related to GSecondsPerCycle.
 //
@@ -258,19 +260,13 @@ inline DWORD appCycles()
 //
 // Seconds, arbitrarily based.
 //
-#if ASMLINUX
 #define DEFINED_appSeconds 1
 inline FTime appSeconds()
 {
-	if( GTimestamp )
-	{
-		DWORD L,H;
-		asm("rdtsc" : "=a" (L), "=d" (H));
-		return ((double)L +  4294967296.0 * (double)H) * GSecondsPerCycle;
-	}
-	else return appSecondsSlow();
+	struct timespec t;
+	clock_gettime(CLOCK_MONOTONIC, &t);
+	return (FLOAT)t.tv_sec + (FLOAT)t.tv_nsec / 1000000000.0;
 }
-#endif
 
 //
 // Memory copy.
