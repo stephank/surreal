@@ -213,7 +213,7 @@ inline INT appRound( FLOAT f )
 	);
 	return r;
 #else
-	return (INT)(F);
+	return (INT)(f);
 #endif
 }
 
@@ -235,7 +235,7 @@ inline INT appFloor( FLOAT f )
 	);
 	return r;
 #else
-	return (INT)F;
+	return (INT)(f);
 #endif
 }
 
