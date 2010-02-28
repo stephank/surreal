@@ -105,7 +105,7 @@ class USDLViewport : public UViewport
 	UBOOL				Borderless;
 	UBOOL				RestoreAutoRepeat;
 	UBOOL				LastKey;
-	DOUBLE				RepeatTimer;
+	FTime				RepeatTimer;
 	UBOOL				Mapped;
 	UBOOL				Iconified;
 	
