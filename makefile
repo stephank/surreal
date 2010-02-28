@@ -26,8 +26,15 @@ endif
 ifeq ($(TARGETTYPE),linux)
 #all : core engine ipdrv fire render ucc xdrv xlaunch xmesagldrv glidedrv \
 #	uweb audio
-all : xlaunch sdldrv opengldrv
+all : libstdc++.a xlaunch sdldrv opengldrv
 endif
+
+# Need to statically link libstdc++.
+# To force this, ask g++ where the static libstdc++ is, and symlink
+# it into UNREAL_DIR. Then UNREAL_DIR is included in the linker's
+# search path, where it won't find a shared version.
+libstdc++.a :
+	ln -s `$(STD_CXX) -print-file-name=$@` $(UNREAL_DIR)/$@
 
 %.so :
 	@echo
