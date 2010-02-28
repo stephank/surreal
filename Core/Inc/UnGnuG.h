@@ -120,20 +120,19 @@ enum {CACHE_LINE_SIZE   = 32}; // Cache line size.
 	va_end( ArgPtr );	\
 }
 
+#include <stdint.h>
+
 // Unsigned base types.
-typedef unsigned char		BYTE;		// 8-bit  unsigned.
-typedef unsigned short		_WORD;		// 16-bit unsigned.
-typedef unsigned int		DWORD;		// 32-bit unsigned.
-typedef unsigned long long	QWORD;		// 64-bit unsigned.
-#if __GNUC__
-typedef unsigned int		OWORD __attribute__ ((mode (TI)));
-#endif
+typedef uint8_t		BYTE;		// 8-bit  unsigned.
+typedef uint16_t	_WORD;		// 16-bit unsigned.
+typedef uint32_t	DWORD;		// 32-bit unsigned.
+typedef uint64_t	QWORD;		// 64-bit unsigned.
 
 // Signed base types.
-typedef	signed char			SBYTE;		// 8-bit  signed.
-typedef signed short		SWORD;		// 16-bit signed.
-typedef signed int  		INT;		// 32-bit signed.
-typedef signed long long	SQWORD;		// 64-bit signed.
+typedef	int8_t		SBYTE;		// 8-bit  signed.
+typedef int16_t		SWORD;		// 16-bit signed.
+typedef int32_t 	INT;		// 32-bit signed.
+typedef int64_t		SQWORD;		// 64-bit signed.
 
 // Character types.
 typedef char			    ANSICHAR;	// An ANSI character.
@@ -144,6 +143,7 @@ typedef unsigned short      UNICHARU;	// A unicode character.
 // Other base types.
 typedef signed int			UBOOL;		// Boolean 0 (false) or 1 (true).
 typedef float				FLOAT;		// 32-bit IEEE floating point.
+typedef double				DOUBLE;		// 64-bit IEEE floating point.
 typedef unsigned int        SIZE_T;     // Corresponds to C SIZE_T.
 
 // Bitfield type.
