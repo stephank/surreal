@@ -13,16 +13,16 @@
 #-----------------------------------------------------------------------------
 
 # Specify version here.  Used for object storage directory.
-VERSION			= 413
+VERSION			= 436
 
 # Specify link method here.  Either [static] or [shared].
-LINKSTYLE		= static
+LINKSTYLE		= shared
 
 # Target type.  Either [linux] or [psx2]
-TARGETTYPE		= psx2
+TARGETTYPE		= linux
 
 # Machine type.  Either [i386] or [mips-ee]
-MACHTYPE		= mips-ee
+MACHTYPE		= i386
 
 # Specify build here.  Either [release] or [debug].
 # Make sure there isn't any trailing space on the line.
@@ -334,7 +334,7 @@ PSX2ILINKDRV_SONAME	= psx2iLinkDrv.so
 #-----------------------------------------------------------------------------
 
 ifeq ($(TARGETTYPE),linux)
-STD_CXX		= gcc 
+STD_CXX		= g++-2.95
 STD_CXXFLAGS	= -D__LINUX_X86__ -D__STATIC_LINK=$(STATICLINK) \
 			-fno-for-scope $(BUILD_CXXFLAGS)
 STD_LDFLAGS	= -Wl,-rpath,.
