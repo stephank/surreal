@@ -197,6 +197,9 @@ static UEngine* InitEngine()
 	Engine->Init();
 	debugf( TEXT("Startup time: %f seconds."), appSeconds()-LoadTime );
 
+	// Don't use the TSC, which is a broken timing mechanism on modern PCs.
+	GTimestamp = 0;
+
 	return Engine;
 	unguard;
 }
