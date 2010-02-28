@@ -28,41 +28,42 @@ all : core engine ipdrv fire render ucc xdrv xlaunch xmesagldrv glidedrv \
 	uweb audio
 endif
 
+%.so :
+	@echo
+	@echo "	Source code for '$@' is not included."
+	@echo "	Copy the '$@' file from your Unreal Tournament"
+	@echo "	installation, and then try running make again."
+	@echo
+	@exit 1
+
 .PHONY : core
-core : 
-	@$(MAKE) $(ARGS) --directory=$(CORE_SRC)
+core : $(CORE)
 
 .PHONY : engine
-engine : core
-	@$(MAKE) $(ARGS) --directory=$(ENGINE_SRC)
+engine : $(ENGINE)
 
 .PHONY : ipdrv
-ipdrv : core engine
-	@$(MAKE) $(ARGS) --directory=$(IPDRV_SRC)
+ipdrv : $(IPDRV)
 
 .PHONY : fire
-fire : core engine
-	@$(MAKE) $(ARGS) --directory=$(FIRE_SRC)
+fire : $(FIRE)
 
 .PHONY : editor
-editor : core engine
-	@$(MAKE) $(ARGS) --directory=$(EDITOR_SRC)
+editor : $(EDITOR)
 
 .PHONY : ucc
 ucc : core engine nullnetdriver psx2ilinkdrv
 	@$(MAKE) $(ARGS) --directory=$(UCC_SRC)
 
 .PHONY : render
-render : core engine
-	@$(MAKE) $(ARGS) --directory=$(RENDER_SRC)
+render : $(RENDER)
 
 .PHONY : xlaunch
 xlaunch : core engine
 	@$(MAKE) $(ARGS) --directory=$(XLAUNCH_SRC)
 
 .PHONY : psxlaunch
-psxlaunch : core engine
-	@$(MAKE) $(ARGS) --directory=$(PSXLAUNCH_SRC)
+psxlaunch : $(PSXLAUNCH)
 
 .PHONY : xdrv
 xdrv : core engine
@@ -73,8 +74,7 @@ nulldrv : core engine
 	@$(MAKE) $(ARGS) --directory=$(NULLDRV_SRC)
 
 .PHONY : psx2drv
-psx2drv : core engine
-	@$(MAKE) $(ARGS) --directory=$(PSX2DRV_SRC)
+psx2drv : $(PSX2DRV)
 
 .PHONY : xmesagldrv
 xmesagldrv : core engine render
@@ -85,37 +85,29 @@ glidedrv : core engine render
 	@$(MAKE) $(ARGS) --directory=$(GLIDEDRV_SRC)
 
 .PHONY : galaxy
-galaxy :
-	@$(MAKE) $(ARGS) --directory=$(GALAXY_SRC)
+galaxy : $(GALAXY)
 
 .PHONY : audio
 audio :
 	@$(MAKE) $(ARGS) --directory=$(AUDIO_SRC)
 
 .PHONY : uweb
-uweb :
-	@$(MAKE) $(ARGS) --directory=$(UWEB_SRC)
+uweb : $(UWEB)
 
-#.PHONY : nullrender
-#nullrender :
-#	@$(MAKE) $(ARGS) --directory=$(NULLRENDER_SRC)
+.PHONY : nullrender
+nullrender : $(NULLRENDER)
 
 .PHONY : psx2render
-psx2render :
-	@$(MAKE) $(ARGS) --directory=$(PSX2RENDER_SRC)
+psx2render : $(PSX2RENDER)
 
 .PHONY : psx2audio
-psx2audio :
-	@$(MAKE) $(ARGS) --directory=$(PSX2AUDIO_SRC)
+psx2audio : $(PSX2AUDIO)
 
 .PHONY : nullnetdriver
-nullnetdriver :
-	@$(MAKE) $(ARGS) --directory=$(NULLNETDRIVER_SRC)
+nullnetdriver : $(NULLNETDRIVER)
 
 .PHONY : psx2ilinkdrv
-psx2ilinkdrv :
-	@$(MAKE) $(ARGS) --directory=$(PSX2ILINKDRV_SRC)
-	@$(MAKE) $(ARGS) --directory=$(PSX2ILINKDRV_IOPMODULE)
+psx2ilinkdrv : $(PSX2ILINKDRV)
 
 #-----------------------------------------------------------------------------
 # Maintenance.
