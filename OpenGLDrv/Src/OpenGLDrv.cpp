@@ -1,5 +1,5 @@
 /*=============================================================================
-	OpenGlDrv.cpp: Unreal OpenGL support precompiled header generator.
+	OpenGLDrv.cpp: Unreal OpenGL support precompiled header generator.
 	Copyright 1997-1999 Epic Games, Inc. All Rights Reserved.
 
 	Revision history:
@@ -9,13 +9,13 @@
 
 =============================================================================*/
 
-#include "OpenGlDrv.h"
+#include "OpenGLDrv.h"
 
 /*-----------------------------------------------------------------------------
 	Unreal package implementation.
 -----------------------------------------------------------------------------*/
 
-IMPLEMENT_PACKAGE(OpenGlDrv);
+IMPLEMENT_PACKAGE(OpenGLDrv);
 
 /*-----------------------------------------------------------------------------
 	The End.

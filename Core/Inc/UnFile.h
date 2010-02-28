@@ -449,19 +449,31 @@ CORE_API void appMemzero( void* Dest, INT Count );
 inline void* operator new( unsigned int Size, const TCHAR* Tag )
 {
 	guardSlow(new);
+#ifdef UTGLR_NO_APP_MALLOC
+	return malloc(Size);
+#else
 	return appMalloc( Size, Tag );
+#endif
 	unguardSlow;
 }
 inline void* operator new( unsigned int Size )
 {
 	guardSlow(new);
+#ifdef UTGLR_NO_APP_MALLOC
+	return malloc(Size);
+#else
 	return appMalloc( Size, TEXT("new") );
+#endif
 	unguardSlow;
 }
 inline void operator delete( void* Ptr )
 {
 	guardSlow(delete);
+#ifdef UTGLR_NO_APP_MALLOC
+	free(Ptr);
+#else
 	appFree( Ptr );
+#endif
 	unguardSlow;
 }
 
@@ -469,19 +481,31 @@ inline void operator delete( void* Ptr )
 inline void* operator new[]( unsigned int Size, const TCHAR* Tag )
 {
 	guardSlow(new);
+#ifdef UTGLR_NO_APP_MALLOC
+	return malloc(Size);
+#else
 	return appMalloc( Size, Tag );
+#endif
 	unguardSlow;
 }
 inline void* operator new[]( unsigned int Size )
 {
 	guardSlow(new);
+#ifdef UTGLR_NO_APP_MALLOC
+	return malloc(Size);
+#else
 	return appMalloc( Size, TEXT("new") );
+#endif
 	unguardSlow;
 }
 inline void operator delete[]( void* Ptr )
 {
 	guardSlow(delete);
+#ifdef UTGLR_NO_APP_MALLOC
+	free(Ptr);
+#else
 	appFree( Ptr );
+#endif
 	unguardSlow;
 }
 #endif
