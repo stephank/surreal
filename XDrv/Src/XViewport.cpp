@@ -946,23 +946,10 @@ void UXViewport::Tick()
 				break;
 			case MotionNotify:
 				MouseMoved = True;
-
-				if (UseDGA)
-				{
-					if (abs(Event.xmotion.x_root) > 1)
-						DX += Event.xmotion.x_root * 2;
-					else
-						DX += Event.xmotion.x_root;
-					if (abs(Event.xmotion.y_root) > 1)
-						DY += Event.xmotion.y_root * 2;
-					else
-						DY += Event.xmotion.y_root;
-				} else {
-					DX += Event.xmotion.x - BaseX;
-					DY += Event.xmotion.y - BaseY;
-					BaseX = Event.xmotion.x;
-					BaseY = Event.xmotion.y;
-				}
+				DX += Event.xmotion.x - BaseX;
+				DY += Event.xmotion.y - BaseY;
+				BaseX = Event.xmotion.x;
+				BaseY = Event.xmotion.y;
 				break;
 			case ResizeRequest:
 				// Eventually resize and setres.
@@ -1012,17 +999,14 @@ void UXViewport::Tick()
 	// Deliver mouse behavior to the engine.
 	if (MouseMoved)
 	{
-		if (!UseDGA)
-		{
-			XWarpPointer(XDisplay, None, XWindow,
-				0, 0, 0, 0, SizeX/2, SizeY/2);
+		XWarpPointer(XDisplay, None, XWindow,
+			0, 0, 0, 0, SizeX/2, SizeY/2);
 
-			// Clear out the warp.
-			XEvent MouseEvent;
-			while( XCheckWindowEvent(XDisplay, XWindow, ButtonMotionMask | PointerMotionMask, &MouseEvent) )
-			{
-				// Do Nothing.
-			}
+		// Clear out the warp.
+		XEvent MouseEvent;
+		while( XCheckWindowEvent(XDisplay, XWindow, ButtonMotionMask | PointerMotionMask, &MouseEvent) )
+		{
+			// Do Nothing.
 		}
 		
 		// Send to input subsystem.
@@ -1154,24 +1138,6 @@ void UXViewport::CaptureInputs()
 	XChangePointerControl(XDisplay, True, True, 2, 1, 0);
 
 	XSync(XDisplay, False);
-		
-	// Query DGA capabilities.
-	UXClient* C = GetOuterUXClient();
-	if (C->DGAMouseEnabled)
-	{
-		INT VersionMajor, VersionMinor;
-		if (!XF86DGAQueryVersion(XDisplay, &VersionMajor, &VersionMinor))
-		{
-			debugf( TEXT("XF86DGA disabled.") );
-			UseDGA = false;
-		} else {
-			debugf( TEXT("XF86DGA enabled.") );
-			UseDGA = true;
-			XF86DGADirectVideo(XDisplay, DefaultScreen(XDisplay), XF86DGADirectMouse);
-			XWarpPointer(XDisplay, None, XWindow, 0, 0, 0, 0, 0, 0);
-		}
-	} else
-		UseDGA = false;
 
 	XGrabKeyboard(XDisplay, XWindow, False, GrabModeAsync, GrabModeAsync, CurrentTime);
 
@@ -1183,13 +1149,6 @@ void UXViewport::CaptureInputs()
 void UXViewport::ReleaseInputs()
 {
 	guard(UXViewport::ReleaseInputs);
-
-	// Restore DGA mode.
-	if (UseDGA)
-	{
-		UseDGA = false;
-		XF86DGADirectVideo(XDisplay, DefaultScreen(XDisplay), 0);
-	}
 
 	// Restore acceleration.
 	XChangePointerControl(XDisplay, True, True, MouseAccel_N, MouseAccel_D, MouseThreshold);

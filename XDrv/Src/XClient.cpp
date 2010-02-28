@@ -37,7 +37,6 @@ void UXClient::StaticConstructor()
 
 	new(GetClass(),TEXT("StartupFullscreen"), RF_Public)UBoolProperty(CPP_PROPERTY(StartupFullscreen), TEXT("Display"),  CPF_Config );
 	new(GetClass(),TEXT("SlowVideoBuffering"),RF_Public)UBoolProperty(CPP_PROPERTY(SlowVideoBuffering),TEXT("Display"),  CPF_Config );
-	new(GetClass(),TEXT("DGAMouseEnabled"),RF_Public)UBoolProperty(CPP_PROPERTY(DGAMouseEnabled),TEXT("Display"), CPF_Config );
 	unguard;
 }
 

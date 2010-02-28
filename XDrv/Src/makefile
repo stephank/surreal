@@ -27,7 +27,7 @@ CXXFLAGS	= $(STD_CXXFLAGS) -Werror -fPIC -I$(XDRV_INC) \
 			-I$(ENGINE_INC) -I$(CORE_INC) \
 			-DGPackage=GPackageXDrv
 LDFLAGS		= $(STD_LDFLAGS) -shared -Wl,-soname,$(XDRV_SONAME)
-LIBS		= $(STD_LIBS) $(CORE) $(XLIBS) -lXxf86dga
+LIBS		= $(STD_LIBS) $(CORE) $(XLIBS)
 
 #-----------------------------------------------------------------------------
 # Files.
