@@ -46,6 +46,7 @@ public:
 	int     operator== (FTime t)        {return v==t.v;}
 	int     operator!= (FTime t)        {return v!=t.v;}
 	int     operator>  (FTime t)        {return v>t.v;}
+	int     operator<  (FTime t)        {return v<t.v;}
 	FTime&  operator=  (const FTime& t) {v=t.v; return *this;}
 private:
 	FTime (TIMETYP i) {v=i;}
