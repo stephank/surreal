@@ -61,11 +61,16 @@
 
 
 //Debug defines
+#ifdef __GNUC__
+#define UTGLR_DONT_DEBUG_AT_ALL
+#endif
+//#ifndef UTGLR_DONT_DEBUG_AT_ALL
 //#define UTGLR_DEBUG_SHOW_TEX_CONVERT_COUNTS
 //#define UTGLR_DEBUG_SHOW_CALL_COUNTS
 //#define UTGLR_DEBUG_WORLD_WIREFRAME
 //#define UTGLR_DEBUG_ACTOR_WIREFRAME
 //#define UTGLR_DEBUG_Z_RANGE_HACK_WIREFRAME
+//#endif
 
 //Controls the loading of a subset of OpenGL procs
 //#define UTGLR_ALL_GL_PROCS
@@ -716,6 +721,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 	DECLARE_CLASS(UOpenGLRenderDevice, URenderDevice, CLASS_Config, OpenGLDrv)
 #endif
 
+#ifndef UTGLR_DONT_DEBUG_AT_ALL
 	class ods_buf : public std::basic_stringbuf<TCHAR, std::char_traits<TCHAR> > {
 	public:
 		virtual ~ods_buf() {
@@ -771,6 +777,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 		DEBUG_BIT_GL_ERROR	= 0x00000002,
 		DEBUG_BIT_ANY		= 0xFFFFFFFF
 	};
+#endif
 
 	//Fixed texture cache ids
 	#define TEX_CACHE_ID_UNUSED		0xFFFFFFFFFFFFFFFFLL

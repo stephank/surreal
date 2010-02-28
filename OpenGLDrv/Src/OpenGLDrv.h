@@ -27,8 +27,11 @@
 #include <GL/glext.h>
 #endif
 
-#define UTGLR_NO_APP_MALLOC
 #include <stdlib.h>
+
+#ifndef UTGLR_DONT_DEBUG_AT_ALL
+#define UTGLR_NO_APP_MALLOC
+#endif
 
 #include "Engine.h"
 #include "UnRender.h"

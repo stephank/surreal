@@ -965,6 +965,7 @@ void UOpenGLRenderDevice::SC_AddFloatConfigParam(const TCHAR *pName, FLOAT &para
 }
 
 
+#ifndef UTGLR_DONT_DEBUG_AT_ALL
 void UOpenGLRenderDevice::DbgPrintInitParam(const TCHAR *pName, INT value) {
 	dout << TEXT("utglr: ") << pName << TEXT(" = ") << value << std::endl;
 	return;
@@ -974,6 +975,7 @@ void UOpenGLRenderDevice::DbgPrintInitParam(const TCHAR *pName, FLOAT value) {
 	dout << TEXT("utglr: ") << pName << TEXT(" = ") << value << std::endl;
 	return;
 }
+#endif
 
 
 #ifdef UTGLR_INCLUDE_SSE_CODE
@@ -1820,9 +1822,11 @@ bool UOpenGLRenderDevice::FindExt(const char *pName) {
 	if (bRet) {
 		debugf(NAME_Init, TEXT("Device supports: %s"), appFromAnsi(pName));
 	}
+#ifndef UTGLR_DONT_DEBUG_AT_ALL
 	if (DebugBit(DEBUG_BIT_BASIC)) {
 		dout << TEXT("utglr: GL_EXT: ") << appFromAnsi(pName) << TEXT(" = ") << bRet << std::endl;
 	}
+#endif
 
 	return bRet;
 	unguard;
@@ -1954,9 +1958,11 @@ void UOpenGLRenderDevice::ShutdownAfterError() {
 
 	debugf(NAME_Exit, TEXT("UOpenGLRenderDevice::ShutdownAfterError"));
 
+#ifndef UTGLR_DONT_DEBUG_AT_ALL
 	if (DebugBit(DEBUG_BIT_BASIC)) {
 		dout << TEXT("utglr: ShutdownAfterError") << std::endl;
 	}
+#endif
 
 	//ChangeDisplaySettings(NULL, 0);
 
@@ -1972,6 +1978,7 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 
 	guard(UOpenGlRenderDevice::SetRes);
 
+#ifndef UTGLR_DONT_DEBUG_AT_ALL
 	//Get debug bits
 	{
 		INT i = 0;
@@ -1980,6 +1987,7 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 	}
 	//Display debug bits
 	if (DebugBit(DEBUG_BIT_ANY)) dout << TEXT("utglr: DebugBits = ") << m_debugBits << std::endl;
+#endif
 
 #ifdef __LINUX__
 	UnsetRes();
@@ -2161,6 +2169,7 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 	//Get other defaults
 	if (!GConfig->GetInt(g_pSection, TEXT("Brightness"), Brightness)) Brightness = 0;
 
+#ifndef UTGLR_DONT_DEBUG_AT_ALL
 	//Debug parameter listing
 	if (DebugBit(DEBUG_BIT_BASIC)) {
 		#define UTGLR_DEBUG_SHOW_PARAM_REG(_name) DbgPrintInitParam(TEXT(#_name), _name)
@@ -2228,6 +2237,7 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 		#undef UTGLR_DEBUG_SHOW_PARAM_REG
 		#undef UTGLR_DEBUG_SHOW_PARAM_DCV
 	}
+#endif
 
 	//Special handling for WGL_EXT_swap_control
 	//Restricted to a maximum of 10
@@ -2272,8 +2282,10 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 	UseSSE = 0;
 	UseSSE2 = 0;
 #endif
+#ifndef UTGLR_DONT_DEBUG_AT_ALL
 	if (DebugBit(DEBUG_BIT_BASIC)) dout << TEXT("utglr: UseSSE = ") << UseSSE << std::endl;
 	if (DebugBit(DEBUG_BIT_BASIC)) dout << TEXT("utglr: UseSSE2 = ") << UseSSE2 << std::endl;
+#endif
 
 	SetGamma(Viewport->GetOuterUClient()->Brightness);
 
@@ -2614,6 +2626,7 @@ void UOpenGLRenderDevice::MakeCurrent(void) {
 }
 
 void UOpenGLRenderDevice::CheckGLErrorFlag(const TCHAR *pTag) {
+#ifndef UTGLR_DONT_DEBUG_AT_ALL
 	GLenum Error = glGetError();
 	if ((Error != GL_NO_ERROR) && DebugBit(DEBUG_BIT_GL_ERROR)) {
 		const TCHAR *pMsg;
@@ -2642,6 +2655,7 @@ void UOpenGLRenderDevice::CheckGLErrorFlag(const TCHAR *pTag) {
 		//appErrorf(TEXT("OpenGL Error: %s (%s)"), pMsg, pTag);
 		debugf(TEXT("OpenGL Error: %s (%s)"), pMsg, pTag);
 	}
+#endif
 }
 
 
@@ -2884,7 +2898,9 @@ void UOpenGLRenderDevice::SetBasicPixelFormat(INT NewColorBytes) {
 		0,0,0
 	};
 
+#ifndef UTGLR_DONT_DEBUG_AT_ALL
 	if (DebugBit(DEBUG_BIT_BASIC)) dout << TEXT("utglr: BasicInit") << std::endl;
+#endif
 
 	nPixelFormat = ChoosePixelFormat(m_hDC, &pfd);
 	if (!nPixelFormat) {
@@ -2930,7 +2946,9 @@ bool UOpenGLRenderDevice::SetAAPixelFormat(INT NewColorBytes) {
 		return false;
 	}
 
+#ifndef UTGLR_DONT_DEBUG_AT_ALL
 	if (DebugBit(DEBUG_BIT_BASIC)) dout << TEXT("utglr: AAInit") << std::endl;
+#endif
 
 	iAttributes[0] = WGL_SUPPORT_OPENGL_ARB;
 	iAttributes[1] = GL_TRUE;
@@ -2959,7 +2977,9 @@ bool UOpenGLRenderDevice::SetAAPixelFormat(INT NewColorBytes) {
 		bRet = iapfRet.p_wglChoosePixelFormatARB(m_hDC, iAttributes, NULL, 1, iFormats, &nNumFormats);
 	}
 	if ((bRet == FALSE) || (nNumFormats == 0)) {
+#ifndef UTGLR_DONT_DEBUG_AT_ALL
 		if (DebugBit(DEBUG_BIT_BASIC)) dout << TEXT("utglr: AAInit failed") << std::endl;
+#endif
 		return false;
 	}
 
@@ -6667,21 +6687,25 @@ bool UOpenGLRenderDevice::InitializeVertexPrograms(void) {
 bool UOpenGLRenderDevice::LoadVertexProgram(GLuint vpId, const char *pProgram, const TCHAR *pName) {
 	GLint iErrorPos;
 
+#ifndef UTGLR_DONT_DEBUG_AT_ALL
 	if (DebugBit(DEBUG_BIT_BASIC)) {
 		dout << TEXT("utglr: Loading vertex program \"") << pName << TEXT("\"") << std::endl;
 	}
+#endif
 
 	glBindProgramARB(GL_VERTEX_PROGRAM_ARB, vpId);
 	glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, strlen(pProgram), pProgram);
 
 	glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &iErrorPos);
 
+#ifndef UTGLR_DONT_DEBUG_AT_ALL
 	if (DebugBit(DEBUG_BIT_BASIC)) {
 		if (iErrorPos != -1) {
 			dout << TEXT("utglr: Vertex program error at offset ") << iErrorPos << std::endl;
 			dout << TEXT("utglr: Vertex program text from error offset:\n") << appFromAnsi(pProgram + iErrorPos) << std::endl;
 		}
 	}
+#endif
 
 	if (iErrorPos != -1) {
 		return false;
@@ -6707,7 +6731,9 @@ void UOpenGLRenderDevice::TryInitializeVertexProgramMode(void) {
 		UseVertexProgram = 0;
 		PL_UseVertexProgram = 0;
 
+#ifndef UTGLR_DONT_DEBUG_AT_ALL
 		if (DebugBit(DEBUG_BIT_BASIC)) dout << TEXT("utglr: Vertex program initialization failed") << std::endl;
+#endif
 	}
 
 	return;
@@ -6880,21 +6906,25 @@ bool UOpenGLRenderDevice::InitializeFragmentPrograms(void) {
 bool UOpenGLRenderDevice::LoadFragmentProgram(GLuint fpId, const char *pProgram, const TCHAR *pName) {
 	GLint iErrorPos;
 
+#ifndef UTGLR_DONT_DEBUG_AT_ALL
 	if (DebugBit(DEBUG_BIT_BASIC)) {
 		dout << TEXT("utglr: Loading fragment program \"") << pName << TEXT("\"") << std::endl;
 	}
+#endif
 
 	glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, fpId);
 	glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, strlen(pProgram), pProgram);
 
 	glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &iErrorPos);
 
+#ifndef UTGLR_DONT_DEBUG_AT_ALL
 	if (DebugBit(DEBUG_BIT_BASIC)) {
 		if (iErrorPos != -1) {
 			dout << TEXT("utglr: Fragment program error at offset ") << iErrorPos << std::endl;
 			dout << TEXT("utglr: Fragment program text from error offset:\n") << appFromAnsi(pProgram + iErrorPos) << std::endl;
 		}
 	}
+#endif
 
 	if (iErrorPos != -1) {
 		return false;
@@ -6920,7 +6950,9 @@ void UOpenGLRenderDevice::TryInitializeFragmentProgramMode(void) {
 		UseFragmentProgram = 0;
 		PL_UseFragmentProgram = 0;
 
+#ifndef UTGLR_DONT_DEBUG_AT_ALL
 		if (DebugBit(DEBUG_BIT_BASIC)) dout << TEXT("utglr: Fragment program initialization failed") << std::endl;
+#endif
 	}
 
 	return;
