@@ -5270,14 +5270,14 @@ void UOpenGLRenderDevice::SetTextureNoCheck(FTexInfo& Tex, FTextureInfo& Info, D
 	// Make current.
 	clock(BindCycles);
 
-	bool isZeroPrefixCacheID = ((Tex.CurrentCacheID & 0xFFFFFFFF00000000) == 0) ? true : false;
+	bool isZeroPrefixCacheID = ((Tex.CurrentCacheID & 0xFFFFFFFF00000000LL) == 0) ? true : false;
 
 	FCachedTexture *pBind = NULL;
 	bool existingBind = false;
 	bool needTexAllocate = true;
 
 	if (isZeroPrefixCacheID) {
-		DWORD CacheIDSuffix = (Tex.CurrentCacheID & 0x00000000FFFFFFFF);
+		DWORD CacheIDSuffix = (Tex.CurrentCacheID & 0x00000000FFFFFFFFLL);
 
 		DWORD_CTTree_t *zeroPrefixBindTree = &m_zeroPrefixBindTrees[CTZeroPrefixCacheIDSuffixToTreeIndex(CacheIDSuffix)];
 		DWORD_CTTree_t::node_t *bindTreePtr = zeroPrefixBindTree->find(CacheIDSuffix);
@@ -5311,7 +5311,7 @@ void UOpenGLRenderDevice::SetTextureNoCheck(FTexInfo& Tex, FTextureInfo& Info, D
 		}
 	}
 	else {
-		DWORD CacheIDSuffix = (Tex.CurrentCacheID & 0x00000000FFFFFFFF);
+		DWORD CacheIDSuffix = (Tex.CurrentCacheID & 0x00000000FFFFFFFFLL);
 		DWORD treeIndex = CTNonZeroPrefixCacheIDSuffixToTreeIndex(CacheIDSuffix);
 
 		QWORD_CTTree_t *nonZeroPrefixBindTree = &m_nonZeroPrefixBindTrees[treeIndex];

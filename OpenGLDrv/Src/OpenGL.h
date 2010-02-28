@@ -773,9 +773,9 @@ class UOpenGLRenderDevice : public URenderDevice {
 	};
 
 	//Fixed texture cache ids
-	#define TEX_CACHE_ID_UNUSED		0xFFFFFFFFFFFFFFFF
-	#define TEX_CACHE_ID_NO_TEX		0xFFFFFFFF00000010
-	#define TEX_CACHE_ID_ALPHA_TEX	0xFFFFFFFF00000020
+	#define TEX_CACHE_ID_UNUSED		0xFFFFFFFFFFFFFFFFLL
+	#define TEX_CACHE_ID_NO_TEX		0xFFFFFFFF00000010LL
+	#define TEX_CACHE_ID_ALPHA_TEX	0xFFFFFFFF00000020LL
 
 	//Texture cache id flags
 	enum {
