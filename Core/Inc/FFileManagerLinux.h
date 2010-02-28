@@ -213,9 +213,13 @@ protected:
 class FFileManagerLinux : public FFileManagerGeneric
 {
 public:
-	FArchive* CreateFileReader( const TCHAR* Filename, DWORD Flags, FOutputDevice* Error )
+	FArchive* CreateFileReader( const TCHAR* OrigFilename, DWORD Flags, FOutputDevice* Error )
 	{
 		guard(FFileManagerLinux::CreateFileReader);
+
+		char Filename[256];
+		PathSeparatorFixup( Filename, OrigFilename );
+
 		FILE* File = fopen(TCHAR_TO_ANSI(Filename), TCHAR_TO_ANSI(TEXT("rb")));
 		if( !File )
 		{
@@ -224,16 +228,23 @@ public:
 			return NULL;
 		}
 		fseek( File, 0, SEEK_END );
+
 		return new(TEXT("LinuxFileReader"))FArchiveFileReader(File,Error,ftell(File));
+
 		unguard;
 	}
-	FArchive* CreateFileWriter( const TCHAR* Filename, DWORD Flags, FOutputDevice* Error )
+	FArchive* CreateFileWriter( const TCHAR* OrigFilename, DWORD Flags, FOutputDevice* Error )
 	{
 		guard(FFileManagerLinux::CreateFileWriter);
+
+		char Filename[256];
+		PathSeparatorFixup( Filename, OrigFilename );
+
 		if( Flags & FILEWRITE_EvenIfReadOnly )
 			chmod(TCHAR_TO_ANSI(Filename), __S_IREAD | __S_IWRITE);
 		if( (Flags & FILEWRITE_NoReplaceExisting) && FileSize(Filename)>=0 )
 			return NULL;
+
 		const TCHAR* Mode = (Flags & FILEWRITE_Append) ? TEXT("ab") : TEXT("wb"); 
 		FILE* File = fopen(TCHAR_TO_ANSI(Filename),TCHAR_TO_ANSI(Mode));
 		if( !File )
@@ -244,15 +255,22 @@ public:
 		}
 		if( Flags & FILEWRITE_Unbuffered )
 			setvbuf( File, 0, _IONBF, 0 );
+
 		return new(TEXT("LinuxFileWriter"))FArchiveFileWriter(File,Error);
+
 		unguard;
 	}
-	UBOOL Delete( const TCHAR* Filename, UBOOL RequireExists=0, UBOOL EvenReadOnly=0 )
+	UBOOL Delete( const TCHAR* OrigFilename, UBOOL RequireExists=0, UBOOL EvenReadOnly=0 )
 	{
 		guard(FFileManagerLinux::Delete);
+
+		char Filename[256];
+		PathSeparatorFixup( Filename, OrigFilename );
+
 		if( EvenReadOnly )
 			chmod(TCHAR_TO_ANSI(Filename), __S_IREAD | __S_IWRITE);
 		return unlink(TCHAR_TO_ANSI(Filename))==0 || (errno==ENOENT && !RequireExists);
+
 		unguard;
 	}
 	SQWORD GetGlobalTime( const TCHAR* Filename )
@@ -268,23 +286,35 @@ public:
 		guard(FFileManagerLinux::SetGlobalTime);
 
 		return 0;
-		
+
 		unguard;
 	}
-	UBOOL MakeDirectory( const TCHAR* Path, UBOOL Tree=0 )
+	UBOOL MakeDirectory( const TCHAR* OrigPath, UBOOL Tree=0 )
 	{
 		guard(FFileManagerLinux::MakeDirectory);
+
+		char Path[256];
+		PathSeparatorFixup( Path, OrigPath );
+
 		if( Tree )
 			return FFileManagerGeneric::MakeDirectory( Path, Tree );
+
 		return mkdir(TCHAR_TO_ANSI(Path), __S_IREAD && __S_IWRITE && __S_IEXEC)==0 || errno==EEXIST;
+
 		unguard;
 	}
-	UBOOL DeleteDirectory( const TCHAR* Path, UBOOL RequireExists=0, UBOOL Tree=0 )
+	UBOOL DeleteDirectory( const TCHAR* OrigPath, UBOOL RequireExists=0, UBOOL Tree=0 )
 	{
 		guard(FFileManagerLinux::DeleteDirectory);
+
+		char Path[256];
+		PathSeparatorFixup( Path, OrigPath );
+
 		if( Tree )
 			return FFileManagerGeneric::DeleteDirectory( Path, RequireExists, Tree );
+
 		return rmdir(TCHAR_TO_ANSI(Path))==0 || (errno==ENOENT && !RequireExists);
+
 		unguard;
 	}
 	TArray<FString> FindFiles( const TCHAR* Filename, UBOOL Files, UBOOL Directories )
@@ -301,12 +331,8 @@ public:
 		UBOOL Match;
 
 		// Initialize Path to Filename.
-		appStrcpy( Path, Filename );
-
 		// Convert MS "\" to Unix "/".
-		for( Cur = Path; *Cur != '\0'; Cur++ )
-			if( *Cur == '\\' )
-				*Cur = '/';
+		PathSeparatorFixup( Path, Filename );
 	
 		// Separate path and filename.
 		Filestart = Path;
@@ -414,6 +440,14 @@ public:
 			return appFromAnsi( Buffer );
 		}
 		unguard;
+	}
+private:
+	void PathSeparatorFixup( char* Dest, const TCHAR* Src )
+	{
+		appStrcpy( Dest, Src );
+		for( char *Cur = Dest; *Cur != '\0'; Cur++ )
+			if( *Cur == '\\' )
+				*Cur = '/';
 	}
 };
 
