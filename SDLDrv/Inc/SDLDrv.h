@@ -42,7 +42,7 @@ class USDLClient;
 //
 class USDLClient : public UClient, public FNotifyHook
 {
-	DECLARE_CLASS(USDLClient,UClient,CLASS_Transient|CLASS_Config)
+	DECLARE_CLASS(USDLClient,UClient,CLASS_Transient|CLASS_Config,SDLDrv)
 
 	// Configuration.
 	BITFIELD			StartupFullscreen;
@@ -95,7 +95,7 @@ enum ESDLViewportStatus
 //
 class USDLViewport : public UViewport
 {
-	DECLARE_CLASS(USDLViewport,UViewport,CLASS_Transient)
+	DECLARE_CLASS(USDLViewport,UViewport,CLASS_Transient,SDLDrv)
 	DECLARE_WITHIN(USDLClient)
 
 	// Variables.
