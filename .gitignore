@@ -1,4 +1,5 @@
 System/UnrealTournament
+System/ucc
 System/*-bin
 System/*.so
 */release-*

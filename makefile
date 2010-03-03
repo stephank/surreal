@@ -22,7 +22,7 @@ ARGS =
 ifeq ($(TARGETTYPE),linux)
 #all : core engine ipdrv fire render ucc uweb audio
 all : $(TMPDIR)/libstdc++.a \
-	sdllaunch sdldrv opengldrv
+	sdllaunch sdldrv opengldrv ucc
 endif
 
 # Need to statically link libstdc++.
@@ -57,7 +57,7 @@ fire : $(FIRE)
 editor : $(EDITOR)
 
 .PHONY : ucc
-ucc : core engine nullnetdriver
+ucc : core engine
 	@$(MAKE) $(ARGS) --directory=$(UCC_SRC)
 
 .PHONY : render
