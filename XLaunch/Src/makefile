@@ -36,15 +36,13 @@ CXXFLAGS	= $(STD_CXXFLAGS) \
 			-I$(FIRE_INC) -I$(ENGINE_INC) \
 			-I$(IPDRV_INC) -I$(UWEB_INC) \
 			-I$(XDRV_INC) -I$(AUDIO_INC) \
-			-I$(RENDER_INC) -I$(GLIDEDRV_INC) \
-			$(GLIDEINC)
+			-I$(RENDER_INC)
 LIBS		= $(STD_LIBS) \
-			../../System/GlideDrv.a \
 			../../System/Render.a ../../System/Audio.a \
 			../../System/XDrv.a ../../System/UWeb.a \
 			../../System/IpDrv.a ../../System/Fire.a \
 			../../System/Engine.a ../../System/Core.a \
-			$(GLIDELIBS) $(XLIBS)
+			$(XLIBS)
 endif
 
 #-----------------------------------------------------------------------------

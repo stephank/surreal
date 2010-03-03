@@ -52,10 +52,6 @@ void UXClient::Init( UEngine* InEngine )
 	// Init base.
 	UClient::Init( InEngine );
 
-	// Fix up the environment variables for 3dfx.
-	putenv( "MESA_GLX_FX=fullscreen" );
-	putenv( "FX_GLIDE_NO_SPLASH=1" );
-
 	// Note configuration.
 	PostEditChange();
 

@@ -684,14 +684,10 @@ UBOOL USDLViewport::ResizeViewport( DWORD NewBlitFlags, INT InNewX, INT InNewY, 
 	NewX = InNewX!=INDEX_NONE ? InNewX : (NewBlitFlags&BLIT_Fullscreen) ? Client->FullscreenViewportX : Client->WindowedViewportX;
 	NewY = InNewX!=INDEX_NONE ? InNewY : (NewBlitFlags&BLIT_Fullscreen) ? Client->FullscreenViewportY : Client->WindowedViewportY;
 
-	INT VideoFlags = SDL_SWSURFACE;
+	INT VideoFlags = SDL_SWSURFACE | SDL_OPENGL;
 
 	// Pull current driver string 
 	FString CurrentDriver = RenDev->GetClass()->GetPathName();
-
-	// if ! Glide, Set up the SDL OpenGL contexts
-	if (!( CurrentDriver == "GlideDrv.GlideRenderDevice" )) 
-		VideoFlags = SDL_OPENGL;
 
 	if( NewBlitFlags & BLIT_Fullscreen )
 	{

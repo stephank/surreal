@@ -2353,8 +2353,6 @@ class DLL_EXPORT UD3DRenderDevice : public URenderDevice
 			else if	(DeviceIdentifier.dwVendorId==4318 && DeviceIdentifier.dwDeviceId<=255) // any NVidia pre-GeForce card.
 				DescFlags |= RDDESCF_LowDetailSkins;
 			SaveConfig();
-			if( DeviceIdentifier.dwVendorId==4634 ) // Propagate 3dfx settings to Glide tab.
-				GConfig->SetString(TEXT("GlideDrv.GlideRenderDevice"),TEXT("DescFlags"),*FString::Printf(TEXT("%i"),DescFlags|RDDESCF_Certified));
 			UnSetRes(TEXT("Successfully tested Direct3D presence"),0);
 			if( !LocalUse3dfx )
 			{

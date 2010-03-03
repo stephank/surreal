@@ -177,12 +177,6 @@ PSX2DRV_INC		= $(UNREAL_DIR)/PSX2Drv/Inc
 PSX2DRV_BUILD		= $(UNREAL_DIR)/PSX2Drv/$(BUILD_SUBDIR)
 PSX2DRV_OUT		= $(UNREAL_DIR)/System
 
-# GlideDrv directories.
-GLIDEDRV_SRC		= $(UNREAL_DIR)/GlideDrv/Src
-GLIDEDRV_INC		= $(UNREAL_DIR)/GlideDrv/Inc
-GLIDEDRV_BUILD		= $(UNREAL_DIR)/GlideDrv/$(BUILD_SUBDIR)
-GLIDEDRV_OUT		= $(UNREAL_DIR)/System
-
 # Unreal audio subsystem directories.
 AUDIO_SRC		= $(UNREAL_DIR)/Audio/Src
 AUDIO_INC		= $(UNREAL_DIR)/Audio/Inc
@@ -237,7 +231,6 @@ ALL_SRC_DIRS 	= $(CORE_INC) $(CORE_SRC) \
 		  $(EDITOR_SRC) $(EDITOR_INC) \
 		  $(OPENGLDRV_SRC) $(OPENGLDRV_INC) \
 		  $(XMESAGLDRV_SRC) $(XMESAGLDRV_INC) \
-		  $(GLIDEDRV_SRC) $(GLIDEDRV_INC) \
 		  $(XDRV_SRC) $(XDRV_INC) \
 		  $(SDLDRV_SRC) $(SDLDRV_INC) \
 		  $(XLAUNCH_SRC) $(XLAUNCH_INC) \
@@ -255,10 +248,6 @@ XLIBS			= -L/usr/X11/lib -L/usr/X11R6/lib -lX11 -lXext -lXmu \
 
 SDL_LIBS		= $(shell sdl-config --libs)
 SDL_CFLAGS		= $(shell sdl-config --cflags)
-
-# GL libs.
-GLIDEINC		= -I/usr/include/glide -I../Inc
-GLIDELIBS		= -lglide2x
 
 #-----------------------------------------------------------------------------
 # Output files.
@@ -315,10 +304,6 @@ XDRV_SONAME		= XDrv.so
 # XDrv library
 SDLDRV			= $(SDLDRV_OUT)/SDLDrv.$(LIBSUFFIX)
 SDLDRV_SONAME		= SDLDrv.so
-
-# GlideDrv library
-GLIDEDRV		= $(GLIDEDRV_OUT)/GlideDrv.$(LIBSUFFIX)
-GLIDEDRV_SONAME		= GlideDrv.so
 
 # Audio library
 AUDIO			= $(AUDIO_OUT)/Audio.$(LIBSUFFIX)
@@ -399,7 +384,6 @@ UCC_TAG		= $(UCC_INC)/*.h $(UCC_SRC)/*.h $(UCC_SRC)/*.cpp
 RENDER_TAG	= $(RENDER_INC)/*.h $(RENDER_SRC)/*.h $(RENDER_SRC)/*.cpp
 OPENGLDRV_TAG	= $(OPENGLDRV_INC)/*.h $(OPENGLDRV_SRC)/*.h $(OPENGLDRV_SRC)/*.cpp
 XMESAGLDRV_TAG	= $(XMESAGLDRV_INC)/*.h $(XMESAGLDRV_SRC)/*.h $(XMESAGLDRV_SRC)/*.cpp
-GLIDEDRV_TAG	= $(GLIDEDRV_INC)/*.h $(GLIDEDRV_SRC)/*.h $(GLIDEDRV_SRC)/*.cpp
 XDRV_TAG	= $(XDRV_INC)/*.h $(XDRV_INC)/*.h $(XDRV_SRC)/*.cpp
 SDLDRV_TAG	= $(SDLDRV_INC)/*.h $(SDLDRV_INC)/*.h $(SDLDRV_SRC)/*.cpp
 XLAUNCH_TAG	= $(XLAUNCH_INC)/*.h $(XLAUNCH_SRC)/*.h $(XLAUNCH_SRC)/*.cpp
@@ -413,7 +397,7 @@ STD_TAG		= /usr/include/*.h /usr/include/sys/*.h /usr/include/arpa/*.h \
 ALL_TAGS	= $(CORE_TAG) $(ENGINE_TAG) $(IPDRV_TAG) $(FIRE_TAG) \
 			$(EDITOR_TAG) $(UCC_TAG) $(RENDER_TAG) \
 			$(OPENGLDRV_TAG) $(XMESAGLDRV_TAG) $(XLAUNCH_TAG) $(SDLLAUNCH_TAG) \
-			$(XDRV_TAG) $(SDLDRV_TAG) $(GLIDEDRV_TAG) \
+			$(XDRV_TAG) $(SDLDRV_TAG) \
 			$(AUDIO_TAG) $(UWEB_TAG) $(NULLRENDER_TAG) $(STD_TAG)
 
 #-----------------------------------------------------------------------------

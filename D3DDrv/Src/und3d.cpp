@@ -1737,8 +1737,6 @@ class DLL_EXPORT UD3DRenderDevice : public URenderDevice
 			||	(DeviceIdentifier.dwVendorId==4634 && DeviceIdentifier.dwDeviceId<=1 )) // 3dfx Voodoo1
 				DescFlags |= RDDESCF_LowDetailWorld|RDDESCF_LowDetailSkins;
 			SaveConfig();
-			if( DeviceIdentifier.dwVendorId==4634 ) // Propagate 3dfx settings to Glide tab.
-				GConfig->SetString(TEXT("GlideDrv.GlideRenderDevice"),TEXT("DescFlags"),*FString::Printf(TEXT("%i"),DescFlags|RDDESCF_Certified));
 			UnSetRes(TEXT("Successfully tested Direct3D presence"),0);
 			if( !LocalUse3dfx )
 			{

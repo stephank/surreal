@@ -69,10 +69,6 @@ FFileManagerLinux FileManager;
 #include "Render.h"
 #include "UnRenderNative.h"
 
-// Glide static stuff.
-#include "UnGlide.h"
-#include "UnGlideNative.h"
-
 #endif
 
 // X Windows
@@ -420,7 +416,6 @@ int main( int argc, char* argv[] )
 		AUTO_INITIALIZE_REGISTRANTS_XDRV;
 		AUTO_INITIALIZE_REGISTRANTS_RENDER;
 		AUTO_INITIALIZE_REGISTRANTS_AUDIO;
-		AUTO_INITIALIZE_REGISTRANTS_GLIDEDRV;
 	#endif
 
 	// Init mode.
