@@ -28,6 +28,9 @@ MACHTYPE		= i386
 # Make sure there isn't any trailing space on the line.
 BUILD			= release
 
+# Directory for temporary files
+TMPDIR			= /tmp/surreal-build
+
 #-----------------------------------------------------------------------------
 
 
@@ -351,7 +354,7 @@ ifeq ($(TARGETTYPE),linux)
 STD_CXX		= g++-2.95
 STD_CXXFLAGS	= -D__LINUX_X86__ -D__STATIC_LINK=$(STATICLINK) \
 			-fno-for-scope $(BUILD_CXXFLAGS)
-STD_LDFLAGS	= -Wl,-rpath,. -L$(UNREAL_DIR)
+STD_LDFLAGS	= -Wl,-rpath,. -L$(TMPDIR)
 STD_LIBS	= -lm -lrt -ldl -lnsl -lpthread
 
 STD_AR		= ar
