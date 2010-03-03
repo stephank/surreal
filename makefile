@@ -72,6 +72,10 @@ render : $(RENDER)
 xlaunch : core engine
 	@$(MAKE) $(ARGS) --directory=$(XLAUNCH_SRC)
 
+.PHONY : sdllaunch
+sdllaunch : core engine
+	@$(MAKE) $(ARGS) --directory=$(SDLLAUNCH_SRC)
+
 .PHONY : psxlaunch
 psxlaunch : $(PSXLAUNCH)
 
