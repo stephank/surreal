@@ -133,30 +133,6 @@ static void MainLoop( UEngine* Engine )
 -----------------------------------------------------------------------------*/
 
 //
-// Simple copy.
-// 
-
-void SimpleCopy(TCHAR* fromfile, TCHAR* tofile)
-{
-	INT c;
-	FILE* from;
-	FILE* to;
-	from = fopen(fromfile, "r");
-	if (from == NULL)
-		return;
-	to = fopen(tofile, "w");
-	if (to == NULL)
-	{
-		printf("Can't open or create %s", tofile);
-		return;
-	}
-	while ((c = getc(from)) != EOF)
-		putc(c, to);
-	fclose(from);
-	fclose(to);
-}
-
-//
 // Exit wound.
 // 
 int CleanUpOnExit(int ErrorLevel)
@@ -172,18 +148,6 @@ int CleanUpOnExit(int ErrorLevel)
 	// Shutdown.
 	appExit();
 	GIsStarted = 0;
-
-	// Restore the user's configuration.
-//	TCHAR baseconfig[PATH_MAX] = TEXT("");
-//	getcwd(baseconfig, sizeof(baseconfig));
-//	appStrcat(baseconfig, "/User.ini");
-
-//	TCHAR userconfig[PATH_MAX] = TEXT("");
-//	sprintf(userconfig, "~/.utconf");
-
-//	TCHAR exec[PATH_MAX] = TEXT("");
-//	sprintf(exec, "cp -f %s %s", baseconfig, userconfig);
-//	system( exec );
 
 	_exit(ErrorLevel);
 }
@@ -223,22 +187,6 @@ int main( int argc, char* argv[] )
 			appStrcat( CmdLine, " " );
 		appStrcat( CmdLine, argv[i] );
 	}
-
-	// Take care of .ini swapping.
-	/*
-	TCHAR userconfig[PATH_MAX] = TEXT("");
-	sprintf(userconfig, "~/.utconf");
-
-	TCHAR baseconfig[PATH_MAX] = TEXT("");
-	getcwd(baseconfig, sizeof(baseconfig));
-	appStrcat(baseconfig, "/User.ini");
-
-	TCHAR exec[PATH_MAX] = TEXT("");
-	sprintf(exec, "cp -f %s %s", userconfig, baseconfig);
-	system( exec );
-
-	SimpleCopy( userconfig, baseconfig );
-	*/
 
 	// Init core.
 	GIsClient = 1; 
