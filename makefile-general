@@ -59,10 +59,6 @@ ifeq ($(LINKSTYLE),static)
    $(OUT) : $(BUILD_OBJS)
 	$(CXX) -o $@ $(LDFLAGS) $^ $(LIBS)
   endif
-  ifeq ($(TARGETTYPE),psx2)
-   $(OUT) : crt0.o $(BUILD_OBJS) $(UNREAL_STATIC_LIBS)
-	$(CXX) -o $@ -T $(LCFILE) $(BUILD_DIR)/$(OBJS) $(LIBS) $(LDFLAGS)
-  endif
  endif
 endif
 
@@ -73,10 +69,6 @@ ifeq ($(LINKSTYLE),static)
 	$(STD_AR) rcs $(OUT) $(BUILD_OBJS)
  endif
 endif
-
-# Build a PSX2 core.
-crt0.o : $(PSX2_LIB)/crt0.s
-	$(AS) $(ASFLAGS) -o $@ $< > $(BUILD_DIR)/crt0.lst
 
 # Compile a C++ file.
 $(BUILD_DIR)/%.o : %.cpp

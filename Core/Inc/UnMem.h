@@ -32,10 +32,6 @@ public:
 		// Debug checks.
 		guardSlow(FMemStack::PushBytes);
 
-		#if __PSX2_EE__
-		Align = Max(Align,16);
-		#endif
-
 		checkSlow(AllocSize>=0);
 		checkSlow((Align&(Align-1))==0);
 		checkSlow(Top<=End);

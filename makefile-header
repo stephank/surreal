@@ -18,10 +18,10 @@ VERSION			= 436
 # Specify link method here.  Either [static] or [shared].
 LINKSTYLE		= shared
 
-# Target type.  Either [linux] or [psx2]
+# Target type.  Only [linux] for now.
 TARGETTYPE		= linux
 
-# Machine type.  Either [i386] or [mips-ee]
+# Machine type.  Only [i386] for now
 MACHTYPE		= i386
 
 # Specify build here.  Either [release] or [debug].
@@ -44,18 +44,12 @@ ifeq ($(BUILD),release)
 ifeq ($(TARGETTYPE),linux)
 BUILD_CXXFLAGS = -O2 -Werror -fomit-frame-pointer -m386 -D_REENTRANT
 endif
-ifeq ($(TARGETTYPE),psx2)
-BUILD_CXXFLAGS = -O3 -fno-strict-aliasing -ffast-math -Werror -Wa,-al -fno-common -G0 -msingle-float
-endif
 endif
 
 # Debug build.
 ifeq ($(BUILD),debug)
 ifeq ($(TARGETTYPE),linux)
 BUILD_CXXFLAGS = -O2 -Werror -m386 -D_REENTRANT -ggdb
-endif
-ifeq ($(TARGETTYPE),psx2)
-BUILD_CXXFLAGS = -O3 -fno-strict-aliasing -ffast-math -Werror -Wa,-al -fno-common -G0 -ggdb -msingle-float
 endif
 endif
 
@@ -74,12 +68,6 @@ endif
 #-----------------------------------------------------------------------------
 # Directories.
 #-----------------------------------------------------------------------------
-
-# PSX2 support directories.
-PSX2_DIR		= /usr/local/sce/ee
-PSX2_LIB		= $(PSX2_DIR)/lib
-PSX2_INC		= $(PSX2_DIR)/include
-PSX2_COMMON_INC		= /usr/local/sce/common/include
 
 # Core directories.
 CORE_SRC		= $(UNREAL_DIR)/Core/Src
@@ -123,12 +111,6 @@ SDLLAUNCH_INC		= $(UNREAL_DIR)/SDLLaunch/Inc
 SDLLAUNCH_BUILD		= $(UNREAL_DIR)/SDLLaunch/$(BUILD_SUBDIR)
 SDLLAUNCH_OUT		= $(UNREAL_DIR)/System
 
-# PSXLaunch directories.
-PSXLAUNCH_SRC		= $(UNREAL_DIR)/PSXLaunch/Src
-PSXLAUNCH_INC		= $(UNREAL_DIR)/PSXLaunch/Inc
-PSXLAUNCH_BUILD		= $(UNREAL_DIR)/PSXLaunch/$(BUILD_SUBDIR)
-PSXLAUNCH_OUT		= $(UNREAL_DIR)/System
-
 # Render directories.
 RENDER_SRC		= $(UNREAL_DIR)/Render/Src
 RENDER_INC		= $(UNREAL_DIR)/Render/Inc
@@ -153,12 +135,6 @@ NULLDRV_INC		= $(UNREAL_DIR)/NullDrv/Inc
 NULLDRV_BUILD		= $(UNREAL_DIR)/NullDrv/$(BUILD_SUBDIR)
 NULLDRV_OUT		= $(UNREAL_DIR)/System
 
-# PSX2Drv directories.
-PSX2DRV_SRC		= $(UNREAL_DIR)/PSX2Drv/Src
-PSX2DRV_INC		= $(UNREAL_DIR)/PSX2Drv/Inc
-PSX2DRV_BUILD		= $(UNREAL_DIR)/PSX2Drv/$(BUILD_SUBDIR)
-PSX2DRV_OUT		= $(UNREAL_DIR)/System
-
 # Unreal audio subsystem directories.
 AUDIO_SRC		= $(UNREAL_DIR)/Audio/Src
 AUDIO_INC		= $(UNREAL_DIR)/Audio/Inc
@@ -177,30 +153,11 @@ NULLRENDER_INC		= $(UNREAL_DIR)/NullRender/Inc
 NULLRENDER_BUILD	= $(UNREAL_DIR)/NullRender/$(BUILD_SUBDIR)
 NULLRENDER_OUT		= $(UNREAL_DIR)/System
 
-# PSX Render
-PSX2RENDER_SRC		= $(UNREAL_DIR)/PSX2Render/Src
-PSX2RENDER_INC		= $(UNREAL_DIR)/PSX2Render/Inc
-PSX2RENDER_BUILD	= $(UNREAL_DIR)/PSX2Render/$(BUILD_SUBDIR)
-PSX2RENDER_OUT		= $(UNREAL_DIR)/System
-
-# PSX Audio
-PSX2AUDIO_SRC		= $(UNREAL_DIR)/PSX2Audio/Src
-PSX2AUDIO_INC		= $(UNREAL_DIR)/PSX2Audio/Inc
-PSX2AUDIO_BUILD		= $(UNREAL_DIR)/PSX2Audio/$(BUILD_SUBDIR)
-PSX2AUDIO_OUT		= $(UNREAL_DIR)/System
-
 # Null Net Driver
 NULLNETDRIVER_SRC	= $(UNREAL_DIR)/NullNetDriver/Src
 NULLNETDRIVER_INC	= $(UNREAL_DIR)/NullNetDriver/Inc
 NULLNETDRIVER_BUILD	= $(UNREAL_DIR)/NullNetDriver/$(BUILD_SUBDIR)
 NULLNETDRIVER_OUT	= $(UNREAL_DIR)/System
-
-# PSX iLink Network Driver
-PSX2ILINKDRV_SRC	= $(UNREAL_DIR)/PSX2iLinkDrv/Src
-PSX2ILINKDRV_INC	= $(UNREAL_DIR)/PSX2iLinkDrv/Inc
-PSX2ILINKDRV_IOPMODULE = $(UNREAL_DIR)/PSX2iLinkDrv/IOPModule
-PSX2ILINKDRV_BUILD	= $(UNREAL_DIR)/PSX2iLinkDrv/$(BUILD_SUBDIR)
-PSX2ILINKDRV_OUT	= $(UNREAL_DIR)/System
 
 
 # Source directories.
@@ -258,9 +215,6 @@ UCC			= $(UCC_OUT)/ucc
 # SDLLaunch executable
 SDLLAUNCH			= $(SDLLAUNCH_OUT)/UnrealTournament
 
-# Playstation executable
-PSXLAUNCH		= $(PSXLAUNCH_OUT)/UnrealTournament
-
 # Render library
 RENDER			= $(RENDER_OUT)/Render.$(LIBSUFFIX)
 RENDER_SONAME		= Render.so
@@ -293,22 +247,6 @@ NULLNETDRIVER_SONAME	= NullNetDriver.so
 NULLDRV			= $(NULLDRV_OUT)/NullDrv.$(LIBSUFFIX)
 NULLDRV_SONAME		= NullDrv.so
 
-# PSX2Drv library
-PSX2DRV			= $(PSX2DRV_OUT)/PSX2Drv.$(LIBSUFFIX)
-PSX2DRV_SONAME		= PSX2Drv.so
-
-# PSX2Render library
-PSX2RENDER		= $(PSX2RENDER_OUT)/PSX2Render.$(LIBSUFFIX)
-PSX2RENDER_SONAME	= PSX2Render.so
-
-# PSX2Audio library
-PSX2AUDIO		= $(PSX2AUDIO_OUT)/PSX2Audio.$(LIBSUFFIX)
-PSX2AUDIO_SONAME	= PSX2Audio.so
-
-# PSX2iLinkDrv library
-PSX2ILINKDRV		= $(PSX2ILINKDRV_OUT)/PSX2iLinkDrv.$(LIBSUFFIX)
-PSX2ILINKDRV_SONAME	= psx2iLinkDrv.so
-
 #-----------------------------------------------------------------------------
 # Standard compiler/linker options.
 #-----------------------------------------------------------------------------
@@ -321,22 +259,6 @@ STD_LDFLAGS	= -Wl,-rpath,. -L$(TMPDIR)
 STD_LIBS	= -lm -lrt -ldl -lnsl -lpthread
 
 STD_AR		= ar
-endif
-
-ifeq ($(TARGETTYPE),psx2)
-STD_CXX		= ee-g++
-STD_CXXFLAGS	= -D__PSX2_EE__ -D__STATIC_LINK=$(STATICLINK) \
-			-fno-for-scope $(BUILD_CXXFLAGS)
-STD_AS		= ee-g++
-STD_ASFLAGS	= -c -xassembler-with-cpp -Wal,-al
-STD_DVPASM	= ee-dvp-as
-STD_DVPASMFLAGS	= -g
-STD_LDFLAGS	= -Wl,-Map,$(TARGET).map -nostartfiles -L$(PSX2_LIB)
-STD_LIBS	=
-STD_OBJDUMP	= ee-objdump
-RUN		= dsedb -r run
-
-STD_AR		= ee-ar
 endif
 
 #-----------------------------------------------------------------------------

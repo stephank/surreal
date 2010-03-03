@@ -204,12 +204,7 @@ class ENGINE_API ULevel : public ULevelBase
 	virtual INT TickDemoRecord( FLOAT DeltaSeconds );
 	virtual INT TickDemoPlayback( FLOAT DeltaSeconds );
 	virtual void UpdateTime( ALevelInfo* Info );
-	// !! PSX2 has a problem with the TCHAR typedef.
-	#if _MSC_VER
 	virtual void WelcomePlayer( UNetConnection* Connection, TCHAR* Optional=TEXT("") );
-	#else
-	virtual void WelcomePlayer( UNetConnection* Connection, char* Optional = "" );
-	#endif
 
 	// FNetworkNotify interface.
 	EAcceptConnection NotifyAcceptingConnection();

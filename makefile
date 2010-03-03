@@ -19,10 +19,6 @@ ARGS =
 #-----------------------------------------------------------------------------
 
 .PHONY : all
-ifeq ($(TARGETTYPE),psx2)
-all : core engine fire nullnetdriver ucc render \
-	nulldrv psx2drv psx2render psx2audio ipdrv psx2ilinkdrv psxlaunch
-endif
 ifeq ($(TARGETTYPE),linux)
 #all : core engine ipdrv fire render ucc uweb audio
 all : $(TMPDIR)/libstdc++.a \
@@ -61,7 +57,7 @@ fire : $(FIRE)
 editor : $(EDITOR)
 
 .PHONY : ucc
-ucc : core engine nullnetdriver psx2ilinkdrv
+ucc : core engine nullnetdriver
 	@$(MAKE) $(ARGS) --directory=$(UCC_SRC)
 
 .PHONY : render
@@ -71,9 +67,6 @@ render : $(RENDER)
 sdllaunch : core engine
 	@$(MAKE) $(ARGS) --directory=$(SDLLAUNCH_SRC)
 
-.PHONY : psxlaunch
-psxlaunch : $(PSXLAUNCH)
-
 .PHONY : sdldrv
 sdldrv : core engine
 	@$(MAKE) $(ARGS) --directory=$(SDLDRV_SRC)
@@ -81,9 +74,6 @@ sdldrv : core engine
 .PHONY : nulldrv
 nulldrv : core engine
 	@$(MAKE) $(ARGS) --directory=$(NULLDRV_SRC)
-
-.PHONY : psx2drv
-psx2drv : $(PSX2DRV)
 
 .PHONY : opengldrv
 opengldrv : core engine render
@@ -102,17 +92,8 @@ uweb : $(UWEB)
 .PHONY : nullrender
 nullrender : $(NULLRENDER)
 
-.PHONY : psx2render
-psx2render : $(PSX2RENDER)
-
-.PHONY : psx2audio
-psx2audio : $(PSX2AUDIO)
-
 .PHONY : nullnetdriver
 nullnetdriver : $(NULLNETDRIVER)
-
-.PHONY : psx2ilinkdrv
-psx2ilinkdrv : $(PSX2ILINKDRV)
 
 #-----------------------------------------------------------------------------
 # Maintenance.

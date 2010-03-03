@@ -17,17 +17,6 @@
 	#undef ASMKNI
 	#define ASMLINUX 1
 	#define COMPILER "Compiled with GNU g++ ("__VERSION__")"
-#elif __PSX2_EE__
-	#define __UNIX__ 1
-	#define __LINUX__ 1
-	#define __INTEL__ 1
-	#define __INTEL_BYTE_ORDER__ 1
-	#undef ASM
-	#undef ASM3DNOW
-	#undef ASMKNI
-	#undef ASMLINUX
-	#define ASMPSX2 1
-	#define COMPILER "Compiled with PSX2-EE g++ ("__VERSION__")"
 #else
 	#error Unsupported platform.
 #endif
@@ -201,20 +190,7 @@ CORE_API FTime appSecondsSlow();
 #define DEFINED_appRound 1
 inline INT appRound( FLOAT f )
 {
-#if __PSX2_EE__
-	register int r;
-	__asm__ __volatile__(
-	"
-		cvt.w.s %1,%1
-		mfc1 %0,%1
-	"
-	:"=r"(r)
-	:"$f"(f)
-	);
-	return r;
-#else
 	return (INT)(f);
-#endif
 }
 
 //
@@ -223,20 +199,7 @@ inline INT appRound( FLOAT f )
 #define DEFINED_appFloor 1
 inline INT appFloor( FLOAT f )
 {
-#if __PSX2_EE__
-	register int r;
-	__asm__ __volatile__(
-	"
-		cvt.w.s %1,%1
-		mfc1 %0,%1
-	"
-	:"=r"(r)
-	:"$f"(f)
-	);
-	return r;
-#else
 	return (INT)(f);
-#endif
 }
 
 #include <time.h>
