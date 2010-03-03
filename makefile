@@ -27,7 +27,7 @@ ifeq ($(TARGETTYPE),linux)
 #all : core engine ipdrv fire render ucc xdrv xlaunch xmesagldrv glidedrv \
 #	uweb audio
 all : $(TMPDIR)/libstdc++.a \
-	xlaunch sdldrv opengldrv
+	sdllaunch sdldrv opengldrv
 endif
 
 # Need to statically link libstdc++.
