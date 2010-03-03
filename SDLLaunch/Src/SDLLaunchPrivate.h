@@ -1,5 +1,5 @@
 /*=============================================================================
-	XLaunchPrivate.h: Unreal launcher for X.
+	XLaunchPrivate.h: Unreal launcher for SDL.
 	Copyright 1999 Epic Games, Inc. All Rights Reserved.
 
 Revision history:

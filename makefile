@@ -24,8 +24,7 @@ all : core engine fire nullnetdriver ucc render \
 	nulldrv psx2drv psx2render psx2audio ipdrv psx2ilinkdrv psxlaunch
 endif
 ifeq ($(TARGETTYPE),linux)
-#all : core engine ipdrv fire render ucc xdrv xlaunch xmesagldrv \
-#	uweb audio
+#all : core engine ipdrv fire render ucc uweb audio
 all : $(TMPDIR)/libstdc++.a \
 	sdllaunch sdldrv opengldrv
 endif
@@ -68,20 +67,12 @@ ucc : core engine nullnetdriver psx2ilinkdrv
 .PHONY : render
 render : $(RENDER)
 
-.PHONY : xlaunch
-xlaunch : core engine
-	@$(MAKE) $(ARGS) --directory=$(XLAUNCH_SRC)
-
 .PHONY : sdllaunch
 sdllaunch : core engine
 	@$(MAKE) $(ARGS) --directory=$(SDLLAUNCH_SRC)
 
 .PHONY : psxlaunch
 psxlaunch : $(PSXLAUNCH)
-
-.PHONY : xdrv
-xdrv : core engine
-	@$(MAKE) $(ARGS) --directory=$(XDRV_SRC)
 
 .PHONY : sdldrv
 sdldrv : core engine
@@ -93,10 +84,6 @@ nulldrv : core engine
 
 .PHONY : psx2drv
 psx2drv : $(PSX2DRV)
-
-.PHONY : xmesagldrv
-xmesagldrv : core engine render
-	@$(MAKE) $(ARGS) --directory=$(XMESAGLDRV_SRC)
 
 .PHONY : opengldrv
 opengldrv : core engine render

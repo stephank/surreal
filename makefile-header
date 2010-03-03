@@ -117,12 +117,6 @@ UCC_INC			= $(UNREAL_DIR)/UCC/Inc
 UCC_BUILD		= $(UNREAL_DIR)/UCC/$(BUILD_SUBDIR)
 UCC_OUT			= $(UNREAL_DIR)/System
 
-# XLaunch directories.
-XLAUNCH_SRC		= $(UNREAL_DIR)/XLaunch/Src
-XLAUNCH_INC		= $(UNREAL_DIR)/XLaunch/Inc
-XLAUNCH_BUILD		= $(UNREAL_DIR)/XLaunch/$(BUILD_SUBDIR)
-XLAUNCH_OUT		= $(UNREAL_DIR)/System
-
 # SDLLaunch directories.
 SDLLAUNCH_SRC		= $(UNREAL_DIR)/SDLLaunch/Src
 SDLLAUNCH_INC		= $(UNREAL_DIR)/SDLLaunch/Inc
@@ -146,18 +140,6 @@ OPENGLDRV_SRC		= $(UNREAL_DIR)/OpenGLDrv/Src
 OPENGLDRV_INC		= $(UNREAL_DIR)/OpenGLDrv/Src
 OPENGLDRV_BUILD		= $(UNREAL_DIR)/OpenGLDrv/$(BUILD_SUBDIR)
 OPENGLDRV_OUT		= $(UNREAL_DIR)/System
-
-# XMesaGLDrv directories.
-XMESAGLDRV_SRC		= $(UNREAL_DIR)/XMesaGLDrv/Src
-XMESAGLDRV_INC		= $(UNREAL_DIR)/XMesaGLDrv/Src
-XMESAGLDRV_BUILD	= $(UNREAL_DIR)/XMesaGLDrv/$(BUILD_SUBDIR)
-XMESAGLDRV_OUT		= $(UNREAL_DIR)/System
-
-# XDrv directories.
-XDRV_SRC		= $(UNREAL_DIR)/XDrv/Src
-XDRV_INC		= $(UNREAL_DIR)/XDrv/Inc
-XDRV_BUILD		= $(UNREAL_DIR)/XDrv/$(BUILD_SUBDIR)
-XDRV_OUT		= $(UNREAL_DIR)/System
 
 # SDLDrv directories.
 SDLDRV_SRC		= $(UNREAL_DIR)/SDLDrv/Src
@@ -230,10 +212,7 @@ ALL_SRC_DIRS 	= $(CORE_INC) $(CORE_SRC) \
 		  $(RENDER_INC) $(RENDER_SRC) \
 		  $(EDITOR_SRC) $(EDITOR_INC) \
 		  $(OPENGLDRV_SRC) $(OPENGLDRV_INC) \
-		  $(XMESAGLDRV_SRC) $(XMESAGLDRV_INC) \
-		  $(XDRV_SRC) $(XDRV_INC) \
 		  $(SDLDRV_SRC) $(SDLDRV_INC) \
-		  $(XLAUNCH_SRC) $(XLAUNCH_INC) \
 		  $(SDLLAUNCH_SRC) $(SDLLAUNCH_INC) \
 		  $(AUDIO_SRC) $(AUDIO_INC) \
 		  $(UWEB_SRC) $(UWEB_INC) \
@@ -276,10 +255,7 @@ EDITOR_SONAME		= Editor.so
 # UCC executable
 UCC			= $(UCC_OUT)/ucc
 
-# XLaunch executable
-XLAUNCH			= $(XLAUNCH_OUT)/UnrealTournament
-
-# XLaunch executable
+# SDLLaunch executable
 SDLLAUNCH			= $(SDLLAUNCH_OUT)/UnrealTournament
 
 # Playstation executable
@@ -293,15 +269,7 @@ RENDER_SONAME		= Render.so
 OPENGLDRV		= $(OPENGLDRV_OUT)/OpenGLDrv.$(LIBSUFFIX)
 OPENGLDRV_SONAME	= OpenGLDrv.so
 
-# XMesaGLDrv library
-XMESAGLDRV		= $(XMESAGLDRV_OUT)/XMesaGLDrv.$(LIBSUFFIX)
-XMESAGLDRV_SONAME	= XMesaGLDrv.so
-
-# XDrv library
-XDRV			= $(XDRV_OUT)/XDrv.$(LIBSUFFIX)
-XDRV_SONAME		= XDrv.so
-
-# XDrv library
+# SDLDrv library
 SDLDRV			= $(SDLDRV_OUT)/SDLDrv.$(LIBSUFFIX)
 SDLDRV_SONAME		= SDLDrv.so
 
@@ -383,10 +351,7 @@ EDITOR_TAG	= $(EDITOR_INC)/*.h $(EDITOR_SRC)/*.h $(EDITOR_SRC)/*.cpp
 UCC_TAG		= $(UCC_INC)/*.h $(UCC_SRC)/*.h $(UCC_SRC)/*.cpp
 RENDER_TAG	= $(RENDER_INC)/*.h $(RENDER_SRC)/*.h $(RENDER_SRC)/*.cpp
 OPENGLDRV_TAG	= $(OPENGLDRV_INC)/*.h $(OPENGLDRV_SRC)/*.h $(OPENGLDRV_SRC)/*.cpp
-XMESAGLDRV_TAG	= $(XMESAGLDRV_INC)/*.h $(XMESAGLDRV_SRC)/*.h $(XMESAGLDRV_SRC)/*.cpp
-XDRV_TAG	= $(XDRV_INC)/*.h $(XDRV_INC)/*.h $(XDRV_SRC)/*.cpp
 SDLDRV_TAG	= $(SDLDRV_INC)/*.h $(SDLDRV_INC)/*.h $(SDLDRV_SRC)/*.cpp
-XLAUNCH_TAG	= $(XLAUNCH_INC)/*.h $(XLAUNCH_SRC)/*.h $(XLAUNCH_SRC)/*.cpp
 SDLLAUNCH_TAG	= $(SDLLAUNCH_INC)/*.h $(SDLLAUNCH_SRC)/*.h $(SDLLAUNCH_SRC)/*.cpp
 AUDIO_TAG	= $(AUDIO_INC)/*.h $(AUDIO_SRC)/*.h $(AUDIO_SRC)/*.cpp
 UWEB_TAG	= $(UWEB_INC)/*.h $(UWEB_SRC)/*.h $(UWEB_SRC)/*.cpp
@@ -396,8 +361,7 @@ STD_TAG		= /usr/include/*.h /usr/include/sys/*.h /usr/include/arpa/*.h \
 
 ALL_TAGS	= $(CORE_TAG) $(ENGINE_TAG) $(IPDRV_TAG) $(FIRE_TAG) \
 			$(EDITOR_TAG) $(UCC_TAG) $(RENDER_TAG) \
-			$(OPENGLDRV_TAG) $(XMESAGLDRV_TAG) $(XLAUNCH_TAG) $(SDLLAUNCH_TAG) \
-			$(XDRV_TAG) $(SDLDRV_TAG) \
+			$(OPENGLDRV_TAG) $(SDLLAUNCH_TAG) $(SDLDRV_TAG) \
 			$(AUDIO_TAG) $(UWEB_TAG) $(NULLRENDER_TAG) $(STD_TAG)
 
 #-----------------------------------------------------------------------------
