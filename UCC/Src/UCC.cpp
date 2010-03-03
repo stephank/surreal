@@ -18,34 +18,6 @@ Revision history:
 // Core and Engine
 #include "Engine.h"
 
-#if __STATIC_LINK
-
-// Extra stuff for static links for Engine.
-#include "UnEngineNative.h"
-#include "UnCon.h"
-#include "UnRender.h"
-#include "UnNet.h"
-
-// NullNetDriver static stuff
-#include "NullNetDriver.h"
-
-#ifdef __LINUX_X86__
-// Fire static stuff.
-//#include "UnFractal.h"
-
-// IpDrv static stuff.
-//#include "UnIpDrv.h"
-//#include "UnTcpNetDriver.h"
-//#include "UnIpDrvCommandlets.h"
-//#include "UnIpDrvNative.h"
-
-// UWeb static stuff
-//#include "UWeb.h"
-//#include "UWebNative.h"
-#endif
-
-#endif
-
 INT GFilesOpen, GFilesOpened;
 
 /*-----------------------------------------------------------------------------
@@ -114,46 +86,6 @@ void ShowBanner( FOutputDevice& Warn )
 }
 int main( int argc, char* argv[] )
 {
-	#if __STATIC_LINK
-	// Clean lookups.
-	for (INT k=0; k<ARRAY_COUNT(GNativeLookupFuncs); k++)
-	{
-		GNativeLookupFuncs[k] = NULL;
-	}
-
-	// Core lookups.
-	GNativeLookupFuncs[0] = &FindCoreUObjectNative;
-	GNativeLookupFuncs[1] = &FindCoreUCommandletNative;
-
-	// Engine lookups.
-	GNativeLookupFuncs[2] = &FindEngineAActorNative;
-	GNativeLookupFuncs[3] = &FindEngineAPawnNative;
-	GNativeLookupFuncs[4] = &FindEngineAPlayerPawnNative;
-	GNativeLookupFuncs[5] = &FindEngineADecalNative;
-	GNativeLookupFuncs[6] = &FindEngineAStatLogNative;
-	GNativeLookupFuncs[7] = &FindEngineAStatLogFileNative;
-	GNativeLookupFuncs[8] = &FindEngineAZoneInfoNative;
-	GNativeLookupFuncs[9] = &FindEngineAWarpZoneInfoNative;
-	GNativeLookupFuncs[10] = &FindEngineALevelInfoNative;
-	GNativeLookupFuncs[11] = &FindEngineAGameInfoNative;
-	GNativeLookupFuncs[12] = &FindEngineANavigationPointNative;
-	GNativeLookupFuncs[13] = &FindEngineUCanvasNative;
-	GNativeLookupFuncs[14] = &FindEngineUConsoleNative;
-	GNativeLookupFuncs[15] = &FindEngineUScriptedTextureNative;
-
-	#ifdef __LINUX_X86__
-	// IpDrv lookups.
-//	GNativeLookupFuncs[16] = &FindIpDrvAInternetLinkNative;
-//	GNativeLookupFuncs[17] = &FindIpDrvAUdpLinkNative;
-//	GNativeLookupFuncs[18] = &FindIpDrvATcpLinkNative;
-
-	// UWeb lookups.
-//	GNativeLookupFuncs[19] = &FindUWebUWebResponseNative;
-//	GNativeLookupFuncs[20] = &FindUWebUWebRequestNative;
-	#endif
-
-	#endif
-
 	#if !_MSC_VER
 		__Context::StaticInit();
 	#endif
@@ -194,17 +126,6 @@ int main( int argc, char* argv[] )
 
 		// Init engine core.
 		appInit( TEXT("UnrealTournament"), CmdLine, &Malloc, &Log, &Error, &Warn, &FileManager, FConfigCacheIni::Factory, 1 );
-
-		// Init static classes.
-		#if __STATIC_LINK
-			AUTO_INITIALIZE_REGISTRANTS_ENGINE;
-			AUTO_INITIALIZE_REGISTRANTS_NULLNETDRIVER;
-			#ifdef __LINUX_86__
-		//	AUTO_INITIALIZE_REGISTRANTS_FIRE;
-		//	AUTO_INITIALIZE_REGISTRANTS_IPDRV;
-		//	AUTO_INITIALIZE_REGISTRANTS_UWEB;
-			#endif
-		#endif
 
 		// Get the ucc stuff going.	
 		UObject::SetLanguage(TEXT("int"));
