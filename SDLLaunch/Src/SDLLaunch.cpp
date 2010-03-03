@@ -38,99 +38,9 @@ FFileManagerLinux FileManager;
 // Config.
 #include "FConfigCacheIni.h"
 
-// X Windows
-#include <X11/Xlib.h>
-#include <X11/xpm.h>
-Display* GDisplay;
-Window SplashScreen;
-Pixmap SplashPixmap;
-
 /*-----------------------------------------------------------------------------
 	Initialization
 -----------------------------------------------------------------------------*/
-
-//
-// Connects to the X server.
-//
-static INT InitWindowing()
-{
-	// Get the display.
-	GDisplay = XOpenDisplay(0);
-	if (!GDisplay)
-		appErrorf( TEXT("Can't open display. Unreal requires X windows.") );
-}
-
-//
-// Clear out all the splash window messages.
-// 
-static void EmptySplashQueue()
-{
-	XEvent SplashEvent;
-	while( XCheckWindowEvent(GDisplay, SplashScreen, 
-		ExposureMask | StructureNotifyMask | VisibilityChangeMask, 
-		&SplashEvent) )
-	{
-		// Do nothing.
-	}
-}
-
-//
-// Create a splash screen.
-//
-static void InitSplash()
-{
-	// Load the splash pixmap.
-	XpmReadFileToPixmap( GDisplay, DefaultRootWindow(GDisplay), 
-		"../Help/UT-Linux.Xpm", &SplashPixmap, NULL, NULL);
-
-	// Find position to put the window.
-	Window RootRoot;
-	int r_x, r_y;
-	unsigned int r_width, r_height, r_border, r_depth;
-	XGetGeometry(
-		GDisplay, DefaultRootWindow(GDisplay), &RootRoot,
-		&r_x, &r_y, &r_width, &r_height, &r_border, &r_depth
-	);
-	
-	// Create the splash window.
-	XSetWindowAttributes swa;
-	swa.background_pixmap = SplashPixmap;
-	swa.colormap = DefaultColormap(GDisplay, DefaultScreen(GDisplay));
-	swa.border_pixel = 0;
-	swa.override_redirect = True;
-	swa.event_mask = ExposureMask | StructureNotifyMask | VisibilityChangeMask;
-	SplashScreen = XCreateWindow(
-		GDisplay,
-		DefaultRootWindow(GDisplay),
-		(r_width - 510)/2, (r_height - 385)/2,
-		510, 385,
-		0, DefaultDepth(GDisplay, DefaultScreen(GDisplay)),
-		InputOutput, DefaultVisual(GDisplay, DefaultScreen(GDisplay)),
-		CWBackPixmap | CWBorderPixel | CWColormap | 
-		CWEventMask | CWOverrideRedirect, &swa
-	);
-
-	// Show the window.
-	XMapRaised(GDisplay, SplashScreen);
-
-	// Empty the window message queue.
-	EmptySplashQueue();
-}
-
-//
-// Destroy the splash screen.
-//
-static void ExitSplash()
-{
-	// Destroy the splash screen.
-	XDestroyWindow(GDisplay, SplashScreen);
-
-	// Empty the window message queue.
-	EmptySplashQueue();
-
-	// Free the pixmap.
-	XFreePixmap(GDisplay, SplashPixmap);
-}
 
 //
 // Creates a UEngine object.
@@ -253,8 +163,6 @@ int CleanUpOnExit(int ErrorLevel)
 {
 	// Clean up our mess.
 	GIsRunning = 0;
-	if( GDisplay )
-		XCloseDisplay(GDisplay);
 	GFileManager->Delete(TEXT("Running.ini"),0,0);
 	debugf( NAME_Title, LocalizeGeneral("Exit") );
 
@@ -344,12 +252,6 @@ int main( int argc, char* argv[] )
 	GIsScriptable	= 1;
 	GLazyLoad		= !GIsClient || ParseParam(appCmdLine(), TEXT("LAZY"));
 
-	// Init windowing.
-	InitWindowing();
-
-	// Init splash screen.
-	InitSplash();
-	
 	// Init console log.
 	if (ParseParam(CmdLine, TEXT("LOG")))
 	{
@@ -362,9 +264,6 @@ int main( int argc, char* argv[] )
 	if( Engine )
 	{
 		debugf( NAME_Title, LocalizeGeneral("Run") );
-
-		// Remove splash screen.
-		ExitSplash();
 
 		// Optionally Exec and exec file.
 		FString Temp;

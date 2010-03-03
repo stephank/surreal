@@ -26,7 +26,7 @@ CXX		= $(STD_CXX)
 
 CXXFLAGS	= $(STD_CXXFLAGS) -I$(CORE_INC) -I$(ENGINE_INC)
 LDFLAGS		= $(STD_LDFLAGS) -export-dynamic
-LIBS		= $(STD_LIBS) $(ENGINE) $(CORE) $(XLIBS)
+LIBS		= $(STD_LIBS) $(ENGINE) $(CORE)
 
 #-----------------------------------------------------------------------------
 # Files.
