@@ -15,9 +15,10 @@ Revision history:
 
 extern "C" {TCHAR GPackage[64]=TEXT("SDLLaunch");}
 
+#include "FNativeTypes.h"
+
 // Memory allocator.
-#include "FMallocAnsi.h"
-FMallocAnsi Malloc;
+FMallocNative Malloc;
 
 // Log file.
 #include "FOutputDeviceFile.h"
@@ -32,8 +33,7 @@ FOutputDeviceAnsiError Error;
 FFeedbackContextAnsi Warn;
 
 // File manager.
-#include "FFileManagerLinux.h"
-FFileManagerLinux FileManager;
+FFileManagerNative FileManager;
 
 // Config.
 #include "FConfigCacheIni.h"
@@ -157,7 +157,9 @@ int CleanUpOnExit(int ErrorLevel)
 //
 int main( int argc, char* argv[] )
 {
-	__Context::StaticInit();
+	#if !_MSC_VER
+		__Context::StaticInit();
+	#endif
 
 	#if DO_GUARD
 	guard(main);
@@ -172,8 +174,10 @@ int main( int argc, char* argv[] )
 	INT ErrorLevel = 0;
 	GIsStarted	   = 1;
 
+	#if !_MSC_VER
 	// Set module name.
 	appStrcpy( GModule, argv[0] );
+	#endif
 
 	// Set the package name.
 	appStrcpy( GPackage, appPackage() );	

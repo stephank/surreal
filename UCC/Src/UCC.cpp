@@ -25,10 +25,12 @@ INT GFilesOpen, GFilesOpened;
 -----------------------------------------------------------------------------*/
 
 // General.
-#if _MSC_VER
-	extern "C" {HINSTANCE hInstance;}
-#endif
 extern "C" {TCHAR GPackage[64]=TEXT("UCC");}
+
+#include "FNativeTypes.h"
+
+// Memory allocator.
+FMallocNative Malloc;
 
 // Log.
 #include "FOutputDeviceFile.h"
@@ -43,20 +45,7 @@ FOutputDeviceAnsiError Error;
 FFeedbackContextAnsi Warn;
 
 // File manager.
-#if WIN32
-	#include "FFileManagerWindows.h"
-	FFileManagerWindows FileManager;
-	#include "FMallocAnsi.h"
-	FMallocAnsi Malloc;
-#elif __LINUX_X86__
-	#include "FFileManagerLinux.h"
-	FFileManagerLinux FileManager;
-	#include "FMallocAnsi.h"
-	FMallocAnsi Malloc;
-#else
-	#include "FFileManagerAnsi.h"
-	FFileManagerAnsi FileManager;
-#endif
+FFileManagerNative FileManager;
 
 // Config.
 #include "FConfigCacheIni.h"
