@@ -86,7 +86,7 @@ public:
 //
 class DLL_EXPORT_CLASS USDLAudioSubsystem : public UAudioSubsystem
 {
-	DECLARE_CLASS(USDLAudioSubsystem,UAudioSubsystem,CLASS_Config)
+	DECLARE_CLASS(USDLAudioSubsystem,UAudioSubsystem,CLASS_Config,SDLAudio)
 
 	// Configuration.
 	BITFIELD		UseFilter;
@@ -111,7 +111,7 @@ class DLL_EXPORT_CLASS USDLAudioSubsystem : public UAudioSubsystem
 	// Variables.
 	UViewport*		Viewport;
 	FPlayingSound           PlayingSounds[MAX_EFFECTS_CHANNELS];
-	DOUBLE			LastTime;
+	FTime			LastTime;
 	UMusic*			CurrentMusic;
 	BYTE			CurrentCDTrack;
 	INT			FreeSlot;
