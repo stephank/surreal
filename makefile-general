@@ -102,7 +102,7 @@ dirs :
 	@-mkdir -p $(dir $(OUT))
 
 .PHONY : clean
-clean : clean-objs clean-deps clean-old clean-lst clean-tmp
+clean : clean-objs clean-deps clean-old clean-lst clean-tmp clean-out
 
 .PHONY : clean-objs
 clean-objs :
