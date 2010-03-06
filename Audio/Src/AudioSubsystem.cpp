@@ -403,7 +403,7 @@ void UGenericAudioSubsystem::Update( FPointRegion Region, FCoords& Coords )
 	// Time passes...
 	FTime DeltaTime = appSeconds() - LastTime;
 	LastTime += DeltaTime;
-	DeltaTime = Clamp( DeltaTime, 0.0, 1.0 );
+	DeltaTime = Clamp( (double)DeltaTime.GetFloat(), 0.0, 1.0 );
 
 	AActor *ViewActor = Viewport->Actor->ViewTarget?Viewport->Actor->ViewTarget:Viewport->Actor;
 

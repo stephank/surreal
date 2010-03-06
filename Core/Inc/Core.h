@@ -40,9 +40,9 @@ public:
 	float   operator-  (FTime t) const  {return (v-t.v)/FIXTIME;}
 	FTime   operator*  (float f) const  {return FTime(v*f);}
 	FTime   operator/  (float f) const  {return FTime(v/f);}
-	FTime&  operator+= (float f)        {v=v+(TIMETYP)(f*FIXTIME); return *this;}
-	FTime&  operator*= (float f)        {v=(TIMETYP)(v*f); return *this;}
-	FTime&  operator/= (float f)        {v=(TIMETYP)(v/f); return *this;}
+	FTime&  operator+= (FTime t)        {v+=t.v; return *this;}
+	FTime&  operator*= (FTime t)        {v*=t.v; return *this;}
+	FTime&  operator/= (FTime t)        {v/=t.v; return *this;}
 	int     operator== (FTime t)        {return v==t.v;}
 	int     operator!= (FTime t)        {return v!=t.v;}
 	int     operator>  (FTime t)        {return v>t.v;}

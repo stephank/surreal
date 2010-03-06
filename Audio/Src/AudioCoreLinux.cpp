@@ -10,11 +10,11 @@ Revision history:
 	Audio includes.
 ------------------------------------------------------------------------------------*/
 
+#define _XOPEN_SOURCE 500
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#define __USE_UNIX98 1
 #include <pthread.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>

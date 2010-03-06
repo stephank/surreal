@@ -283,7 +283,7 @@ Voice* AcquireVoice()
 	ALock;
 	Voice* OpenVoice = NULL;
 	INT FoundVoice = 0, OldestVoice = -1;
-	FTime LastTime = 0xfffffffe;
+	FTime LastTime = (double)0xfffffffe;
 	for (INT i=0; i<SampleVoices && !FoundVoice; i++)
 	{
 		if (Voices[i].State & VOICE_ENABLED)
