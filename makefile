@@ -86,6 +86,10 @@ galaxy : $(GALAXY)
 audio :
 	@$(MAKE) $(ARGS) --directory=$(AUDIO_SRC)
 
+.PHONY : sdlaudio
+sdlaudio :
+	@$(MAKE) $(ARGS) --directory=$(SDLAUDIO_SRC)
+
 .PHONY : uweb
 uweb : $(UWEB)
 
