@@ -109,7 +109,11 @@ UBOOL UOpenALAudioSubsystem::Init()
 	Sources = new FAudioSource[NumSources];
 	alGenSources( NumSources, NewSources );
 	for( INT i=0; i<NumSources; i++ )
+	{
+		// FIXME: Heavy distortion without this, but why?
+		alSourcef( NewSources[i], AL_MAX_GAIN, .001f );
 		Sources[i].Id = NewSources[i];
+	}
 
 	// Initialized!
 	USound::Audio = this;
