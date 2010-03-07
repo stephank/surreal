@@ -100,7 +100,7 @@ public:
 
 private:
 	// Inlines.
-	void SetVolumes()
+	inline void SetVolumes()
 	{
 		guard(UOpenALAudioSubsystem::SetVolumes);
 

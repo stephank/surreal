@@ -220,39 +220,46 @@ UBOOL UOpenALAudioSubsystem::PlaySound
 	if( (Slot&14)==2*SLOT_None )
 		Slot = 16 * --FreeSlot;
 
-	// Compute priority.
+	// Compute our priority.
 	FLOAT Priority = SoundPriority( Viewport, Location, Volume, Radius );
 
-	// If already playing, stop it.
 	INT   Index        = -1;
 	FLOAT BestPriority = Priority;
 	for( INT i=0; i<NumSources; i++ )
 	{
 		FAudioSource& Source = Sources[i];
+
+		// Check if the slot is already in use.
 		if( (Source.Slot&~1)==(Slot&~1) )
 		{
-			// Skip if not interruptable.
+			// Stop processing if not told to override.
 			if( Slot&1 )
 				return 0;
 
-			// Stop the sound.
+			// Override the existing sound.
 			Index = i;
 			break;
 		}
-		else if( Source.Priority<=BestPriority )
+
+		// Find the lowest priority sound below our own priority
+		// and override it. (Unless the above applies.)
+		if( Source.Priority<=BestPriority )
 		{
 			Index = i;
 			BestPriority = Source.Priority;
 		}
 	}
 
-	// If no sound, or its priority is overruled, stop it.
+	// Didn't match an existing slot, or couldn't override a lower
+	// priority sound. Give up.
 	if( Index==-1 )
 		return 0;
 
-	// Start the sound.
+	// Stop the old sound.
 	FAudioSource& Source = Sources[Index];
 	alSourceStop( Source.Id );
+
+	// And start the new sound.
 	if( Sound!=(USound*)-1 )
 	{
 		const ALuint Id = Source.Id;
@@ -286,8 +293,9 @@ void UOpenALAudioSubsystem::NoteDestroy( AActor* Actor )
 			// Stop ambient sound when actor dies.
 			if( (Source.Slot&14)==SLOT_Ambient*2 )
 				StopSound( Source );
+
+			// Unbind regular sounds from their actors.
 			else
-				// Unbind regular sounds from actors.
 				Source.Actor = NULL;
 		}
 	}
@@ -320,11 +328,17 @@ void UOpenALAudioSubsystem::Update( FPointRegion Region, FCoords& Coords )
 			&&	FDistSquared(ViewActor->Location,Actor->Location)<=Square(Actor->WorldSoundRadius()) )
 			{
 				INT Slot = Actor->GetIndex()*16+SLOT_Ambient*2;
+				// See if there's already an existing slot.
 				for( INT j=0; j<NumSources; j++ )
 					if( Sources[j].Slot==Slot )
 						break;
+				// If not, start playing.
 				if( j==NumSources )
-					PlaySound( Actor, Slot, Actor->AmbientSound, Actor->Location, AmbientFactor*Actor->SoundVolume/255.0, Actor->WorldSoundRadius(), Actor->SoundPitch/64.0 );
+					PlaySound(
+						Actor, Slot, Actor->AmbientSound, Actor->Location,
+						AmbientFactor*Actor->SoundVolume/255.0,
+						Actor->WorldSoundRadius(),
+						Actor->SoundPitch/64.0 );
 			}
 		}
 		unguard;
@@ -352,10 +366,7 @@ void UOpenALAudioSubsystem::Update( FPointRegion Region, FCoords& Coords )
 				FLOAT Volume = 2.0 * (AmbientFactor*Source.Actor->SoundVolume/255.0);
 				// XXX: Huh? What does light brightness have to do with it?
 				if( Source.Actor->LightType!=LT_None )
-				{
-					FPlane Color;
 					Volume *= Source.Actor->LightBrightness/255.0;
-				}
 				Source.Volume = Volume;
 				Source.Radius = Source.Actor->WorldSoundRadius();
 
@@ -374,7 +385,7 @@ void UOpenALAudioSubsystem::Update( FPointRegion Region, FCoords& Coords )
 	{
 		FAudioSource& Source = Sources[Index];
 
-		// We shouldn've been notified about this.
+		// We should've been notified about this.
 		if( Source.Actor )
 			check(Source.Actor->IsValid());
 
