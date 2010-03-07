@@ -7,6 +7,8 @@ Revision history:
 
 #include "ALAudioSubsystem.h"
 
+// FIXME: A lot of lingering FIXMEs are for the lack of error checking.
+
 /*------------------------------------------------------------------------------------
 	UOpenALAudioSubsystem
 ------------------------------------------------------------------------------------*/
