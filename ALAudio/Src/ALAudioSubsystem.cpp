@@ -98,12 +98,17 @@ UBOOL UOpenALAudioSubsystem::Init()
 	guard(UOpenALAudioSubsystem::Init);
 
 	// FIXME: Init OpenAL
-	alureInitDevice(NULL, NULL);
+	alureInitDevice( NULL, NULL );
+
+	// Metre per second to units per second, where units per meter is 52.5.
+	// Taken from: http://wiki.beyondunreal.com/Legacy:General_Scale_And_Dimensions
+	alSpeedOfSound( 343.3f * 52.5f );
+
 	SetVolumes();
 
 	ALuint NewSources[NumSources];
 	Sources = new FAudioSource[NumSources];
-	alGenSources(NumSources, NewSources);
+	alGenSources( NumSources, NewSources );
 	for( INT i=0; i<NumSources; i++ )
 		Sources[i].Id = NewSources[i];
 
@@ -264,11 +269,20 @@ UBOOL UOpenALAudioSubsystem::PlaySound
 	{
 		const ALuint Id = Source.Id;
 		alSourcei(	Id, AL_BUFFER,			GetBufferFromUSound(Sound)->Id );
-		alSourcefv(	Id, AL_POSITION,		&Location.X );
-		alSource3f(	Id, AL_VELOCITY,		0.f, 0.f, 0.f );
 		alSourcef(	Id, AL_GAIN,			Volume );
 		alSourcef(	Id, AL_MAX_DISTANCE,	Radius );
 		alSourcef(	Id, AL_PITCH,			Pitch );
+		if( Actor )
+		{
+			alSourcefv(	Id, AL_POSITION,	&Actor->Location.X );
+			alSourcefv(	Id, AL_VELOCITY,	&Actor->Velocity.X );
+		}
+		else
+		{
+			ALfloat ZeroVelocity[3] = { 0.f, 0.f, 0.f };
+			alSourcefv(	Id, AL_POSITION,	&Location.X );
+			alSourcefv(	Id, AL_VELOCITY,	ZeroVelocity );
+		}
 		alSourcePlay( Id );
 		Source.Fill( Actor, Sound, Slot, Location, Volume, Radius, Priority );
 	}
@@ -310,9 +324,16 @@ void UOpenALAudioSubsystem::Update( FPointRegion Region, FCoords& Coords )
 	if( !Viewport )
 		return;
 
-	// Update the listener
 	AActor *ViewActor = Viewport->Actor->ViewTarget ? Viewport->Actor->ViewTarget : Viewport->Actor;
-	alListenerfv(AL_POSITION, &ViewActor->Location.X );
+
+	// Update the listener
+	{
+		FVector Direction = ViewActor->Rotation.Vector();
+		FLOAT Orientation[6] = { Direction.X, Direction.Y, Direction.Z, 0.f, 0.f, 1.f };
+		alListenerfv( AL_POSITION,		&ViewActor->Location.X );
+		alListenerfv( AL_VELOCITY,		&ViewActor->Velocity.X );
+		alListenerfv( AL_ORIENTATION,	Orientation );
+	}
 
 	// See if any new ambient sounds need to be started.
 	UBOOL Realtime = Viewport->IsRealtime() && Viewport->Actor->Level->Pauser==TEXT("");
@@ -407,7 +428,8 @@ void UOpenALAudioSubsystem::Update( FPointRegion Region, FCoords& Coords )
 		if( Source.Actor )
 		{
 			Source.Location = Source.Actor->Location;
-			alSourcefv( Source.Id, AL_POSITION, &Source.Location.X );
+			alSourcefv( Source.Id, AL_POSITION, &Source.Actor->Location.X );
+			alSourcefv( Source.Id, AL_VELOCITY, &Source.Actor->Velocity.X );
 		}
 
 		// Update the priority.
