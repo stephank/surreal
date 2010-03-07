@@ -127,12 +127,12 @@ private:
 		return Volume * (1.0 - (Location - (Viewport->Actor->ViewTarget?Viewport->Actor->ViewTarget:Viewport->Actor)->Location).Size()/Radius);
 	}
 
-	inline void StopSound( INT Index )
+	inline void StopSource( INT Index )
 	{
 		FAudioSource& Source = Sources[Index];
-		StopSound(Source);
+		StopSource(Source);
 	}
-	inline void StopSound( FAudioSource& Source )
+	inline void StopSource( FAudioSource& Source )
 	{
 		FVector ZeroLocation(0.f, 0.f, 0.f);
 		alSourceStop( Source.Id );

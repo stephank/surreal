@@ -99,11 +99,10 @@ UBOOL UOpenALAudioSubsystem::Init()
 
 	// FIXME: Init OpenAL
 	alureInitDevice( NULL, NULL );
-
+	alDistanceModel( AL_INVERSE_DISTANCE_CLAMPED );
 	// Metre per second to units per second, where units per meter is 52.5.
 	// Taken from: http://wiki.beyondunreal.com/Legacy:General_Scale_And_Dimensions
 	alSpeedOfSound( 343.3f * 52.5f );
-
 	SetVolumes();
 
 	ALuint NewSources[NumSources];
@@ -127,7 +126,7 @@ void UOpenALAudioSubsystem::SetViewport( UViewport* InViewport )
 
 	// FIXME: Stop all sources and contexts
 	for( INT i=0; i<NumSources; i++ )
-		StopSound( i );
+		StopSource( i );
 
 	Viewport = InViewport;
 
@@ -268,10 +267,12 @@ UBOOL UOpenALAudioSubsystem::PlaySound
 	if( Sound!=(USound*)-1 )
 	{
 		const ALuint Id = Source.Id;
-		alSourcei(	Id, AL_BUFFER,			GetBufferFromUSound(Sound)->Id );
-		alSourcef(	Id, AL_GAIN,			Volume );
-		alSourcef(	Id, AL_MAX_DISTANCE,	Radius );
-		alSourcef(	Id, AL_PITCH,			Pitch );
+		alSourcei( Id, AL_BUFFER,		GetBufferFromUSound(Sound)->Id );
+		alSourcef( Id, AL_GAIN,			Volume );
+		alSourcef( Id, AL_MAX_DISTANCE,	Radius );
+		alSourcef( Id, AL_PITCH,		Pitch );
+		// Update will override Location with Actor's Location anyways.
+		// XXX: Should we use Location and not attach to Actor instead?
 		if( Actor )
 		{
 			alSourcefv(	Id, AL_POSITION,	&Actor->Location.X );
@@ -306,7 +307,7 @@ void UOpenALAudioSubsystem::NoteDestroy( AActor* Actor )
 		{
 			// Stop ambient sound when actor dies.
 			if( (Source.Slot&14)==SLOT_Ambient*2 )
-				StopSound( Source );
+				StopSource( Source );
 
 			// Unbind regular sounds from their actors.
 			else
@@ -326,7 +327,7 @@ void UOpenALAudioSubsystem::Update( FPointRegion Region, FCoords& Coords )
 
 	AActor *ViewActor = Viewport->Actor->ViewTarget ? Viewport->Actor->ViewTarget : Viewport->Actor;
 
-	// Update the listener
+	// Update the listener.
 	{
 		FVector Direction = ViewActor->Rotation.Vector();
 		FLOAT Orientation[6] = { Direction.X, Direction.Y, Direction.Z, 0.f, 0.f, 1.f };
@@ -379,7 +380,7 @@ void UOpenALAudioSubsystem::Update( FPointRegion Region, FCoords& Coords )
 			||  !Realtime )
 			{
 				// Ambient sound went out of range.
-				StopSound( Source );
+				StopSource( Source );
 			}
 			else
 			{
@@ -419,12 +420,11 @@ void UOpenALAudioSubsystem::Update( FPointRegion Region, FCoords& Coords )
 		alGetSourcei( Source.Id, AL_SOURCE_STATE, &state );
 		if( state==AL_STOPPED )
 		{
-			StopSound( Source );
+			StopSource( Source );
 			continue;
 		}
 
 		// Update positioning from actor, if available.
-		// FIXME: velocity and direction.
 		if( Source.Actor )
 		{
 			Source.Location = Source.Actor->Location;
