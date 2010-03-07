@@ -147,6 +147,12 @@ SDLAUDIO_INC		= $(UNREAL_DIR)/SDLAudio/Inc
 SDLAUDIO_BUILD		= $(UNREAL_DIR)/SDLAudio/$(BUILD_SUBDIR)
 SDLAUDIO_OUT		= $(UNREAL_DIR)/System
 
+# Unreal OpenAL audio subsystem directories.
+ALAUDIO_SRC		= $(UNREAL_DIR)/ALAudio/Src
+ALAUDIO_INC		= $(UNREAL_DIR)/ALAudio/Inc
+ALAUDIO_BUILD	= $(UNREAL_DIR)/ALAudio/$(BUILD_SUBDIR)
+ALAUDIO_OUT		= $(UNREAL_DIR)/System
+
 # UWeb
 UWEB_SRC		= $(UNREAL_DIR)/UWeb/Src
 UWEB_INC		= $(UNREAL_DIR)/UWeb/Inc
@@ -179,6 +185,7 @@ ALL_SRC_DIRS 	= $(CORE_INC) $(CORE_SRC) \
 		  $(SDLLAUNCH_SRC) $(SDLLAUNCH_INC) \
 		  $(SDLAUDIO_SRC) $(SDLAUDIO_INC) \
 		  $(AUDIO_SRC) $(AUDIO_INC) \
+		  $(ALAUDIO_SRC) $(ALAUDIO_INC) \
 		  $(UWEB_SRC) $(UWEB_INC) \
 		  $(NULLRENDER_SRC) $(NULLRENDER_INC)
 
@@ -242,6 +249,10 @@ SDLAUDIO_SONAME		= SDLAudio.so
 AUDIO			= $(AUDIO_OUT)/Audio.$(LIBSUFFIX)
 AUDIO_SONAME		= Audio.so
 
+# ALAudio library
+ALAUDIO			= $(ALAUDIO_OUT)/ALAudio.$(LIBSUFFIX)
+ALAUDIO_SONAME		= ALAudio.so
+
 # UWeb library
 UWEB			= $(UWEB_OUT)/UWeb.$(LIBSUFFIX)
 UWEB_SONAME		= UWeb.so
@@ -288,6 +299,7 @@ SDLDRV_TAG	= $(SDLDRV_INC)/*.h $(SDLDRV_INC)/*.h $(SDLDRV_SRC)/*.cpp
 SDLLAUNCH_TAG	= $(SDLLAUNCH_INC)/*.h $(SDLLAUNCH_SRC)/*.h $(SDLLAUNCH_SRC)/*.cpp
 SDLAUDIO_TAG	= $(SDLAUDIO_INC)/*.h $(SDLAUDIO_SRC)/*.h $(SDLAUDIO_SRC)/*.cpp
 AUDIO_TAG	= $(AUDIO_INC)/*.h $(AUDIO_SRC)/*.h $(AUDIO_SRC)/*.cpp
+ALAUDIO_TAG	= $(ALAUDIO_INC)/*.h $(ALAUDIO_SRC)/*.h $(ALAUDIO_SRC)/*.cpp
 UWEB_TAG	= $(UWEB_INC)/*.h $(UWEB_SRC)/*.h $(UWEB_SRC)/*.cpp
 NULLRENDER_TAG	= $(NULLRENDER_INC)/*.h $(NULLRENDER_SRC)/*.h $(NULLRENDER_SRC)/*.cpp
 STD_TAG		= /usr/include/*.h /usr/include/sys/*.h /usr/include/arpa/*.h \
@@ -296,7 +308,7 @@ STD_TAG		= /usr/include/*.h /usr/include/sys/*.h /usr/include/arpa/*.h \
 ALL_TAGS	= $(CORE_TAG) $(ENGINE_TAG) $(IPDRV_TAG) $(FIRE_TAG) \
 			$(EDITOR_TAG) $(UCC_TAG) $(RENDER_TAG) \
 			$(OPENGLDRV_TAG) $(SDLLAUNCH_TAG) $(SDLDRV_TAG) $(SDLAUDIO_TAG) \
-			$(AUDIO_TAG) $(UWEB_TAG) $(NULLRENDER_TAG) $(STD_TAG)
+			$(AUDIO_TAG) $(ALAUDIO_TAG) $(UWEB_TAG) $(NULLRENDER_TAG) $(STD_TAG)
 
 #-----------------------------------------------------------------------------
 # The End.

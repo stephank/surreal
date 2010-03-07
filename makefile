@@ -22,7 +22,7 @@ ARGS =
 ifeq ($(TARGETTYPE),linux)
 #all : core engine ipdrv fire render ucc uweb audio
 all : $(TMPDIR)/libstdc++.a \
-	sdllaunch sdldrv opengldrv ucc
+	sdllaunch sdldrv opengldrv alaudio ucc
 endif
 
 # Need to statically link libstdc++.
@@ -89,6 +89,10 @@ audio :
 .PHONY : sdlaudio
 sdlaudio :
 	@$(MAKE) $(ARGS) --directory=$(SDLAUDIO_SRC)
+
+.PHONY : alaudio
+alaudio :
+	@$(MAKE) $(ARGS) --directory=$(ALAUDIO_SRC)
 
 .PHONY : uweb
 uweb : $(UWEB)
