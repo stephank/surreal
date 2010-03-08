@@ -1855,7 +1855,7 @@ inline FVector FRotator::Vector()
 //
 inline FVector FRotator::UpVector()
 {
-	return (GMath.UnitCoords / *this).ZAxis;
+	return -(GMath.UnitCoords / *this).ZAxis;
 }
 
 
