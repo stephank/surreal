@@ -20,7 +20,6 @@ ARGS =
 
 .PHONY : all
 ifeq ($(TARGETTYPE),linux)
-#all : core engine ipdrv fire render ucc uweb audio
 all : $(TMPDIR)/libstdc++.a \
 	sdllaunch sdldrv opengldrv alaudio ucc
 endif
@@ -81,14 +80,6 @@ opengldrv : core engine render
 
 .PHONY : galaxy
 galaxy : $(GALAXY)
-
-.PHONY : audio
-audio :
-	@$(MAKE) $(ARGS) --directory=$(AUDIO_SRC)
-
-.PHONY : sdlaudio
-sdlaudio :
-	@$(MAKE) $(ARGS) --directory=$(SDLAUDIO_SRC)
 
 .PHONY : alaudio
 alaudio :
