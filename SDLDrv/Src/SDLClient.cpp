@@ -64,12 +64,6 @@ void USDLClient::Init( UEngine* InEngine )
 		WindowedViewportY  = FullscreenViewportY  = 480;
 	}
 
-	// Init SDL
-	if( !SDL_WasInit( SDL_INIT_VIDEO ) ) {
-		if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
-			appErrorf( TEXT("Couldn't initialize SDL: %s\n"), SDL_GetError() );
-	}
-
 	// Success.
 	debugf( NAME_Init, TEXT("SDLClient initialized.") );
 	unguard;
