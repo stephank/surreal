@@ -39,6 +39,17 @@ FFileManagerNative FileManager;
 #include "FConfigCacheIni.h"
 
 /*-----------------------------------------------------------------------------
+	Splash
+-----------------------------------------------------------------------------*/
+
+static void OpenSplash()
+{
+	// Init SDL
+	if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
+		appErrorf( TEXT("Couldn't initialize SDL: %s\n"), SDL_GetError() );
+}
+
+/*-----------------------------------------------------------------------------
 	Initialization
 -----------------------------------------------------------------------------*/
 
@@ -210,6 +221,9 @@ int main( int argc, char* argv[] )
 		Warn.AuxOut = GLog;
 		GLog		= &Warn;
 	}
+
+	// Open splash screen.
+	OpenSplash();
 
 	// Init engine.
 	UEngine* Engine = InitEngine();

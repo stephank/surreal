@@ -12,6 +12,7 @@ Revision history:
 #include <sys/stat.h>
 #include <malloc.h>
 #include <fcntl.h>
+#include <SDL/SDL.h>
 #include "Engine.h"
 #include "UnRender.h"
 

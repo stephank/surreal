@@ -65,9 +65,9 @@ void USDLClient::Init( UEngine* InEngine )
 	}
 
 	// Init SDL
-	if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
-		fprintf(stderr,"Couldn't initialize SDL: %s\n",SDL_GetError());
-		exit( 1 );
+	if( !SDL_WasInit( SDL_INIT_VIDEO ) ) {
+		if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
+			appErrorf( TEXT("Couldn't initialize SDL: %s\n"), SDL_GetError() );
 	}
 
 	// Success.

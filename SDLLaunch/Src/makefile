@@ -24,9 +24,9 @@ BUILD_DIR	= $(SDLLAUNCH_BUILD)
 
 CXX		= $(STD_CXX)
 
-CXXFLAGS	= $(STD_CXXFLAGS) -I$(CORE_INC) -I$(ENGINE_INC)
+CXXFLAGS	= $(STD_CXXFLAGS) $(SDL_CFLAGS) -Werror -I$(CORE_INC) -I$(ENGINE_INC)
 LDFLAGS		= $(STD_LDFLAGS) -export-dynamic
-LIBS		= $(STD_LIBS) $(ENGINE) $(CORE)
+LIBS		= $(STD_LIBS) $(ENGINE) $(CORE) $(SDL_LIBS)
 
 #-----------------------------------------------------------------------------
 # Files.
