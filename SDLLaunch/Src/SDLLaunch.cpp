@@ -38,15 +38,43 @@ FFileManagerNative FileManager;
 // Config.
 #include "FConfigCacheIni.h"
 
+// Splash
+SDL_Surface* Splash = NULL;
+
 /*-----------------------------------------------------------------------------
 	Splash
 -----------------------------------------------------------------------------*/
 
 static void OpenSplash()
 {
-	// Init SDL
+	// Init SDL.
 	if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
 		appErrorf( TEXT("Couldn't initialize SDL: %s\n"), SDL_GetError() );
+
+	// Load the splash.
+	// FIXME: path portability.
+	SDL_Surface* Splash = SDL_LoadBMP( "../Help/Logo.bmp" );
+	if( Splash == NULL )
+		return;
+
+	// Create a centered frameless window.
+	SDL_putenv( "SDL_VIDEO_CENTERED=center" );
+	SDL_Surface* Fb = SDL_SetVideoMode( Splash->w, Splash->h, 0, SDL_ANYFORMAT | SDL_NOFRAME );
+	if( Fb == NULL )
+		return;
+
+	SDL_BlitSurface( Splash, NULL, Fb, NULL );
+	SDL_Flip( Fb );
+}
+
+static void CloseSplash()
+{
+	// Unload splash.
+	if ( Splash )
+	{
+		SDL_FreeSurface( Splash );
+		Splash = NULL;
+	}
 }
 
 /*-----------------------------------------------------------------------------
@@ -239,6 +267,9 @@ int main( int argc, char* argv[] )
 			if( Engine->Client && Engine->Client->Viewports.Num() && Engine->Client->Viewports(0) )
 				Engine->Client->Viewports(0)->Exec( *Temp, *GLog );
 		}
+
+		// Clean up the splash screen.
+		CloseSplash();
 		
 		// Start main engine loop.
 		debugf( TEXT("Entering main loop.") );
