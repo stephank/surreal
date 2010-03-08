@@ -104,7 +104,7 @@ UBOOL UOpenALAudioSubsystem::Init()
 
 	// FIXME: Init OpenAL
 	alureInitDevice( NULL, NULL );
-	alDistanceModel( AL_INVERSE_DISTANCE_CLAMPED );
+	alDistanceModel( AL_LINEAR_DISTANCE_CLAMPED );
 	// Metre per second to units per second, where units per meter is 52.5.
 	// Taken from: http://wiki.beyondunreal.com/Legacy:General_Scale_And_Dimensions
 	alSpeedOfSound( 343.3f * 52.5f );
