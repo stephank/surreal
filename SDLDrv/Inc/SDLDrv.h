@@ -22,7 +22,7 @@ Revision history:
 #include "UnRender.h"
 
 // SDL includes
-#include <SDL/SDL.h>
+#include "SDL.h"
 
 
 /*-----------------------------------------------------------------------------

@@ -23,7 +23,7 @@
 #ifdef WIN32
 #include <windows.h>
 #else
-#include <SDL/SDL.h>
+#include "SDL.h"
 #endif
 #include <GL/gl.h>
 #ifdef WIN32
