@@ -109,7 +109,7 @@ private:
 		FLOAT NormMusicVolume = MusicVolume/255.0;
 
 		// FIXME: Set music and effects volumes.
-		alListenerf( AL_GAIN, SoundVolume );
+		alListenerf( AL_GAIN, NormSoundVolume );
 
 		unguard;
 	}
