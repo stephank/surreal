@@ -63,6 +63,9 @@ void UOpenALAudioSubsystem::Destroy()
 		// Shut down viewport.
 		SetViewport( NULL );
 
+		// Cleanup.
+		for( INT i=0; i<NumSources; i++ )
+			alDeleteSources( 1, &Sources[i].Id );
 		alureShutdownDevice();
 
 		debugf( NAME_Exit, TEXT("Generic audio subsystem shut down.") );
