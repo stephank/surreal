@@ -26,7 +26,7 @@ CXX		= $(STD_CXX)
 CXXFLAGS	= $(STD_CXXFLAGS) -Werror -fPIC -I$(ENGINE_INC) -I$(CORE_INC) \
 			-DGPackage=GPackageALAudio
 LDFLAGS		= $(STD_LDFLAGS) -shared -Wl,-soname,$(ALAUDIO_SONAME)
-LIBS		= $(STD_LIBS) $(CORE) -lopenal -lalure
+LIBS		= $(STD_LIBS) $(CORE) -lopenal -lalure -lmikmod
 
 #-----------------------------------------------------------------------------
 # Files.
@@ -34,7 +34,8 @@ LIBS		= $(STD_LIBS) $(CORE) -lopenal -lalure
 
 OBJS =				\
 	ALAudio.o			\
-	ALAudioSubsystem.o
+	ALAudioSubsystem.o	\
+	ALAudioMusic.o
 
 OUT = $(ALAUDIO)
 

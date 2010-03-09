@@ -81,6 +81,8 @@ void UOpenALAudioSubsystem::Destroy()
 		SetViewport( NULL );
 
 		// Cleanup.
+		MikMod_Exit();
+		alDeleteSources( 1, &MusicSource );
 		for( INT i=0; i<NumSources; i++ )
 			alDeleteSources( 1, &Sources[i].Id );
 		alureShutdownDevice();
@@ -104,7 +106,10 @@ void UOpenALAudioSubsystem::ShutdownAfterError()
 	debugf( NAME_Exit, TEXT("UOpenALAudioSubsystem::ShutdownAfterError") );
 
 	if( Initialized )
+	{
+		MikMod_Exit();
 		alureShutdownDevice();
+	}
 
 	Super::ShutdownAfterError();
 
@@ -119,6 +124,7 @@ UBOOL UOpenALAudioSubsystem::Init()
 {
 	guard(UOpenALAudioSubsystem::Init);
 
+	// OpenAL / ALURE initialization
 	if( alureInitDevice( NULL, NULL ) == AL_FALSE )
 		appErrorf( TEXT("Couldn't initialize OpenAL: %s"), alureGetErrorString() );
 
@@ -130,15 +136,34 @@ UBOOL UOpenALAudioSubsystem::Init()
 	alSpeedOfSound( 343.3f * 52.5f );
 	CheckALErrorFlag( TEXT("alSpeedOfSound") );
 
+	ALuint NewSources[NumSources + 1];
+	Sources = new FAudioSource[NumSources];
+	alGenSources( NumSources + 1, NewSources );
+	CheckALErrorFlag( TEXT("alGenSources") );
+	MusicSource = NewSources[0];
+	for( INT i=0; i<NumSources; i++ )
+		Sources[i].Id = NewSources[i+1];
+
 	SetVolumes();
 	CheckALErrorFlag( TEXT("SetVolumes") );
 
-	ALuint NewSources[NumSources];
-	Sources = new FAudioSource[NumSources];
-	alGenSources( NumSources, NewSources );
-	CheckALErrorFlag( TEXT("alGenSources") );
-	for( INT i=0; i<NumSources; i++ )
-		Sources[i].Id = NewSources[i];
+
+	// MikMod initialization
+	MikMod_RegisterDriver( &MusicDriver );
+
+	// Register only formats that are known to be supported by UT.
+	// Taken from: http://wiki.beyondunreal.com/Music
+	MikMod_RegisterLoader( &load_mod );
+	MikMod_RegisterLoader( &load_s3m );
+	MikMod_RegisterLoader( &load_stm );
+	MikMod_RegisterLoader( &load_it  );
+	MikMod_RegisterLoader( &load_xm  );
+	MikMod_RegisterLoader( &load_far );
+	MikMod_RegisterLoader( &load_669 );
+
+	if( MikMod_Init( "" ) )
+		appErrorf( TEXT("Couldn't initialize MikMod: %s"), MikMod_strerror( MikMod_errno ) );
+
 
 	// Initialized!
 	USound::Audio = this;

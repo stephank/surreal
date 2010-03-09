@@ -9,6 +9,7 @@ Revision history:
 #include "AL/alure.h"
 #include "Core.h"
 #include "Engine.h"
+#include "ALAudioMusic.h"
 
 /*------------------------------------------------------------------------------------
 	UOpenALAudioSubsystem.
@@ -110,7 +111,8 @@ private:
 
 		// Set music and effects volumes.
 		alListenerf( AL_GAIN, NormSoundVolume );
-		// FIXME: Music
+		// FIXME: Music volume is relative to effects volume here.
+		alSourcef( MusicSource, AL_GAIN, NormMusicVolume );
 
 		unguard;
 	}
