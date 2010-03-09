@@ -258,7 +258,7 @@ UBOOL UOpenALAudioSubsystem::PlaySound
 		Slot = 16 * --FreeSlot;
 
 	// Compute our priority.
-	FLOAT Priority = SoundPriority( Viewport, Location, Volume, Radius );
+	FLOAT Priority = SoundPriority( Location, Volume, Radius );
 
 	INT   Index        = -1;
 	FLOAT BestPriority = Priority;
@@ -358,7 +358,7 @@ void UOpenALAudioSubsystem::Update( FPointRegion Region, FCoords& Coords )
 	if( !Viewport )
 		return;
 
-	AActor *ViewActor = Viewport->Actor->ViewTarget ? Viewport->Actor->ViewTarget : Viewport->Actor;
+	AActor *ViewActor = FindViewActor();
 
 	// Update the listener.
 	{
@@ -467,7 +467,7 @@ void UOpenALAudioSubsystem::Update( FPointRegion Region, FCoords& Coords )
 		}
 
 		// Update the priority.
-		Source.Priority = SoundPriority( Viewport, Source.Location, Source.Volume, Source.Radius );
+		Source.Priority = SoundPriority( Source.Location, Source.Volume, Source.Radius );
 	}
 	unguard;
 

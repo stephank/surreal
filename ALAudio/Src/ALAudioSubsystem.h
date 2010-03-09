@@ -123,9 +123,14 @@ private:
 		return (FAudioBuffer*)Sound->Handle;
 	}
 
-	inline FLOAT SoundPriority( UViewport* Viewport, FVector Location, FLOAT Volume, FLOAT Radius )
+	inline AActor* FindViewActor()
 	{
-		return Volume * (1.0 - (Location - (Viewport->Actor->ViewTarget?Viewport->Actor->ViewTarget:Viewport->Actor)->Location).Size()/Radius);
+		return Viewport->Actor->ViewTarget ? Viewport->Actor->ViewTarget : Viewport->Actor;
+	}
+
+	inline FLOAT SoundPriority( FVector Location, FLOAT Volume, FLOAT Radius )
+	{
+		return Volume * (1.0 - (Location - FindViewActor()->Location).Size()/Radius);
 	}
 
 	inline void StopSource( INT Index )
