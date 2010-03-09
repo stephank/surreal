@@ -7,7 +7,24 @@ Revision history:
 
 #include "ALAudioSubsystem.h"
 
-// FIXME: A lot of lingering FIXMEs are for the lack of error checking.
+/*------------------------------------------------------------------------------------
+	Utility
+------------------------------------------------------------------------------------*/
+
+static void CheckALErrorFlag( const TCHAR* Tag )
+{
+	guard(CheckALErrorFlag);
+
+	ALenum Error = alGetError();
+	if( Error != AL_NO_ERROR )
+	{
+		const ALchar* Msg = alGetString( Error );
+		if( Msg == NULL ) Msg = "Unknown error";
+		appErrorf( TEXT("%s failure: %s (%d)"), Tag, Msg, Error );
+	}
+
+	unguard;
+}
 
 /*------------------------------------------------------------------------------------
 	UOpenALAudioSubsystem
@@ -102,17 +119,24 @@ UBOOL UOpenALAudioSubsystem::Init()
 {
 	guard(UOpenALAudioSubsystem::Init);
 
-	// FIXME: Init OpenAL
-	alureInitDevice( NULL, NULL );
+	if( alureInitDevice( NULL, NULL ) == AL_FALSE )
+		appErrorf( TEXT("Couldn't initialize OpenAL: %s"), alureGetErrorString() );
+
 	alDistanceModel( AL_LINEAR_DISTANCE_CLAMPED );
+	CheckALErrorFlag( TEXT("alDistanceModel") );
+
 	// Metre per second to units per second, where units per meter is 52.5.
 	// Taken from: http://wiki.beyondunreal.com/Legacy:General_Scale_And_Dimensions
 	alSpeedOfSound( 343.3f * 52.5f );
+	CheckALErrorFlag( TEXT("alSpeedOfSound") );
+
 	SetVolumes();
+	CheckALErrorFlag( TEXT("SetVolumes") );
 
 	ALuint NewSources[NumSources];
 	Sources = new FAudioSource[NumSources];
 	alGenSources( NumSources, NewSources );
+	CheckALErrorFlag( TEXT("alGenSources") );
 	for( INT i=0; i<NumSources; i++ )
 		Sources[i].Id = NewSources[i];
 
@@ -129,7 +153,7 @@ void UOpenALAudioSubsystem::SetViewport( UViewport* InViewport )
 {
 	guard(UOpenALAudioSubsystem::SetViewport);
 
-	// FIXME: Stop all sources and contexts
+	// Stop all sources.
 	for( INT i=0; i<NumSources; i++ )
 		StopSource( i );
 
@@ -160,9 +184,14 @@ void UOpenALAudioSubsystem::RegisterSound( USound* Sound )
 		debugf( NAME_DevSound, TEXT("Register sound: %s (%i)"), Sound->GetPathName(), Sound->Data.Num() );
 		check(Sound->Data.Num()>0);
 
-		// FIXME: create buffer
+		// Create the buffer.
 		FAudioBuffer *Sample = new FAudioBuffer;
 		Sample->Id = alureCreateBufferFromMemory(&Sound->Data(0), Sound->Data.Num());
+		if( Sample->Id == AL_NONE )
+			appErrorf(
+				TEXT("Couldn't create buffer for sound '%s': %s"),
+				Sound->GetPathName(), alureGetErrorString()
+			);
 		Sound->Handle = Sample;
 
 		// Unload the data.
@@ -181,7 +210,6 @@ void UOpenALAudioSubsystem::UnregisterSound( USound* Sound )
 	{
 		debugf( NAME_DevSound, TEXT("Unregister sound: %s"), Sound->GetFullName() );
 
-		// FIXME: destroy buffer
 		FAudioBuffer* Sample = (FAudioBuffer*)Sound->Handle;
 		alDeleteBuffers(1, &Sample->Id);
 		delete Sample;
