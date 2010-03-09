@@ -446,16 +446,16 @@ void UOpenALAudioSubsystem::Update( FPointRegion Region, FCoords& Coords )
 	guard(UpdateMusic);
 	if( Viewport->Actor->Song != PlayingSong )
 	{
-		// FIXME: Stop old song
-
+		Player_Stop();
 		PlayingSong = Viewport->Actor->Song;
 		if( PlayingSong != NULL )
 		{
 			MODULE* Module = GetModuleFromUMusic( PlayingSong );
-
-			// FIXME: Start new song
+			Player_Start( Module );
 		}
 	}
+	if( Player_Active() )
+		MikMod_Update();
 	unguard;
 
 	// Update the listener.

@@ -106,6 +106,22 @@ void DestroyMikModMemoryReader( MREADER* Base )
 	Driver implementation
 ------------------------------------------------------------------------------------*/
 
+#define CheckALError() check(alGetError() == AL_NO_ERROR)
+
+// XXX: Should these be configurable?
+// This fragment size is a little over 3 seconds at 44.1Khz, 16-bit stereo
+#define FRAGMENT_SIZE 32768
+#define FRAGMENT_COUNT 4
+
+// MusicBuffers is a ring of fragments we push to OpenAL.
+static ALuint MusicBuffers[FRAGMENT_COUNT];
+// CurrentBuffer points to the next buffer to fill.
+static INT CurrentBuffer;
+// ScratchArea is the buffer-buffer, the space MikMod writes to, and we in turn
+// feed back into OpenAL.
+static SBYTE ScratchArea[FRAGMENT_SIZE];
+
+
 static BOOL UnMM_IsPresent()
 {
 	return 1;
@@ -113,25 +129,63 @@ static BOOL UnMM_IsPresent()
 
 static BOOL UnMM_Init()
 {
-	// FIXME
+	// Generate the buffers.
+	alGenBuffers( FRAGMENT_COUNT, MusicBuffers );
+	CheckALError();
+	CurrentBuffer = 0;
+
 	return VC_Init();
 }
 
 static void UnMM_Exit()
 {
 	VC_Exit();
-	// FIXME
+
+	// Stop the music.
+	alSourceStop( MusicSource );
+	// Clear the buffer queue.
+	alSourcei( MusicSource, AL_BUFFER, AL_NONE );
+	// Destroy the buffers.
+	alDeleteBuffers( FRAGMENT_COUNT, MusicBuffers );
 }
 
 static BOOL UnMM_Reset()
 {
-	// FIXME
-	return 0;
+	UnMM_Exit();
+	return UnMM_Init();
 }
 
 static void UnMM_Update()
 {
-	// FIXME
+	INT BuffersQueued, BuffersProcessed;
+	alGetSourcei( MusicSource, AL_BUFFERS_QUEUED,		&BuffersQueued );
+	alGetSourcei( MusicSource, AL_BUFFERS_PROCESSED,	&BuffersProcessed );
+
+	INT BuffersToFill = FRAGMENT_COUNT - BuffersQueued + BuffersProcessed;
+	while( BuffersToFill )
+	{
+		ALuint Buffer = MusicBuffers[CurrentBuffer];
+		// During initial buffering, this may actually fail, because the
+		// buffers are fresh and have never been queued at all.
+		// But that's okay, we just flush the error.
+		alSourceUnqueueBuffers( MusicSource, 1, &Buffer );
+		alGetError();
+
+		// Read from MikMod and feed into OpenAL.
+		ALsizei Length = VC_WriteBytes( ScratchArea, FRAGMENT_SIZE );
+		alBufferData( Buffer, AL_FORMAT_STEREO16, ScratchArea, Length, md_mixfreq );
+		alSourceQueueBuffers( MusicSource, 1, &Buffer );
+
+		// Increment CurrentBuffer.
+		CurrentBuffer = (CurrentBuffer + 1) % FRAGMENT_COUNT;
+		BuffersToFill--;
+	}
+
+	// Always keep the source playing, even after an underrun.
+	ALint SourceState;
+	alGetSourcei( MusicSource, AL_SOURCE_STATE, &SourceState );
+	if( SourceState != AL_PLAYING )
+		alSourcePlay( MusicSource );
 }
 
 /*------------------------------------------------------------------------------------
