@@ -62,6 +62,7 @@ class DLL_EXPORT_CLASS UOpenALAudioSubsystem : public UAudioSubsystem
 
 protected:
 	// Configuration.
+	BYTE			OutputRate;
 	INT				NumSources;
 	BYTE			MusicVolume;
 	BYTE			SoundVolume;
@@ -103,6 +104,12 @@ public:
 
 private:
 	// Inlines.
+	inline INT GetActualOutputRate()
+	{
+		static const INT Rates[] = { 8000, 11025, 16000, 22050, 32000, 44100, 48000 };
+		return Rates[OutputRate];
+	}
+
 	inline void SetVolumes()
 	{
 		guard(UOpenALAudioSubsystem::SetVolumes);

@@ -43,6 +43,16 @@ void UOpenALAudioSubsystem::StaticConstructor()
 {
 	guard(UOpenALAudioSubsystem::StaticConstructor);
 
+	UEnum* OutputRates = new(GetClass(),TEXT("OutputRates")) UEnum( NULL );
+		new( OutputRates->Names ) FName( TEXT("8000Hz" ) );
+		new( OutputRates->Names ) FName( TEXT("11025Hz") );
+		new( OutputRates->Names ) FName( TEXT("16000Hz") );
+		new( OutputRates->Names ) FName( TEXT("22050Hz") );
+		new( OutputRates->Names ) FName( TEXT("32000Hz") );
+		new( OutputRates->Names ) FName( TEXT("44100Hz") );
+		new( OutputRates->Names ) FName( TEXT("48000Hz") );
+
+	new(GetClass(),TEXT("OutputRate"),			RF_Public) UByteProperty(	CPP_PROPERTY(OutputRate),		TEXT("Audio"), CPF_Config, OutputRates );
 	new(GetClass(),TEXT("NumSources"),			RF_Public) UIntProperty(	CPP_PROPERTY(NumSources),		TEXT("Audio"), CPF_Config );
 	new(GetClass(),TEXT("MusicVolume"),			RF_Public) UByteProperty(	CPP_PROPERTY(MusicVolume),		TEXT("Audio"), CPF_Config );
 	new(GetClass(),TEXT("SoundVolume"),			RF_Public) UByteProperty(	CPP_PROPERTY(SoundVolume),		TEXT("Audio"), CPF_Config );
@@ -61,6 +71,7 @@ void UOpenALAudioSubsystem::PostEditChange()
 	guard(UOpenALAudioSubsystem::PostEditChange);
 
 	// Validate configurable variables.
+	OutputRate		= Clamp(OutputRate,(BYTE)0,(BYTE)6);
 	NumSources 		= Clamp(NumSources,1,256);
 	AmbientFactor   = Clamp(AmbientFactor,0.f,10.f);
 	SetVolumes();
@@ -123,8 +134,12 @@ UBOOL UOpenALAudioSubsystem::Init()
 {
 	guard(UOpenALAudioSubsystem::Init);
 
+	INT Rate = GetActualOutputRate();
+
+
 	// OpenAL / ALURE initialization
-	if( alureInitDevice( NULL, NULL ) == AL_FALSE )
+	ALCint ContextAttrs[] = { ALC_FREQUENCY, Rate, 0 };
+	if( alureInitDevice( NULL, ContextAttrs ) == AL_FALSE )
 		appErrorf( TEXT("Couldn't initialize OpenAL: %s"), alureGetErrorString() );
 
 	alDistanceModel( AL_LINEAR_DISTANCE_CLAMPED );
@@ -160,6 +175,7 @@ UBOOL UOpenALAudioSubsystem::Init()
 	MikMod_RegisterLoader( &load_far );
 	MikMod_RegisterLoader( &load_669 );
 
+	md_mixfreq = Rate;
 	if ( HighQualityMusic )
 		md_mode |= DMODE_HQMIXER;
 	if( MikMod_Init( "" ) )
