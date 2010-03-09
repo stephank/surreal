@@ -14,6 +14,95 @@ Revision history:
 ALuint MusicSource;
 
 /*------------------------------------------------------------------------------------
+	Memory reader
+------------------------------------------------------------------------------------*/
+
+typedef struct _MikModMemoryReader
+{
+	MREADER Base;
+
+	BYTE* Data;
+	INT Length;
+
+	INT Position;
+} MikModMemoryReader;
+
+#define DEFINE_READER MikModMemoryReader* Reader = (MikModMemoryReader*)Base;
+
+// fseek equivalent
+static BOOL MMMR_Seek( MREADER* Base, long Offset, int Whence )
+{
+	DEFINE_READER;
+	switch( Whence )
+	{
+	case SEEK_SET:
+		Reader->Position = Offset;
+		break;
+	case SEEK_CUR:
+		Reader->Position += Offset;
+		break;
+	case SEEK_END:
+		Reader->Position = Reader->Length - Offset;
+		break;
+	default:
+		return -1;
+	}
+	return 0;
+}
+
+// ftell equivalent
+static long MMMR_Tell( MREADER* Base )
+{
+	DEFINE_READER;
+	return Reader->Position;
+}
+
+// fread equivalent
+static BOOL MMMR_Read( MREADER* Base, void* Ptr, size_t Amount)
+{
+	DEFINE_READER;
+	INT Remaining = Reader->Length - Reader->Position;
+	if( Amount > Remaining ) Amount = Remaining;
+	memcpy( Ptr, &Reader->Data[Reader->Position], Amount );
+	Reader->Position += Amount;
+	return Amount;
+}
+
+// fgetc equivalent
+static int MMMR_Get( MREADER* Base )
+{
+	DEFINE_READER;
+	return Reader->Data[Reader->Position++];
+}
+
+// feof equivalent
+static BOOL MMMR_Eof( MREADER* Base )
+{
+	DEFINE_READER;
+	return Reader->Position >= Reader->Length;
+}
+
+MREADER* BuildMikModMemoryReader( BYTE* Data, INT Length )
+{
+	MikModMemoryReader* Reader = new MikModMemoryReader;
+	Reader->Base.Seek	= MMMR_Seek;
+	Reader->Base.Tell	= MMMR_Tell;
+	Reader->Base.Read	= MMMR_Read;
+	Reader->Base.Get	= MMMR_Get;
+	Reader->Base.Eof	= MMMR_Eof;
+	Reader->Data		= Data;
+	Reader->Length		= Length;
+	Reader->Position	= 0;
+	return &Reader->Base;
+}
+
+void DestroyMikModMemoryReader( MREADER* Base )
+{
+	DEFINE_READER;
+	delete Reader;
+}
+
+/*------------------------------------------------------------------------------------
 	Driver implementation
 ------------------------------------------------------------------------------------*/
 
@@ -25,11 +114,12 @@ static BOOL UnMM_IsPresent()
 static BOOL UnMM_Init()
 {
 	// FIXME
-	return 0;
+	return VC_Init();
 }
 
 static void UnMM_Exit()
 {
+	VC_Exit();
 	// FIXME
 }
 

@@ -214,7 +214,7 @@ void UOpenALAudioSubsystem::RegisterSound( USound* Sound )
 
 		// Create the buffer.
 		FAudioBuffer *Sample = new FAudioBuffer;
-		Sample->Id = alureCreateBufferFromMemory(&Sound->Data(0), Sound->Data.Num());
+		Sample->Id = alureCreateBufferFromMemory( &Sound->Data(0), Sound->Data.Num() );
 		if( Sample->Id == AL_NONE )
 			appErrorf(
 				TEXT("Couldn't create buffer for sound '%s': %s"),
@@ -248,12 +248,50 @@ void UOpenALAudioSubsystem::UnregisterSound( USound* Sound )
 
 void UOpenALAudioSubsystem::RegisterMusic( UMusic* Music )
 {
-	// FIXME
+	guard(UOpenALAudioSubsystem::RegisterMusic);
+
+	checkSlow(Music);
+	if( !Music->Handle )
+	{
+		// Set the handle to avoid reentrance.
+		Music->Handle = (void*)-1;
+
+		// Load the data.
+		Music->Data.Load();
+		debugf( NAME_DevMusic, TEXT("Register music: %s (%i)"), Music->GetPathName(), Music->Data.Num() );
+		check(Music->Data.Num()>0);
+
+		// Load the module.
+		MREADER* Reader = BuildMikModMemoryReader( &Music->Data(0), Music->Data.Num() );
+		Music->Handle = Player_LoadGeneric( Reader, 64, 0 );
+		DestroyMikModMemoryReader( Reader );
+		if( Music->Handle == NULL )
+			appErrorf(
+				TEXT("Couldn't load music '%s': %s"),
+				Music->GetPathName(), MikMod_strerror( MikMod_errno )
+			);
+
+		// Unload the data.
+		Music->Data.Unload();
+	}
+
+	unguard;
 }
 
 void UOpenALAudioSubsystem::UnregisterMusic( UMusic* Music )
 {
-	// FIXME
+	guard(UOpenALAudioSubsystem::UnregisterMusic);
+
+	check(Music);
+	if( Music->Handle )
+	{
+		debugf( NAME_DevMusic, TEXT("Unregister music: %s"), Music->GetFullName() );
+
+		MODULE* Module = (MODULE*)Music->Handle;
+		Player_Free( Module );
+	}
+
+	unguard;
 }
 
 UBOOL UOpenALAudioSubsystem::Exec( const TCHAR* Cmd, FOutputDevice& Ar )
@@ -387,6 +425,21 @@ void UOpenALAudioSubsystem::Update( FPointRegion Region, FCoords& Coords )
 		return;
 
 	AActor *ViewActor = FindViewActor();
+
+	guard(UpdateMusic);
+	if( Viewport->Actor->Song != PlayingSong )
+	{
+		// FIXME: Stop old song
+
+		PlayingSong = Viewport->Actor->Song;
+		if( PlayingSong != NULL )
+		{
+			MODULE* Module = GetModuleFromUMusic( PlayingSong );
+
+			// FIXME: Start new song
+		}
+	}
+	unguard;
 
 	// Update the listener.
 	{

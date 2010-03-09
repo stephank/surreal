@@ -72,6 +72,7 @@ protected:
 	UViewport*		Viewport;
 	FAudioSource*	Sources;
 	INT				FreeSlot;
+	UMusic*			PlayingSong;
 
 public:
 	// Constructor.
@@ -123,6 +124,14 @@ private:
 		if( !Sound->Handle )
 			RegisterSound( Sound );
 		return (FAudioBuffer*)Sound->Handle;
+	}
+
+	inline MODULE* GetModuleFromUMusic( UMusic* Music )
+	{
+		check(Music);
+		if( !Music->Handle )
+			RegisterMusic( Music );
+		return (MODULE*)Music->Handle;
 	}
 
 	inline AActor* FindViewActor()
