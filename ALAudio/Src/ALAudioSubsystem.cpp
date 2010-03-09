@@ -184,6 +184,9 @@ void UOpenALAudioSubsystem::RegisterSound( USound* Sound )
 		debugf( NAME_DevSound, TEXT("Register sound: %s (%i)"), Sound->GetPathName(), Sound->Data.Num() );
 		check(Sound->Data.Num()>0);
 
+		// Flush errors.
+		alGetError();
+
 		// Create the buffer.
 		FAudioBuffer *Sample = new FAudioBuffer;
 		Sample->Id = alureCreateBufferFromMemory(&Sound->Data(0), Sound->Data.Num());
