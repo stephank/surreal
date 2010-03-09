@@ -43,10 +43,11 @@ void UOpenALAudioSubsystem::StaticConstructor()
 {
 	guard(UOpenALAudioSubsystem::StaticConstructor);
 
-	new(GetClass(),TEXT("NumSources"), 		RF_Public)UIntProperty   (CPP_PROPERTY(NumSources		), TEXT("Audio"), CPF_Config );
-	new(GetClass(),TEXT("MusicVolume"),		RF_Public)UByteProperty  (CPP_PROPERTY(MusicVolume		), TEXT("Audio"), CPF_Config );
-	new(GetClass(),TEXT("SoundVolume"),		RF_Public)UByteProperty  (CPP_PROPERTY(SoundVolume		), TEXT("Audio"), CPF_Config );
-	new(GetClass(),TEXT("AmbientFactor"),	RF_Public)UFloatProperty (CPP_PROPERTY(AmbientFactor	), TEXT("Audio"), CPF_Config );
+	new(GetClass(),TEXT("NumSources"),			RF_Public) UIntProperty(	CPP_PROPERTY(NumSources),		TEXT("Audio"), CPF_Config );
+	new(GetClass(),TEXT("MusicVolume"),			RF_Public) UByteProperty(	CPP_PROPERTY(MusicVolume),		TEXT("Audio"), CPF_Config );
+	new(GetClass(),TEXT("SoundVolume"),			RF_Public) UByteProperty(	CPP_PROPERTY(SoundVolume),		TEXT("Audio"), CPF_Config );
+	new(GetClass(),TEXT("AmbientFactor"),		RF_Public) UFloatProperty(	CPP_PROPERTY(AmbientFactor),	TEXT("Audio"), CPF_Config );
+	new(GetClass(),TEXT("HighQualityMusic"),	RF_Public) UBoolProperty(	CPP_PROPERTY(HighQualityMusic),	TEXT("Audio"), CPF_Config );
 
 	unguard;
 }
@@ -159,6 +160,8 @@ UBOOL UOpenALAudioSubsystem::Init()
 	MikMod_RegisterLoader( &load_far );
 	MikMod_RegisterLoader( &load_669 );
 
+	if ( HighQualityMusic )
+		md_mode |= DMODE_HQMIXER;
 	if( MikMod_Init( "" ) )
 		appErrorf( TEXT("Couldn't initialize MikMod: %s"), MikMod_strerror( MikMod_errno ) );
 

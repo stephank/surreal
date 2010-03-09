@@ -62,13 +62,14 @@ class DLL_EXPORT_CLASS UOpenALAudioSubsystem : public UAudioSubsystem
 
 protected:
 	// Configuration.
-	BITFIELD		Initialized;
-	FLOAT			AmbientFactor;
 	INT				NumSources;
 	BYTE			MusicVolume;
 	BYTE			SoundVolume;
+	FLOAT			AmbientFactor;
+	BITFIELD		HighQualityMusic;
 
 	// Variables.
+	BITFIELD		Initialized;
 	UViewport*		Viewport;
 	FAudioSource*	Sources;
 	INT				FreeSlot;
