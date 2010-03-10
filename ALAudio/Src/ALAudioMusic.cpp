@@ -109,9 +109,9 @@ void DestroyMikModMemoryReader( MREADER* Base )
 #define CheckALError() check(alGetError() == AL_NO_ERROR)
 
 // XXX: Should these be configurable?
-// This fragment size is a little over 3 seconds at 44.1Khz, 16-bit stereo
+// For 44.1Khz 16-bit stereo, this buffer size amounts to a little under 3 seconds.
 #define FRAGMENT_SIZE 32768
-#define FRAGMENT_COUNT 4
+#define FRAGMENT_COUNT 16
 
 // MusicBuffers is a ring of fragments we push to OpenAL.
 static ALuint MusicBuffers[FRAGMENT_COUNT];
