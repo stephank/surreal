@@ -168,6 +168,8 @@ static void UnMM_Update()
 	alGetSourcei( MusicSource, AL_BUFFERS_PROCESSED,	&BuffersProcessed );
 
 	INT BuffersToFill = FRAGMENT_COUNT - BuffersQueued + BuffersProcessed;
+	if( !BuffersToFill )
+		return;
 	while( BuffersToFill )
 	{
 		ALuint Buffer = MusicBuffers[CurrentBuffer];
