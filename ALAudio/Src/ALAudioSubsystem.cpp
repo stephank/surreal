@@ -280,13 +280,17 @@ void UOpenALAudioSubsystem::RegisterMusic( UMusic* Music )
 
 		// Load the module.
 		MREADER* Reader = BuildMikModMemoryReader( &Music->Data(0), Music->Data.Num() );
-		Music->Handle = Player_LoadGeneric( Reader, 64, 0 );
+		MODULE* Module = Player_LoadGeneric( Reader, 64, 0 );
 		DestroyMikModMemoryReader( Reader );
-		if( Music->Handle == NULL )
+		if( Module == NULL )
 			appErrorf(
 				TEXT("Couldn't load music '%s': %s"),
 				Music->GetPathName(), MikMod_strerror( MikMod_errno )
 			);
+		Music->Handle = Module;
+
+		// Enable looping and wrapping.
+		Module->loop = Module->wrap = 1;
 
 		// Unload the data.
 		Music->Data.Unload();
