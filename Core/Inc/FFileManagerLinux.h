@@ -6,6 +6,7 @@
 		* Created by Brandon Reinhart
 =============================================================================*/
 
+#include <stdlib.h>
 #include <dirent.h>
 #include <unistd.h>
 #include "FFileManagerGeneric.h"
@@ -212,7 +213,19 @@ protected:
 
 class FFileManagerLinux : public FFileManagerGeneric
 {
+private:
+	FString	ConfigDir;
+
 public:
+	void Init( UBOOL Startup )
+	{
+		const char* XdgConfigHome = getenv( "XDG_CONFIG_HOME" );
+		if( XdgConfigHome )
+			ConfigDir = FString(XdgConfigHome) + TEXT("/UnrealTournament");
+		else
+			ConfigDir = FString(getenv("HOME")) + TEXT("/.config/UnrealTournament");
+	}
+
 	FArchive* CreateFileReader( const TCHAR* OrigFilename, DWORD Flags, FOutputDevice* Error )
 	{
 		guard(FFileManagerLinux::CreateFileReader);
