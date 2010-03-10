@@ -399,18 +399,34 @@ UBOOL UOpenALAudioSubsystem::PlaySound
 		alSourcef( Id, AL_GAIN,			Volume );
 		alSourcef( Id, AL_MAX_DISTANCE,	Radius );
 		alSourcef( Id, AL_PITCH,		Pitch );
-		// Update will override Location with Actor's Location anyways.
-		// XXX: Should we use Location and not attach to Actor instead?
-		if( Actor )
+		if( Actor == Viewport->Actor )
 		{
-			alSourcefv(	Id, AL_POSITION,	&Actor->Location.X );
-			alSourcefv(	Id, AL_VELOCITY,	&Actor->Velocity.X );
+			// Don't attentuate or position viewport actor sounds at all.
+			// (These are sounds like the announcer, menu clicks, etc.)
+			alSource3f(	Id, AL_POSITION,		0.f, 0.f, 0.f );
+			alSource3f(	Id, AL_VELOCITY,		0.f, 0.f, 0.f );
+			alSourcef(	Id, AL_ROLLOFF_FACTOR,	0.f );
+			alSourcei(	Id, AL_SOURCE_RELATIVE,	AL_TRUE );
+			Actor = NULL;
 		}
 		else
 		{
-			ALfloat ZeroVelocity[3] = { 0.f, 0.f, 0.f };
-			alSourcefv(	Id, AL_POSITION,	&Location.X );
-			alSourcefv(	Id, AL_VELOCITY,	ZeroVelocity );
+			// Negate the above
+			alSourcef(	Id, AL_ROLLOFF_FACTOR,	1.f );
+			alSourcei(	Id, AL_SOURCE_RELATIVE,	AL_FALSE );
+			// Update will override Location with Actor's Location anyways.
+			// XXX: Should we use Location and not attach to Actor instead?
+			if ( Actor )
+			{
+				alSourcefv(	Id, AL_POSITION,	&Actor->Location.X );
+				alSourcefv(	Id, AL_VELOCITY,	&Actor->Velocity.X );
+			}
+			else
+			{
+				ALfloat ZeroVelocity[3] = { 0.f, 0.f, 0.f };
+				alSourcefv(	Id, AL_POSITION,	&Location.X );
+				alSourcefv(	Id, AL_VELOCITY,	ZeroVelocity );
+			}
 		}
 		alSourcePlay( Id );
 		Source.Fill( Actor, Sound, Slot, Location, Volume, Radius, Priority );
