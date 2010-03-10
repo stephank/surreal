@@ -462,6 +462,18 @@ private:
 			if( *Cur == '\\' )
 				*Cur = '/';
 	}
+	UBOOL RewriteToConfigPath( TCHAR* Result, const TCHAR* Path )
+	{
+		// Don't rewrite absolute paths
+		if( Path[0] == '/' )
+			return 0;
+
+		appStrcpy( Result, *ConfigDir );
+		appStrcat( Result, TEXT("/") );
+		appStrcat( Result, Path );
+
+		return 1;
+	}
 };
 
 /*-----------------------------------------------------------------------------
