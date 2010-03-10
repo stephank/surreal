@@ -214,16 +214,16 @@ protected:
 class FFileManagerLinux : public FFileManagerGeneric
 {
 private:
-	FString	ConfigDir;
+	TCHAR	ConfigDir[PATH_MAX];
 
 public:
 	void Init( UBOOL Startup )
 	{
 		const char* XdgConfigHome = getenv( "XDG_CONFIG_HOME" );
 		if( XdgConfigHome )
-			ConfigDir = FString(XdgConfigHome) + TEXT("/UnrealTournament");
+			appSprintf( ConfigDir, "%s/%s/System/", appFromAnsi(XdgConfigHome), appPackage() );
 		else
-			ConfigDir = FString(getenv("HOME")) + TEXT("/.config/UnrealTournament");
+			appSprintf( ConfigDir, "%s/.config/%s/System/", appFromAnsi(getenv("HOME")), appPackage() );
 	}
 
 	FArchive* CreateFileReader( const TCHAR* OrigFilename, DWORD Flags, FOutputDevice* Error )
@@ -468,8 +468,7 @@ private:
 		if( Path[0] == '/' )
 			return 0;
 
-		appStrcpy( Result, *ConfigDir );
-		appStrcat( Result, TEXT("/") );
+		appStrcpy( Result, ConfigDir );
 		appStrcat( Result, Path );
 
 		return 1;
