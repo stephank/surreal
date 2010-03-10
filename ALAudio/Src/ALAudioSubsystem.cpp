@@ -158,6 +158,13 @@ UBOOL UOpenALAudioSubsystem::Init()
 	for( INT i=0; i<NumSources; i++ )
 		Sources[i].Id = NewSources[i+1];
 
+	// Fix the music source to 0 values
+	alSource3f(	MusicSource, AL_POSITION,			0.f, 0.f, 0.f );
+	alSource3f(	MusicSource, AL_VELOCITY,			0.f, 0.f, 0.f );
+	alSource3f(	MusicSource, AL_DIRECTION,			0.f, 0.f, 0.f );
+	alSourcef(	MusicSource, AL_ROLLOFF_FACTOR,		0.f );
+	alSourcei(	MusicSource, AL_SOURCE_RELATIVE,	AL_TRUE );
+
 	SetVolumes();
 	CheckALErrorFlag( TEXT("SetVolumes") );
 
