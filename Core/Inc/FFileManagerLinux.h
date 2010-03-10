@@ -219,11 +219,15 @@ private:
 public:
 	void Init( UBOOL Startup )
 	{
+		guard(FFileManagerLinux::Init);
+
 		const char* XdgConfigHome = getenv( "XDG_CONFIG_HOME" );
 		if( XdgConfigHome )
 			appSprintf( ConfigDir, "%s/%s/System/", appFromAnsi(XdgConfigHome), appPackage() );
 		else
 			appSprintf( ConfigDir, "%s/.config/%s/System/", appFromAnsi(getenv("HOME")), appPackage() );
+
+		unguard;
 	}
 
 	FArchive* CreateFileReader( const TCHAR* OrigFilename, DWORD Flags, FOutputDevice* Error )
@@ -447,11 +451,9 @@ public:
 	FString GetDefaultDirectory()
 	{
 		guard(FFileManagerLinux::GetDefaultDirectory);
-		{
-			ANSICHAR Buffer[1024]="";
-			getcwd( Buffer, ARRAY_COUNT(Buffer) );
-			return appFromAnsi( Buffer );
-		}
+		ANSICHAR Buffer[1024]="";
+		getcwd( Buffer, ARRAY_COUNT(Buffer) );
+		return appFromAnsi( Buffer );
 		unguard;
 	}
 private:
