@@ -12,20 +12,25 @@ on several parts from different sources:
    http://www.cwdohnal.com/utglr/
  * Original work done here.
 
+This means that what you will find here is *not* the complete source code to
+the Unreal Tournament engine. Only some very specific parts have been
+open-sourced. However, there is plenty to improve on.
+
 The goal is to get Unreal Tournament running smoothly on modern systems.
 
-For now, it is codenamed Surreal.
+For now, this project is codenamed Surreal.
 
 
 Dependencies
 ------------
 
-For building, you need development files for the following packages:
+For building, you need development files for the following libraries:
 
- * SDL 1.2
+ * SDL 1.2.x
  * OpenGL 1.?
  * OpenAL 1.1
  * ALURE 1.0
+ * MikMod 3.x
 
 
 Building
