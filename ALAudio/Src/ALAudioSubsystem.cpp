@@ -196,6 +196,7 @@ void UOpenALAudioSubsystem::SetViewport( UViewport* InViewport )
 	guard(UOpenALAudioSubsystem::SetViewport);
 
 	// Stop all sources.
+	StopMusic();
 	for( INT i=0; i<NumSources; i++ )
 		StopSource( i );
 
@@ -450,7 +451,7 @@ void UOpenALAudioSubsystem::Update( FPointRegion Region, FCoords& Coords )
 	guard(UpdateMusic);
 	if( Viewport->Actor->Song != PlayingSong )
 	{
-		Player_Stop();
+		StopMusic();
 		PlayingSong = Viewport->Actor->Song;
 		if( PlayingSong != NULL )
 		{

@@ -163,4 +163,11 @@ private:
 		alSourceStop( Source.Id );
 		Source.Fill( NULL, NULL, 0, ZeroLocation, 0.f, 0.f, 0.f );
 	}
+
+	inline void StopMusic()
+	{
+		Player_SetPosition( 0 );
+		Player_Stop();
+		PlayingSong = NULL;
+	}
 };
