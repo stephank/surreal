@@ -155,6 +155,12 @@ static BOOL UnMM_Reset()
 	return UnMM_Init();
 }
 
+static void UnMM_PlayStop()
+{
+	VC_PlayStop();
+	alSourceStop( MusicSource );
+}
+
 static void UnMM_Update()
 {
 	INT BuffersQueued, BuffersProcessed;
@@ -210,7 +216,7 @@ MDRIVER MusicDriver = {
 	UnMM_Reset,
 	VC_SetNumVoices,
 	VC_PlayStart,
-	VC_PlayStop,
+	UnMM_PlayStop,
 	UnMM_Update,
 	NULL,
 	VC_VoiceSetVolume,
