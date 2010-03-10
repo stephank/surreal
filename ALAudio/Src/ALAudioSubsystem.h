@@ -96,6 +96,7 @@ public:
 	void UnregisterSound( USound* Sound );
 	void UnregisterMusic( UMusic* Music );
 	UBOOL PlaySound( AActor* Actor, INT Id, USound* Sound, FVector Location, FLOAT Volume, FLOAT Radius, FLOAT Pitch );
+	UBOOL PlaySound( AActor* Actor, INT Id, USound* Sound, FVector Location, FLOAT Volume, FLOAT Radius, FLOAT Pitch, UBOOL Looping );
 	void NoteDestroy( AActor* Actor );
 	UBOOL GetLowQualitySetting() {};
 	UViewport* GetViewport();

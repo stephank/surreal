@@ -341,6 +341,21 @@ UBOOL UOpenALAudioSubsystem::PlaySound
 	FLOAT	Pitch
 )
 {
+	PlaySound( Actor, Slot, Sound, Location, Volume, Radius, Pitch, 0 );
+}
+
+UBOOL UOpenALAudioSubsystem::PlaySound
+(
+	AActor*	Actor,
+	INT		Slot,
+	USound*	Sound,
+	FVector	Location,
+	FLOAT	Volume,
+	FLOAT	Radius,
+	FLOAT	Pitch,
+	UBOOL	Looping
+)
+{
 	guard(UOpenALAudioSubsystem::PlaySound);
 
 	check(Radius);
@@ -399,6 +414,7 @@ UBOOL UOpenALAudioSubsystem::PlaySound
 		alSourcef( Id, AL_GAIN,			Volume );
 		alSourcef( Id, AL_MAX_DISTANCE,	Radius );
 		alSourcef( Id, AL_PITCH,		Pitch );
+		alSourcei( Id, AL_LOOPING,		Looping ? AL_TRUE : AL_FALSE );
 		if( Actor == Viewport->Actor )
 		{
 			// Don't attentuate or position viewport actor sounds at all.
@@ -520,7 +536,8 @@ void UOpenALAudioSubsystem::Update( FPointRegion Region, FCoords& Coords )
 						Actor, Slot, Actor->AmbientSound, Actor->Location,
 						AmbientFactor*Actor->SoundVolume/255.0,
 						Actor->WorldSoundRadius(),
-						Actor->SoundPitch/64.0 );
+						Actor->SoundPitch/64.0,
+						1 );
 			}
 		}
 		unguard;
