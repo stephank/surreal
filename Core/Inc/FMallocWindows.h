@@ -395,20 +395,21 @@ public:
 		OsTable.FirstPool    = NULL;
 		OsTable.ExaustedPool = NULL;
 		OsTable.BlockSize    = 0;
-		for( DWORD i=0; i<POOL_COUNT; i++ )
+		DWORD i;
+		for( i=0; i<POOL_COUNT; i++ )
 		{
 			PoolTable[i].FirstPool    = NULL;
 			PoolTable[i].ExaustedPool = NULL;
 			PoolTable[i].BlockSize    = (4+(i&3)) << (1+(i>>2));
 		}
-		for( DWORD i=0; i<POOL_MAX; i++ )
+		for( i=0; i<POOL_MAX; i++ )
 		{
 			DWORD Index;
 			for( Index=0; PoolTable[Index].BlockSize<i; Index++ );
 			checkSlow(Index<POOL_COUNT);
 			MemSizeToPoolTable[i] = &PoolTable[Index];
 		}
-		for( DWORD i=0; i<256; i++ )
+		for( i=0; i<256; i++ )
 		{
 			PoolIndirect[i] = NULL;
 		}
