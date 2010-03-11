@@ -275,9 +275,24 @@ public:
 		const ANSICHAR* Mode = (Flags & FILEWRITE_Append) ? "ab" : "wb"; 
 		FILE* File = NULL;
 		if( RewriteToConfigPath( Filename, FixedFilename ) )
+		{
+			// If appending, copy the file from the application directory
+			// as a template for the user's ConfigDir.
+			if( (Flags & FILEWRITE_Append) && FileSize(Filename) == -1 )
+			{
+				if( !Copy( Filename, FixedFilename, 0, 0, 0, NULL ) )
+				{
+					if( Flags & FILEWRITE_NoFail )
+						appErrorf( TEXT("Failed to write: %s"), Filename );
+					return NULL;
+				}
+			}
 			File = fopen(TCHAR_TO_ANSI(Filename),Mode);
+		}
 		else
+		{
 			File = fopen(TCHAR_TO_ANSI(FixedFilename),Mode);
+		}
 		if( !File )
 		{
 			if( Flags & FILEWRITE_NoFail )
