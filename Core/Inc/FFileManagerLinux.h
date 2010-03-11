@@ -227,6 +227,9 @@ public:
 		else
 			appSprintf( ConfigDir, "%s/.config/%s/System/", appFromAnsi(getenv("HOME")), appPackage() );
 
+		if( !MakeDirectory( ConfigDir, 1 ) )
+			appErrorf( TEXT("Failed to create configuration directory %s"), ConfigDir );
+
 		unguard;
 	}
 
@@ -314,9 +317,25 @@ public:
 		PathSeparatorFixup( Path, OrigPath );
 
 		if( Tree )
-			return FFileManagerGeneric::MakeDirectory( Path, Tree );
+		{
+			// Strip one element off the path
+			// Start at the end
+			TCHAR* Ptr = Path + appStrlen( Path ) - 1;
+			// Ignore trailing slashes
+			while( Ptr >= Path && *Ptr == FromAnsi('/') ) Ptr--;
+			// Look for the last separator
+			while( Ptr >= Path && *Ptr != FromAnsi('/') ) Ptr--;
+			if( Ptr >= Path )
+			{
+				*Ptr = FromAnsi('\0');
+				// Don't go past the root
+				if( appStrlen(Path) != 0 && !FFileManagerGeneric::MakeDirectory(Path, 1) )
+					return 0;
+				*Ptr = FromAnsi('/');
+			}
+		}
 
-		return mkdir(TCHAR_TO_ANSI(Path), __S_IREAD && __S_IWRITE && __S_IEXEC)==0 || errno==EEXIST;
+		return mkdir(TCHAR_TO_ANSI(Path), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)==0 || errno==EEXIST;
 
 		unguard;
 	}
