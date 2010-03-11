@@ -50,7 +50,8 @@ SDL dependency from SDL 1.1 to SDL 1.2. The only SDL function actually
 referenced by `Core.so` is `SDL_Quit`, so it's no biggy. Apply the patch with:
 
     mv System/Core.so System/Core.so-SDL1.1
-    xdelta Core-SDL-patch.xdelta System/Core.so-SDL1.1 System/Core.so
+    xdelta patch Core-SDL-patch.xdelta System/Core.so-SDL1.1 System/Core.so
+    chmod a+x System/Core.so
 
 Finally, you need G++ 2.95. This is required to keep binary compatibility with
 the above binaries. I personally use Ubuntu 6.06.2 (Dapper Drake) in a virtual
