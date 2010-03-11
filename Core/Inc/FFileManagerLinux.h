@@ -7,51 +7,54 @@
 =============================================================================*/
 
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 #include <dirent.h>
 #include <unistd.h>
 #include <glob.h>
+#include <sys/mman.h>
 #include "FFileManagerGeneric.h"
 
 /*-----------------------------------------------------------------------------
 	File Manager.
 -----------------------------------------------------------------------------*/
 
+#define MAX_PRECACHE 8192
+
 // File manager.
 class FArchiveFileReader : public FArchive
 {
 public:
-	FArchiveFileReader( FILE* InFile, FOutputDevice* InError, INT InSize )
+	FArchiveFileReader( INT InFile, BYTE* InMap, FOutputDevice* InError, INT InSize )
 	:	File			( InFile )
+	,	Map				( InMap )
 	,	Error			( InError )
 	,	Size			( InSize )
 	,	Pos				( 0 )
-	,	BufferBase		( 0 )
-	,	BufferCount		( 0 )
 	{
 		guard(FArchiveFileReader::FArchiveFileReader);
-		fseek( File, 0, SEEK_SET );
 		ArIsLoading = ArIsPersistent = 1;
 		unguard;
 	}
 	~FArchiveFileReader()
 	{
 		guard(FArchiveFileReader::~FArchiveFileReader);
-		if( File )
+		if( File != -1 )
 			Close();
 		unguard;
 	}
 	void Precache( INT HintCount )
 	{
 		guardSlow(FArchiveFileReader::Precache);
-		checkSlow(Pos==BufferBase+BufferCount);
-		BufferBase = Pos;
-		BufferCount = Min( Min( HintCount, (INT)(ARRAY_COUNT(Buffer) - (Pos&(ARRAY_COUNT(Buffer)-1))) ), Size-Pos );
-		if( fread( Buffer, BufferCount, 1, File )!=1 && BufferCount!=0 )
+		BYTE* StartAddr = Map+Pos;
+		INT Length = Min( Min( HintCount, Size-Pos ), MAX_PRECACHE );
+		if( mlock( StartAddr, Length ) == -1 )
 		{
 			ArIsError = 1;
-			Error->Logf( TEXT("fread failed: BufferCount=%i Error=%i"), BufferCount, ferror(File) );
+			Error->Logf( TEXT("Failed to precache (%i bytes): %s"), Length, appFromAnsi(strerror(errno)) );
 			return;
 		}
+		munlock( StartAddr, Length );
 		unguardSlow;
 	}
 	void Seek( INT InPos )
@@ -59,14 +62,7 @@ public:
 		guard(FArchiveFileReader::Seek);
 		check(InPos>=0);
 		check(InPos<=Size);
-		if( fseek(File,InPos,SEEK_SET) )
-		{
-			ArIsError = 1;
-			Error->Logf( TEXT("seek Failed %i/%i: %i %i"), InPos, Size, Pos, ferror(File) );
-		}
-		Pos         = InPos;
-		BufferBase  = Pos;
-		BufferCount = 0;
+		Pos = InPos;
 		unguard;
 	}
 	INT Tell()
@@ -80,56 +76,34 @@ public:
 	UBOOL Close()
 	{
 		guardSlow(FArchiveFileReader::Close);
-		if( File )
-			fclose( File );
-		File = NULL;
+		if( File != -1 )
+		{
+			munmap( Map, Size );
+			close( File );
+		}
+		File = -1;
 		return !ArIsError;
 		unguardSlow;
 	}
 	void Serialize( void* V, INT Length )
 	{
 		guardSlow(FArchiveFileReader::Serialize);
-		while( Length>0 )
+		if( Length > Size-Pos )
 		{
-			INT Copy = Min( Length, BufferBase+BufferCount-Pos );
-			if( Copy==0 )
-			{
-				if( Length >= ARRAY_COUNT(Buffer) )
-				{
-					if( fread( V, Length, 1, File )!=1 )
-					{
-						ArIsError = 1;
-						Error->Logf( TEXT("fread failed: Length=%i Error=%i"), Length, ferror(File) );
-					}
-					Pos += Length;
-					BufferBase += Length;
-					return;
-				}
-				Precache( MAXINT );
-				Copy = Min( Length, BufferBase+BufferCount-Pos );
-				if( Copy<=0 )
-				{
-					ArIsError = 1;
-					Error->Logf( TEXT("ReadFile beyond EOF %i+%i/%i"), Pos, Length, Size );
-				}
-				if( ArIsError )
-					return;
-			}
-			appMemcpy( V, Buffer+Pos-BufferBase, Copy );
-			Pos       += Copy;
-			Length    -= Copy;
-			V          = (BYTE*)V + Copy;
+			ArIsError = 1;
+			Error->Logf( TEXT("ReadFile beyond EOF %i+%i/%i"), Pos, Length, Size );
+			return;
 		}
+		appMemcpy( V, Map+Pos, Length );
+		Pos += Length;
 		unguardSlow;
 	}
 protected:
-	FILE*			File;
+	INT				File;
 	FOutputDevice*	Error;
 	INT				Size;
 	INT				Pos;
-	INT				BufferBase;
-	INT				BufferCount;
-	BYTE			Buffer[1024];
+	BYTE*			Map;
 };
 class FArchiveFileWriter : public FArchive
 {
@@ -241,22 +215,33 @@ public:
 		TCHAR FixedFilename[PATH_MAX], Filename[PATH_MAX];
 		PathSeparatorFixup( FixedFilename, OrigFilename );
 
-		FILE* File = NULL;
+		INT File = -1;
 		if( RewriteToConfigPath( Filename, FixedFilename ) )
-			File = fopen(TCHAR_TO_ANSI(Filename), "rb");
-		if( !File )
+			File = open(TCHAR_TO_ANSI(Filename), O_RDONLY);
+		if( File == -1 )
 		{
-			File = fopen(TCHAR_TO_ANSI(FixedFilename), "rb");
-			if( !File )
+			File = open(TCHAR_TO_ANSI(FixedFilename), O_RDONLY);
+			if( File == -1 )
 			{
 				if( Flags & FILEREAD_NoFail )
 					appErrorf(TEXT("Failed to read file: %s"),Filename);
 				return NULL;
 			}
 		}
-		fseek( File, 0, SEEK_END );
 
-		return new(TEXT("LinuxFileReader"))FArchiveFileReader(File,Error,ftell(File));
+		INT Size = lseek( File, 0, SEEK_END );
+		lseek( File, 0, SEEK_SET );
+
+		BYTE* Map = (BYTE*)mmap( NULL, Size, PROT_READ, MAP_PRIVATE, File, 0 );
+		if( Map == MAP_FAILED )
+		{
+			close( File );
+			if( Flags & FILEREAD_NoFail )
+				appErrorf(TEXT("Failed to read file: %s"),Filename);
+			return NULL;
+		}
+
+		return new(TEXT("LinuxFileReader"))FArchiveFileReader(File,Map,Error,Size);
 
 		unguard;
 	}
