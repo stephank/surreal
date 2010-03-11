@@ -175,7 +175,8 @@ int main( int argc, char* argv[] )
 				Class = UObject::StaticLoadClass( UCommandlet::StaticClass(), NULL, *(Token+TEXT("Commandlet")), NULL, LoadFlags, NULL );
 			if( !Class )
 			{
-				for( INT i=0; i<List.Num(); i++ )
+				INT i;
+				for( i=0; i<List.Num(); i++ )
 				{
 					FString Str = List(i).Object;
 					while( Str.InStr(TEXT("."))>=0 )
