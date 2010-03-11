@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <dirent.h>
+#include <limits.h>
 #include <unistd.h>
 #include <glob.h>
 #include <fcntl.h>
