@@ -69,7 +69,8 @@ public:
 					TCHAR Ch[1024];
 					ANSICHAR ACh[1024];
 					appSprintf( Ch, TEXT("%s: %s%s"), FName::SafeString(Event), Data, LINE_TERMINATOR );
-					for( INT i=0; Ch[i]; i++ )
+					INT i;
+					for( i=0; Ch[i]; i++ )
 						ACh[i] = ToAnsi(Ch[i] );
 					ACh[i] = 0;
 					LogAr->Serialize( ACh, i );

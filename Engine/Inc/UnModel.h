@@ -152,7 +152,8 @@ class ENGINE_API UBspNodes : public UObject
 			Ar << DbNum << DbMax;
 			Element.Empty( DbNum );
 			Element.AddZeroed( DbNum );
-			for( INT i=0; i<Element.Num(); i++ )
+			INT i;
+			for( i=0; i<Element.Num(); i++ )
 				Ar << Element(i);
 			Ar << AR_INDEX(_NumZones);
 			for( i=0; i<_NumZones; i++ )

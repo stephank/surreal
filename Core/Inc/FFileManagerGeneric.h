@@ -102,7 +102,8 @@ public:
 			return 0;
 		FString Spec = FString(Path) * TEXT("*");
 		TArray<FString> List = FindFiles( *Spec, 1, 0 );
-		for( INT i=0; i<List.Num(); i++ )
+		INT i;
+		for( i=0; i<List.Num(); i++ )
 			if( !Delete(*(FString(Path) * List(i)),1,1) )
 				return 0;
 		List = FindFiles( *Spec, 0, 1 );

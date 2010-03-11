@@ -361,7 +361,8 @@ public:
 		for( INT i=0; i<POOL_COUNT; i++ )
 		{
 			FPoolTable* Table = &PoolTable[i];
-			for( FPoolInfo** PoolPtr=&Table->FirstPool; *PoolPtr; PoolPtr=&(*PoolPtr)->Next )
+			FPoolInfo** PoolPtr;
+			for( PoolPtr=&Table->FirstPool; *PoolPtr; PoolPtr=&(*PoolPtr)->Next )
 			{
 				FPoolInfo* Pool=*PoolPtr;
 				check(Pool->PrevLink==PoolPtr);
@@ -400,13 +401,14 @@ public:
 			PoolTable[i].ExaustedPool = NULL;
 			PoolTable[i].BlockSize    = (4+(i&3)) << (1+(i>>2));
 		}
-		for( i=0; i<POOL_MAX; i++ )
+		for( DWORD i=0; i<POOL_MAX; i++ )
 		{
-			for( DWORD Index=0; PoolTable[Index].BlockSize<i; Index++ );
+			DWORD Index;
+			for( Index=0; PoolTable[Index].BlockSize<i; Index++ );
 			checkSlow(Index<POOL_COUNT);
 			MemSizeToPoolTable[i] = &PoolTable[Index];
 		}
-		for( i=0; i<256; i++ )
+		for( DWORD i=0; i<256; i++ )
 		{
 			PoolIndirect[i] = NULL;
 		}
