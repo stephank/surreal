@@ -12,6 +12,8 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <glob.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <sys/mman.h>
 #include "FFileManagerGeneric.h"
 
