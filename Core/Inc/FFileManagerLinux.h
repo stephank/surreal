@@ -237,15 +237,20 @@ public:
 	{
 		guard(FFileManagerLinux::CreateFileReader);
 
-		TCHAR Filename[PATH_MAX];
-		PathSeparatorFixup( Filename, OrigFilename );
+		TCHAR FixedFilename[PATH_MAX], Filename[PATH_MAX];
+		PathSeparatorFixup( FixedFilename, OrigFilename );
+		RewriteToConfigPath( Filename, FixedFilename );
 
 		FILE* File = fopen(TCHAR_TO_ANSI(Filename), "rb");
 		if( !File )
 		{
-			if( Flags & FILEREAD_NoFail )
-				appErrorf(TEXT("Failed to read file: %s"),Filename);
-			return NULL;
+			File = fopen(TCHAR_TO_ANSI(FixedFilename), "rb");
+			if( !File )
+			{
+				if( Flags & FILEREAD_NoFail )
+					appErrorf(TEXT("Failed to read file: %s"),Filename);
+				return NULL;
+			}
 		}
 		fseek( File, 0, SEEK_END );
 
@@ -257,8 +262,9 @@ public:
 	{
 		guard(FFileManagerLinux::CreateFileWriter);
 
-		TCHAR Filename[PATH_MAX];
-		PathSeparatorFixup( Filename, OrigFilename );
+		TCHAR FixedFilename[PATH_MAX], Filename[PATH_MAX];
+		PathSeparatorFixup( FixedFilename, OrigFilename );
+		RewriteToConfigPath( Filename, FixedFilename );
 
 		if( Flags & FILEWRITE_EvenIfReadOnly )
 			chmod(TCHAR_TO_ANSI(Filename), __S_IREAD | __S_IWRITE);
