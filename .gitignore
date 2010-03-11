@@ -8,6 +8,10 @@ System/*.int
 System/*.ini
 System/*.so*
 System/*.log
+System/*.exe
+System/*.exp
+System/*.ilk
+System/*.lib
 Help/*.txt
 Help/*.ico
 Help/*.bmp
@@ -22,6 +26,8 @@ Web/**/*.uhtm
 Web/**/*.gif
 */release-*
 */debug-*
+*/Src/Release
+*/Src/Debug
 README
 README.Loki
 README.bonus.pack.collection
@@ -30,3 +36,6 @@ ucc
 uninstall
 ut
 ut.xpm
+*.suo
+*.ncb
+*.vcproj.*
