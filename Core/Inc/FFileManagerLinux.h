@@ -237,7 +237,7 @@ public:
 	{
 		guard(FFileManagerLinux::CreateFileReader);
 
-		char Filename[256];
+		char Filename[PATH_MAX];
 		PathSeparatorFixup( Filename, OrigFilename );
 
 		FILE* File = fopen(TCHAR_TO_ANSI(Filename), TCHAR_TO_ANSI(TEXT("rb")));
@@ -257,7 +257,7 @@ public:
 	{
 		guard(FFileManagerLinux::CreateFileWriter);
 
-		char Filename[256];
+		char Filename[PATH_MAX];
 		PathSeparatorFixup( Filename, OrigFilename );
 
 		if( Flags & FILEWRITE_EvenIfReadOnly )
@@ -284,7 +284,7 @@ public:
 	{
 		guard(FFileManagerLinux::Delete);
 
-		char Filename[256];
+		char Filename[PATH_MAX];
 		PathSeparatorFixup( Filename, OrigFilename );
 
 		if( EvenReadOnly )
@@ -313,7 +313,7 @@ public:
 	{
 		guard(FFileManagerLinux::MakeDirectory);
 
-		char Path[256];
+		char Path[PATH_MAX];
 		PathSeparatorFixup( Path, OrigPath );
 
 		if( Tree )
@@ -343,7 +343,7 @@ public:
 	{
 		guard(FFileManagerLinux::DeleteDirectory);
 
-		char Path[256];
+		char Path[PATH_MAX];
 		PathSeparatorFixup( Path, OrigPath );
 
 		if( Tree )
@@ -360,8 +360,8 @@ public:
 	
 		DIR *Dirp;
 		struct dirent* Direntp;
-		char Path[256];
-		char File[256];
+		char Path[PATH_MAX];
+		char File[PATH_MAX];
 		char *Filestart;
 		char *Cur;
 		UBOOL Match;
@@ -426,7 +426,7 @@ public:
 				INT filelen = appStrlen( File );
 				INT starlen = appStrlen( star );
 				INT starpos = filelen - (starlen - 1);
-				TCHAR prefix[256];
+				TCHAR prefix[PATH_MAX];
 				appStrncpy( prefix, File, starpos );
 				star++;
 				if( appStrncmp( Direntp->d_name, prefix, starpos - 1 ) == 0 )
@@ -470,7 +470,7 @@ public:
 	FString GetDefaultDirectory()
 	{
 		guard(FFileManagerLinux::GetDefaultDirectory);
-		ANSICHAR Buffer[1024]="";
+		ANSICHAR Buffer[PATH_MAX]="";
 		getcwd( Buffer, ARRAY_COUNT(Buffer) );
 		return appFromAnsi( Buffer );
 		unguard;
