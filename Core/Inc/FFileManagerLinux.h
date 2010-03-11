@@ -343,23 +343,7 @@ public:
 		PathSeparatorFixup( Path, OrigPath );
 
 		if( Tree )
-		{
-			// Strip one element off the path
-			// Start at the end
-			TCHAR* Ptr = Path + appStrlen( Path ) - 1;
-			// Ignore trailing slashes
-			while( Ptr >= Path && *Ptr == TEXT('/') ) Ptr--;
-			// Look for the last separator
-			while( Ptr >= Path && *Ptr != TEXT('/') ) Ptr--;
-			if( Ptr >= Path )
-			{
-				*Ptr = TEXT('\0');
-				// Don't go past the root
-				if( appStrlen(Path) != 0 && !FFileManagerGeneric::MakeDirectory(Path, 1) )
-					return 0;
-				*Ptr = TEXT('/');
-			}
-		}
+			return FFileManagerGeneric::MakeDirectory( Path, Tree );
 
 		return mkdir(TCHAR_TO_ANSI(Path), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)==0 || errno==EEXIST;
 
