@@ -221,11 +221,11 @@ public:
 	{
 		guard(FFileManagerLinux::Init);
 
-		const char* XdgConfigHome = getenv( "XDG_CONFIG_HOME" );
+		const ANSICHAR* XdgConfigHome = getenv( "XDG_CONFIG_HOME" );
 		if( XdgConfigHome )
-			appSprintf( ConfigDir, "%s/%s/System/", appFromAnsi(XdgConfigHome), appPackage() );
+			appSprintf( ConfigDir, TEXT("%s/%s/System/"), appFromAnsi(XdgConfigHome), appPackage() );
 		else
-			appSprintf( ConfigDir, "%s/.config/%s/System/", appFromAnsi(getenv("HOME")), appPackage() );
+			appSprintf( ConfigDir, TEXT("%s/.config/%s/System/"), appFromAnsi(getenv("HOME")), appPackage() );
 
 		if( !MakeDirectory( ConfigDir, 1 ) )
 			appErrorf( TEXT("Failed to create configuration directory %s"), ConfigDir );
@@ -237,10 +237,10 @@ public:
 	{
 		guard(FFileManagerLinux::CreateFileReader);
 
-		char Filename[PATH_MAX];
+		TCHAR Filename[PATH_MAX];
 		PathSeparatorFixup( Filename, OrigFilename );
 
-		FILE* File = fopen(TCHAR_TO_ANSI(Filename), TCHAR_TO_ANSI(TEXT("rb")));
+		FILE* File = fopen(TCHAR_TO_ANSI(Filename), "rb");
 		if( !File )
 		{
 			if( Flags & FILEREAD_NoFail )
@@ -257,7 +257,7 @@ public:
 	{
 		guard(FFileManagerLinux::CreateFileWriter);
 
-		char Filename[PATH_MAX];
+		TCHAR Filename[PATH_MAX];
 		PathSeparatorFixup( Filename, OrigFilename );
 
 		if( Flags & FILEWRITE_EvenIfReadOnly )
@@ -265,8 +265,8 @@ public:
 		if( (Flags & FILEWRITE_NoReplaceExisting) && FileSize(Filename)>=0 )
 			return NULL;
 
-		const TCHAR* Mode = (Flags & FILEWRITE_Append) ? TEXT("ab") : TEXT("wb"); 
-		FILE* File = fopen(TCHAR_TO_ANSI(Filename),TCHAR_TO_ANSI(Mode));
+		const ANSICHAR* Mode = (Flags & FILEWRITE_Append) ? "ab" : "wb"; 
+		FILE* File = fopen(TCHAR_TO_ANSI(Filename),Mode);
 		if( !File )
 		{
 			if( Flags & FILEWRITE_NoFail )
@@ -284,7 +284,7 @@ public:
 	{
 		guard(FFileManagerLinux::Delete);
 
-		char Filename[PATH_MAX];
+		TCHAR Filename[PATH_MAX];
 		PathSeparatorFixup( Filename, OrigFilename );
 
 		if( EvenReadOnly )
@@ -313,7 +313,7 @@ public:
 	{
 		guard(FFileManagerLinux::MakeDirectory);
 
-		char Path[PATH_MAX];
+		TCHAR Path[PATH_MAX];
 		PathSeparatorFixup( Path, OrigPath );
 
 		if( Tree )
@@ -322,16 +322,16 @@ public:
 			// Start at the end
 			TCHAR* Ptr = Path + appStrlen( Path ) - 1;
 			// Ignore trailing slashes
-			while( Ptr >= Path && *Ptr == FromAnsi('/') ) Ptr--;
+			while( Ptr >= Path && *Ptr == TEXT('/') ) Ptr--;
 			// Look for the last separator
-			while( Ptr >= Path && *Ptr != FromAnsi('/') ) Ptr--;
+			while( Ptr >= Path && *Ptr != TEXT('/') ) Ptr--;
 			if( Ptr >= Path )
 			{
-				*Ptr = FromAnsi('\0');
+				*Ptr = TEXT('\0');
 				// Don't go past the root
 				if( appStrlen(Path) != 0 && !FFileManagerGeneric::MakeDirectory(Path, 1) )
 					return 0;
-				*Ptr = FromAnsi('/');
+				*Ptr = TEXT('/');
 			}
 		}
 
@@ -343,7 +343,7 @@ public:
 	{
 		guard(FFileManagerLinux::DeleteDirectory);
 
-		char Path[PATH_MAX];
+		TCHAR Path[PATH_MAX];
 		PathSeparatorFixup( Path, OrigPath );
 
 		if( Tree )
@@ -360,10 +360,10 @@ public:
 	
 		DIR *Dirp;
 		struct dirent* Direntp;
-		char Path[PATH_MAX];
-		char File[PATH_MAX];
-		char *Filestart;
-		char *Cur;
+		TCHAR Path[PATH_MAX];
+		TCHAR File[PATH_MAX];
+		TCHAR *Filestart;
+		TCHAR *Cur;
 		UBOOL Match;
 
 		// Initialize Path to Filename.
@@ -372,17 +372,17 @@ public:
 	
 		// Separate path and filename.
 		Filestart = Path;
-		for( Cur = Path; *Cur != '\0'; Cur++ )
-			if( *Cur == '/' )
+		for( Cur = Path; *Cur != TEXT('\0'); Cur++ )
+			if( *Cur == TEXT('/') )
 				Filestart = Cur + 1;
 
 		// Store filename and remove it from Path.
 		appStrcpy( File, Filestart );
-		*Filestart = '\0';
+		*Filestart = TEXT('\0');
 
 		// Check for empty path.
 		if (appStrlen( Path ) == 0)
-			appSprintf( Path, "./" );
+			appSprintf( Path, TEXT("./") );
 
 		// Open directory, get first entry.
 		Dirp = opendir( Path );
@@ -395,34 +395,34 @@ public:
 		{
 			Match = false;
 
-			if( appStrcmp( File, "*" ) == 0 )
+			if( appStrcmp( File, TEXT("*") ) == 0 )
 			{
 				// Any filename.
 				Match = true;
 			}
-			else if( appStrcmp( File, "*.*" ) == 0 )
+			else if( appStrcmp( File, TEXT("*.*") ) == 0 )
 			{
 				// Any filename with a '.'.
-				if( appStrchr( Direntp->d_name, '.' ) != NULL )
+				if( appStrchr( Direntp->d_name, TEXT('.') ) != NULL )
 					Match = true;
 			}
-			else if( File[0] == '*' )
+			else if( File[0] == TEXT('*') )
 			{
 				// "*.ext" filename.
 				if( appStrstr( Direntp->d_name, (File + 1) ) != NULL )
 					Match = true;
 			}
-			else if( File[appStrlen( File ) - 1] == '*' )
+			else if( File[appStrlen( File ) - 1] == TEXT('*') )
 			{
 				// "name.*" filename.
 				if( appStrncmp( Direntp->d_name, File, appStrlen( File ) - 1 ) == 
 					0 )
 					Match = true;
 			}
-			else if( appStrstr( File, "*" ) != NULL )
+			else if( appStrstr( File, TEXT("*") ) != NULL )
 			{
 				// single str.*.str match.
-				TCHAR* star = appStrstr( File, "*" );
+				TCHAR* star = appStrstr( File, TEXT("*") );
 				INT filelen = appStrlen( File );
 				INT starlen = appStrlen( star );
 				INT starpos = filelen - (starlen - 1);
@@ -476,17 +476,17 @@ public:
 		unguard;
 	}
 private:
-	void PathSeparatorFixup( char* Dest, const TCHAR* Src )
+	void PathSeparatorFixup( TCHAR* Dest, const TCHAR* Src )
 	{
 		appStrcpy( Dest, Src );
-		for( char *Cur = Dest; *Cur != '\0'; Cur++ )
-			if( *Cur == '\\' )
-				*Cur = '/';
+		for( TCHAR *Cur = Dest; *Cur != TEXT('\0'); Cur++ )
+			if( *Cur == TEXT('\\') )
+				*Cur = TEXT('/');
 	}
 	UBOOL RewriteToConfigPath( TCHAR* Result, const TCHAR* Path )
 	{
 		// Don't rewrite absolute paths
-		if( Path[0] == '/' )
+		if( Path[0] == TEXT('/') )
 			return 0;
 
 		appStrcpy( Result, ConfigDir );
