@@ -240,9 +240,10 @@ public:
 
 		TCHAR FixedFilename[PATH_MAX], Filename[PATH_MAX];
 		PathSeparatorFixup( FixedFilename, OrigFilename );
-		RewriteToConfigPath( Filename, FixedFilename );
 
-		FILE* File = fopen(TCHAR_TO_ANSI(Filename), "rb");
+		FILE* File = NULL;
+		if( RewriteToConfigPath( Filename, FixedFilename ) )
+			File = fopen(TCHAR_TO_ANSI(Filename), "rb");
 		if( !File )
 		{
 			File = fopen(TCHAR_TO_ANSI(FixedFilename), "rb");
@@ -265,7 +266,6 @@ public:
 
 		TCHAR FixedFilename[PATH_MAX], Filename[PATH_MAX];
 		PathSeparatorFixup( FixedFilename, OrigFilename );
-		RewriteToConfigPath( Filename, FixedFilename );
 
 		if( Flags & FILEWRITE_EvenIfReadOnly )
 			chmod(TCHAR_TO_ANSI(Filename), __S_IREAD | __S_IWRITE);
@@ -273,7 +273,11 @@ public:
 			return NULL;
 
 		const ANSICHAR* Mode = (Flags & FILEWRITE_Append) ? "ab" : "wb"; 
-		FILE* File = fopen(TCHAR_TO_ANSI(Filename),Mode);
+		FILE* File = NULL;
+		if( RewriteToConfigPath( Filename, FixedFilename ) )
+			File = fopen(TCHAR_TO_ANSI(Filename),Mode);
+		else
+			File = fopen(TCHAR_TO_ANSI(FixedFilename),Mode);
 		if( !File )
 		{
 			if( Flags & FILEWRITE_NoFail )
@@ -363,16 +367,21 @@ public:
 	TArray<FString> FindFiles( const TCHAR* OrigPattern, UBOOL Files, UBOOL Directories )
 	{
 		guard(FFileManagerLinux::FindFiles);
-		TArray<FString> Result;
 
+		TArray<FString> Result;
 		TCHAR FixedPattern[PATH_MAX], Pattern[PATH_MAX];
+		glob_t GlobBuf;
+
 		PathSeparatorFixup( FixedPattern, OrigPattern );
-		RewriteToConfigPath( Pattern, FixedPattern );
 
 		// Look in both ConfigDir and the application directory.
-		glob_t GlobBuf;
-		glob( TCHAR_TO_ANSI(Pattern), GLOB_NOSORT | GLOB_MARK, NULL, &GlobBuf );
-		glob( TCHAR_TO_ANSI(FixedPattern), GLOB_NOSORT | GLOB_MARK | GLOB_APPEND, NULL, &GlobBuf );
+		INT GlobFlags = GLOB_NOSORT | GLOB_MARK;
+		if( RewriteToConfigPath( Pattern, FixedPattern ) )
+		{
+			glob( TCHAR_TO_ANSI(Pattern), GlobFlags, NULL, &GlobBuf );
+			GlobFlags |= GLOB_APPEND;
+		}
+		glob( TCHAR_TO_ANSI(FixedPattern), GlobFlags, NULL, &GlobBuf );
 
 		for( size_t i = 0; i < GlobBuf.gl_pathc; i++ )
 		{
