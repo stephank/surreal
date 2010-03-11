@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <glob.h>
 #include "FFileManagerGeneric.h"
 
 /*-----------------------------------------------------------------------------
@@ -359,110 +360,34 @@ public:
 
 		unguard;
 	}
-	TArray<FString> FindFiles( const TCHAR* Filename, UBOOL Files, UBOOL Directories )
+	TArray<FString> FindFiles( const TCHAR* OrigPattern, UBOOL Files, UBOOL Directories )
 	{
 		guard(FFileManagerLinux::FindFiles);
 		TArray<FString> Result;
-	
-		DIR *Dirp;
-		struct dirent* Direntp;
-		TCHAR Path[PATH_MAX];
-		TCHAR File[PATH_MAX];
-		TCHAR *Filestart;
-		TCHAR *Cur;
-		UBOOL Match;
 
-		// Initialize Path to Filename.
-		// Convert MS "\" to Unix "/".
-		PathSeparatorFixup( Path, Filename );
-	
-		// Separate path and filename.
-		Filestart = Path;
-		for( Cur = Path; *Cur != TEXT('\0'); Cur++ )
-			if( *Cur == TEXT('/') )
-				Filestart = Cur + 1;
+		TCHAR FixedPattern[PATH_MAX], Pattern[PATH_MAX];
+		PathSeparatorFixup( FixedPattern, OrigPattern );
+		RewriteToConfigPath( Pattern, FixedPattern );
 
-		// Store filename and remove it from Path.
-		appStrcpy( File, Filestart );
-		*Filestart = TEXT('\0');
+		// Look in both ConfigDir and the application directory.
+		glob_t GlobBuf;
+		glob( TCHAR_TO_ANSI(Pattern), GLOB_NOSORT | GLOB_MARK, NULL, &GlobBuf );
+		glob( TCHAR_TO_ANSI(FixedPattern), GLOB_NOSORT | GLOB_MARK | GLOB_APPEND, NULL, &GlobBuf );
 
-		// Check for empty path.
-		if (appStrlen( Path ) == 0)
-			appSprintf( Path, TEXT("./") );
-
-		// Open directory, get first entry.
-		Dirp = opendir( Path );
-		if (Dirp == NULL)
-				return Result;
-		Direntp = readdir( Dirp );
-
-		// Check each entry.
-		while( Direntp != NULL )
+		for( size_t i = 0; i < GlobBuf.gl_pathc; i++ )
 		{
-			Match = false;
-
-			if( appStrcmp( File, TEXT("*") ) == 0 )
-			{
-				// Any filename.
-				Match = true;
-			}
-			else if( appStrcmp( File, TEXT("*.*") ) == 0 )
-			{
-				// Any filename with a '.'.
-				if( appStrchr( Direntp->d_name, TEXT('.') ) != NULL )
-					Match = true;
-			}
-			else if( File[0] == TEXT('*') )
-			{
-				// "*.ext" filename.
-				if( appStrstr( Direntp->d_name, (File + 1) ) != NULL )
-					Match = true;
-			}
-			else if( File[appStrlen( File ) - 1] == TEXT('*') )
-			{
-				// "name.*" filename.
-				if( appStrncmp( Direntp->d_name, File, appStrlen( File ) - 1 ) == 
-					0 )
-					Match = true;
-			}
-			else if( appStrstr( File, TEXT("*") ) != NULL )
-			{
-				// single str.*.str match.
-				TCHAR* star = appStrstr( File, TEXT("*") );
-				INT filelen = appStrlen( File );
-				INT starlen = appStrlen( star );
-				INT starpos = filelen - (starlen - 1);
-				TCHAR prefix[PATH_MAX];
-				appStrncpy( prefix, File, starpos );
-				star++;
-				if( appStrncmp( Direntp->d_name, prefix, starpos - 1 ) == 0 )
-				{
-					// part before * matches
-					TCHAR* postfix = Direntp->d_name + (appStrlen(Direntp->d_name) - starlen) + 1;
-					if ( appStrcmp( postfix, star ) == 0 )
-						Match = true;
-				}
-			}
-			else
-			{
-				// Literal filename.
-				if( appStrcmp( Direntp->d_name, File ) == 0 )
-					Match = true;
-			}
-
-			// Does this entry match the Filename?
-			if( Match )
-			{
-				// Yes, add the file name to Result.
-				new(Result)FString(Direntp->d_name);
-			}
-		
-			// Get next entry.
-			Direntp = readdir( Dirp );
+			const TCHAR* Match = appFromAnsi(GlobBuf.gl_pathv[i]);
+			// Strip the filename from the match
+			for( const TCHAR* Ptr = Match; *Ptr != TEXT('\0'); Ptr++ )
+				if( *Ptr == TEXT('/') )
+					Match = Ptr + 1;
+			// Directories are GLOB_MARK'd with a trailing slash,
+			// so this prevents directories from being added to the result.
+			if( appStrlen(Match) != 0 )
+				new(Result)FString( Match );
 		}
 
-		// Close directory.
-		closedir( Dirp );
+		globfree( &GlobBuf );
 
 		return Result;
 		unguard;
