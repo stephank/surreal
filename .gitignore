@@ -12,6 +12,7 @@ System/*.exe
 System/*.exp
 System/*.ilk
 System/*.lib
+System/*.dll
 Help/*.txt
 Help/*.ico
 Help/*.bmp
@@ -28,6 +29,7 @@ Web/**/*.gif
 */debug-*
 */Src/Release
 */Src/Debug
+*/Lib
 README
 README.Loki
 README.bonus.pack.collection
