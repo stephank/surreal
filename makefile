@@ -21,7 +21,7 @@ ARGS =
 .PHONY : all
 ifeq ($(TARGETTYPE),linux)
 all : $(TMPDIR)/libstdc++.a \
-	sdllaunch sdldrv opengldrv alaudio ucc
+	minilaunch sdllaunch sdldrv opengldrv alaudio ucc
 endif
 
 # Need to statically link libstdc++.
@@ -61,6 +61,10 @@ ucc : core engine
 
 .PHONY : render
 render : $(RENDER)
+
+.PHONY : minilaunch
+minilaunch : core engine
+	@$(MAKE) $(ARGS) --directory=$(MINILAUNCH_SRC)
 
 .PHONY : sdllaunch
 sdllaunch : core engine

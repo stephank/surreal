@@ -105,6 +105,12 @@ UCC_INC			= $(UNREAL_DIR)/UCC/Inc
 UCC_BUILD		= $(UNREAL_DIR)/UCC/$(BUILD_SUBDIR)
 UCC_OUT			= $(UNREAL_DIR)/System
 
+# MiniLaunch directories.
+MINILAUNCH_SRC		= $(UNREAL_DIR)/MiniLaunch/Src
+MINILAUNCH_INC		= $(UNREAL_DIR)/MiniLaunch/Inc
+MINILAUNCH_BUILD	= $(UNREAL_DIR)/MiniLaunch/$(BUILD_SUBDIR)
+MINILAUNCH_OUT		= $(UNREAL_DIR)/System
+
 # SDLLaunch directories.
 SDLLAUNCH_SRC		= $(UNREAL_DIR)/SDLLaunch/Src
 SDLLAUNCH_INC		= $(UNREAL_DIR)/SDLLaunch/Inc
@@ -170,6 +176,7 @@ ALL_SRC_DIRS 	= $(CORE_INC) $(CORE_SRC) \
 		  $(EDITOR_SRC) $(EDITOR_INC) \
 		  $(OPENGLDRV_SRC) $(OPENGLDRV_INC) \
 		  $(SDLDRV_SRC) $(SDLDRV_INC) \
+		  $(MINILAUNCH_SRC) $(MINILAUNCH_INC) \
 		  $(SDLLAUNCH_SRC) $(SDLLAUNCH_INC) \
 		  $(ALAUDIO_SRC) $(ALAUDIO_INC) \
 		  $(UWEB_SRC) $(UWEB_INC) \
@@ -211,6 +218,9 @@ EDITOR_SONAME		= Editor.so
 
 # UCC executable
 UCC			= $(UCC_OUT)/ucc
+
+# MiniLaunch executable
+MINILAUNCH			= $(MINILAUNCH_OUT)/Surreal
 
 # SDLLaunch executable
 SDLLAUNCH			= $(SDLLAUNCH_OUT)/UnrealTournament
@@ -274,6 +284,7 @@ UCC_TAG		= $(UCC_INC)/*.h $(UCC_SRC)/*.h $(UCC_SRC)/*.cpp
 RENDER_TAG	= $(RENDER_INC)/*.h $(RENDER_SRC)/*.h $(RENDER_SRC)/*.cpp
 OPENGLDRV_TAG	= $(OPENGLDRV_INC)/*.h $(OPENGLDRV_SRC)/*.h $(OPENGLDRV_SRC)/*.cpp
 SDLDRV_TAG	= $(SDLDRV_INC)/*.h $(SDLDRV_INC)/*.h $(SDLDRV_SRC)/*.cpp
+MINILAUNCH_TAG	= $(MINILAUNCH_INC)/*.h $(MINILAUNCH_SRC)/*.h $(MINILAUNCH_SRC)/*.cpp
 SDLLAUNCH_TAG	= $(SDLLAUNCH_INC)/*.h $(SDLLAUNCH_SRC)/*.h $(SDLLAUNCH_SRC)/*.cpp
 ALAUDIO_TAG	= $(ALAUDIO_INC)/*.h $(ALAUDIO_SRC)/*.h $(ALAUDIO_SRC)/*.cpp
 UWEB_TAG	= $(UWEB_INC)/*.h $(UWEB_SRC)/*.h $(UWEB_SRC)/*.cpp
@@ -282,8 +293,8 @@ STD_TAG		= /usr/include/*.h /usr/include/sys/*.h /usr/include/arpa/*.h \
 			/usr/include/netinet/*.h
 
 ALL_TAGS	= $(CORE_TAG) $(ENGINE_TAG) $(IPDRV_TAG) $(FIRE_TAG) \
-			$(EDITOR_TAG) $(UCC_TAG) $(RENDER_TAG) \
-			$(OPENGLDRV_TAG) $(SDLLAUNCH_TAG) $(SDLDRV_TAG) \
+			$(EDITOR_TAG) $(UCC_TAG) $(RENDER_TAG) $(OPENGLDRV_TAG) \
+			$(MINILAUNCH_TAG) $(SDLLAUNCH_TAG) $(SDLDRV_TAG) \
 			$(ALAUDIO_TAG) $(UWEB_TAG) $(NULLRENDER_TAG) $(STD_TAG)
 
 #-----------------------------------------------------------------------------
