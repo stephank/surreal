@@ -39,6 +39,7 @@ FFileManagerNative FileManager;
 #include "FConfigCacheIni.h"
 
 // Splash
+static const TCHAR* SplashPath = TEXT("..") PATH_SEPARATOR TEXT("Help") PATH_SEPARATOR TEXT("Logo.bmp");
 SDL_Surface* Splash = NULL;
 
 /*-----------------------------------------------------------------------------
@@ -52,8 +53,7 @@ static void OpenSplash()
 		appErrorf( TEXT("Couldn't initialize SDL: %s\n"), SDL_GetError() );
 
 	// Load the splash.
-	// FIXME: path portability.
-	SDL_Surface* Splash = SDL_LoadBMP( "../Help/Logo.bmp" );
+	SDL_Surface* Splash = SDL_LoadBMP( SplashPath );
 	if( Splash == NULL )
 		return;
 
