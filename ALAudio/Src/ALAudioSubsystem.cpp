@@ -499,7 +499,7 @@ void UOpenALAudioSubsystem::Update( FPointRegion Region, FCoords& Coords )
 	// Update the listener.
 	{
 		FVector At = ViewActor->Rotation.Vector();
-		FVector Up = ViewActor->Rotation.UpVector();
+		FVector Up = -(GMath.UnitCoords / ViewActor->Rotation).ZAxis;
 		FLOAT Orientation[6] = { At.X, At.Y, At.Z, Up.X, Up.Y, Up.Z };
 		alListenerfv( AL_POSITION,		&ViewActor->Location.X );
 		alListenerfv( AL_VELOCITY,		&ViewActor->Velocity.X );

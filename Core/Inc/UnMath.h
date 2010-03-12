@@ -778,7 +778,6 @@ public:
 		);
 	}
 	FVector Vector();
-	FVector UpVector();
 };
 
 /*-----------------------------------------------------------------------------
@@ -1848,14 +1847,6 @@ inline UBOOL FIntersectPlanes2( FVector& I, FVector& D, const FPlane& P1, const 
 inline FVector FRotator::Vector()
 {
 	return (GMath.UnitCoords / *this).XAxis;
-}
-
-//
-// Convert a rotation into a vector facing up.
-//
-inline FVector FRotator::UpVector()
-{
-	return -(GMath.UnitCoords / *this).ZAxis;
 }
 
 
