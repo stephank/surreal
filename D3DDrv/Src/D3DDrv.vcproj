@@ -148,7 +148,7 @@
 				InlineFunctionExpansion="1"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="..\..\Core\Inc,..\..\Engine\Inc,..\..\DirectX7\Inc"
+				AdditionalIncludeDirectories="..\..\Core\Inc;..\..\Engine\Inc;&quot;$(DXSDK_DIR)Include&quot;"
 				PreprocessorDefinitions="WIN32;ThisPackage=D3DDrv"
 				RuntimeLibrary="2"
 				StructMemberAlignment="3"
@@ -175,10 +175,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\..\DirectX7\Lib\DxGuid.lib ..\..\DirectX7\Lib\d3dim.lib ..\..\Engine\Lib\Engine.lib ..\..\Core\Lib\Core.lib"
+				AdditionalDependencies="DxGuid.lib d3dim.lib ..\..\Engine\Lib\Engine.lib ..\..\Core\Lib\Core.lib"
 				OutputFile="..\..\System\D3DDrv.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
+				AdditionalLibraryDirectories="$(DXSDK_DIR)include"
 				ProgramDatabaseFile=".\..\Lib/D3DDrv.pdb"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
