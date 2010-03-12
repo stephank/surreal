@@ -150,13 +150,14 @@ UBOOL UOpenALAudioSubsystem::Init()
 	alSpeedOfSound( 343.3f * 52.5f );
 	CheckALErrorFlag( TEXT("alSpeedOfSound") );
 
-	ALuint NewSources[NumSources + 1];
+	ALuint* NewSources = new ALuint[NumSources + 1];
 	Sources = new FAudioSource[NumSources];
 	alGenSources( NumSources + 1, NewSources );
 	CheckALErrorFlag( TEXT("alGenSources") );
 	MusicSource = NewSources[0];
 	for( INT i=0; i<NumSources; i++ )
 		Sources[i].Id = NewSources[i+1];
+	delete[] NewSources;
 
 	// Fix the music source to 0 values
 	alSource3f(	MusicSource, AL_POSITION,			0.f, 0.f, 0.f );
@@ -323,13 +324,6 @@ void UOpenALAudioSubsystem::UnregisterMusic( UMusic* Music )
 	unguard;
 }
 
-UBOOL UOpenALAudioSubsystem::Exec( const TCHAR* Cmd, FOutputDevice& Ar )
-{
-	guard(UOpenALAudioSubsystem::Exec);
-
-	unguard;
-}
-
 UBOOL UOpenALAudioSubsystem::PlaySound
 (
 	AActor*	Actor,
@@ -341,7 +335,7 @@ UBOOL UOpenALAudioSubsystem::PlaySound
 	FLOAT	Pitch
 )
 {
-	PlaySound( Actor, Slot, Sound, Location, Volume, Radius, Pitch, 0 );
+	return PlaySound( Actor, Slot, Sound, Location, Volume, Radius, Pitch, 0 );
 }
 
 UBOOL UOpenALAudioSubsystem::PlaySound
@@ -526,8 +520,9 @@ void UOpenALAudioSubsystem::Update( FPointRegion Region, FCoords& Coords )
 			&&	FDistSquared(ViewActor->Location,Actor->Location)<=Square(Actor->WorldSoundRadius()) )
 			{
 				INT Slot = Actor->GetIndex()*16+SLOT_Ambient*2;
+				INT j;
 				// See if there's already an existing slot.
-				for( INT j=0; j<NumSources; j++ )
+				for( j=0; j<NumSources; j++ )
 					if( Sources[j].Slot==Slot )
 						break;
 				// If not, start playing.

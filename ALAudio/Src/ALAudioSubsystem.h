@@ -5,11 +5,19 @@ Revision history:
 	* Created by Stéphan Kochen (based on Audio).
 =============================================================================*/
 
+#ifdef _WIN32
+#include <al.h>
+#include <alure.h>
+#elif defined(__APPLE__)
+#include <OpenAL/al.h>
+#include <OpenAL/alure.h>
+#else
 #include "AL/al.h"
 #include "AL/alure.h"
+#endif
+#include "ALAudioMusic.h"
 #include "Core.h"
 #include "Engine.h"
-#include "ALAudioMusic.h"
 
 /*------------------------------------------------------------------------------------
 	UOpenALAudioSubsystem.
@@ -89,7 +97,7 @@ public:
 	// UAudioSubsystem interface.
 	UBOOL Init();
 	void SetViewport( UViewport* Viewport );
-	UBOOL Exec( const TCHAR* Cmd, FOutputDevice& Ar=*GLog );
+	UBOOL Exec( const TCHAR* Cmd, FOutputDevice& Ar=*GLog ) { return 0; };
 	void Update( FPointRegion Region, FCoords& Listener );
 	void RegisterMusic( UMusic* Music );
 	void RegisterSound( USound* Music );
@@ -98,7 +106,7 @@ public:
 	UBOOL PlaySound( AActor* Actor, INT Id, USound* Sound, FVector Location, FLOAT Volume, FLOAT Radius, FLOAT Pitch );
 	UBOOL PlaySound( AActor* Actor, INT Id, USound* Sound, FVector Location, FLOAT Volume, FLOAT Radius, FLOAT Pitch, UBOOL Looping );
 	void NoteDestroy( AActor* Actor );
-	UBOOL GetLowQualitySetting() {};
+	UBOOL GetLowQualitySetting() { return 0; };
 	UViewport* GetViewport();
 	void RenderAudioGeometry( FSceneNode* Frame ) {};
 	void PostRender( FSceneNode* Frame ) {};

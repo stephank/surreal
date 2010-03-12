@@ -5,7 +5,13 @@ Revision history:
 	* Created by Stéphan Kochen.
 =============================================================================*/
 
-#include "AL/al.h"
+#ifdef _WIN32
+#include <al.h>
+#elif defined(__APPLE__)
+#include <OpenAL/al.h>
+#else
+#include <AL/al.h>
+#endif
 #include <mikmod.h>
 #include "Core.h"
 

@@ -62,7 +62,7 @@ static BOOL MMMR_Read( MREADER* Base, void* Ptr, size_t Amount)
 {
 	DEFINE_READER;
 	INT Remaining = Reader->Length - Reader->Position;
-	if( Amount > Remaining ) Amount = Remaining;
+	if( (INT)Amount > Remaining ) Amount = Remaining;
 	memcpy( Ptr, &Reader->Data[Reader->Position], Amount );
 	Reader->Position += Amount;
 	return Amount;
