@@ -172,26 +172,6 @@ static void MainLoop( UEngine* Engine )
 -----------------------------------------------------------------------------*/
 
 //
-// Exit wound.
-// 
-int CleanUpOnExit(int ErrorLevel)
-{
-	// Clean up our mess.
-	GIsRunning = 0;
-	GFileManager->Delete(TEXT("Running.ini"),0,0);
-	debugf( NAME_Title, LocalizeGeneral("Exit") );
-
-	appPreExit();
-	GIsGuarded = 0;
-
-	// Shutdown.
-	appExit();
-	GIsStarted = 0;
-
-	_exit(ErrorLevel);
-}
-
-//
 // Entry point.
 //
 int main( int argc, char* argv[] )
@@ -200,90 +180,90 @@ int main( int argc, char* argv[] )
 		__Context::StaticInit();
 	#endif
 
-	#if DO_GUARD
-	guard(main);
-	#else
-	{ static const TCHAR __FUNC_NAME__[]=TEXT("main");
-	  __Context __LOCAL_CONTEXT__; 
-	  try{
-	  if(setjmp(__Context::Env)) { throw 1; } 
-	  else {
-	#endif
-	
 	INT ErrorLevel = 0;
-	GIsStarted	   = 1;
-
-	#if !_MSC_VER
-	// Set module name.
-	appStrcpy( GModule, argv[0] );
-	#endif
-
-	// Set the package name.
-	appStrcpy( GPackage, appPackage() );	
-
-	// Get the command line.
-	TCHAR CmdLine[1024], *CmdLinePtr=CmdLine;
-	*CmdLinePtr = 0;
-	for( INT i=1; i<argc; i++ )
+	GIsStarted     = 1;
+#ifndef _DEBUG
+	try
+#endif
 	{
-		if( i>1 )
-			appStrcat( CmdLine, " " );
-		appStrcat( CmdLine, argv[i] );
-	}
+		GIsGuarded = 1;
 
-	// Init core.
-	GIsClient = 1; 
-	GIsGuarded = 1;
-	appInit( TEXT("UnrealTournament"), CmdLine, &Malloc, &Log, &Error, &Warn, &FileManager, FConfigCacheIni::Factory, 1 );
+		#if !_MSC_VER
+		// Set module name.
+		appStrcpy( GModule, argv[0] );
+		#endif
 
-	// Init mode.
-	GIsServer		= 1;
-	GIsClient		= !ParseParam(appCmdLine(), TEXT("SERVER"));
-	GIsEditor		= 0;
-	GIsScriptable	= 1;
-	GLazyLoad		= !GIsClient || ParseParam(appCmdLine(), TEXT("LAZY"));
+		// Set the package name.
+		appStrcpy( GPackage, appPackage() );
 
-	// Init console log.
-	if (ParseParam(CmdLine, TEXT("LOG")))
-	{
-		Warn.AuxOut = GLog;
-		GLog		= &Warn;
-	}
-
-	// Open splash screen.
-	OpenSplash();
-
-	// Init engine.
-	UEngine* Engine = InitEngine();
-	if( Engine )
-	{
-		debugf( NAME_Title, LocalizeGeneral("Run") );
-
-		// Optionally Exec and exec file.
-		FString Temp;
-		if( Parse(CmdLine, TEXT("EXEC="), Temp) )
+		// Get the command line.
+		TCHAR CmdLine[1024], *CmdLinePtr=CmdLine;
+		*CmdLinePtr = 0;
+		for( INT i=1; i<argc; i++ )
 		{
-			Temp = FString(TEXT("exec ")) + Temp;
-			if( Engine->Client && Engine->Client->Viewports.Num() && Engine->Client->Viewports(0) )
-				Engine->Client->Viewports(0)->Exec( *Temp, *GLog );
+			if( i>1 )
+				appStrcat( CmdLine, TEXT(" ") );
+			appStrcat( CmdLine, appFromAnsi(argv[i]) );
 		}
 
-		// Clean up the splash screen.
-		CloseSplash();
-		
-		// Start main engine loop.
-		debugf( TEXT("Entering main loop.") );
-		if ( !GIsRequestingExit )
-			MainLoop( Engine );
+		// Init core.
+		GIsClient = 1;
+		GIsGuarded = 1;
+		appInit( TEXT("UnrealTournament"), CmdLine, &Malloc, &Log, &Error, &Warn, &FileManager, FConfigCacheIni::Factory, 1 );
+
+		// Init mode.
+		GIsServer		= 1;
+		GIsClient		= !ParseParam(appCmdLine(), TEXT("SERVER"));
+		GIsEditor		= 0;
+		GIsScriptable	= 1;
+		GLazyLoad		= !GIsClient || ParseParam(appCmdLine(), TEXT("LAZY"));
+
+		// Init console log.
+		if (ParseParam(CmdLine, TEXT("LOG")))
+		{
+			Warn.AuxOut = GLog;
+			GLog		= &Warn;
+		}
+
+		// Open splash screen.
+		OpenSplash();
+
+		// Init engine.
+		UEngine* Engine = InitEngine();
+		if( Engine )
+		{
+			debugf( NAME_Title, LocalizeGeneral("Run") );
+
+			// Optionally Exec and exec file.
+			FString Temp;
+			if( Parse(CmdLine, TEXT("EXEC="), Temp) )
+			{
+				Temp = FString(TEXT("exec ")) + Temp;
+				if( Engine->Client && Engine->Client->Viewports.Num() && Engine->Client->Viewports(0) )
+					Engine->Client->Viewports(0)->Exec( *Temp, *GLog );
+			}
+
+			// Clean up the splash screen.
+			CloseSplash();
+
+			// Start main engine loop.
+			debugf( TEXT("Entering main loop.") );
+			if ( !GIsRequestingExit )
+				MainLoop( Engine );
+		}
+		appPreExit();
+		GIsGuarded = 0;
 	}
-
-	// Finish up.
-	return CleanUpOnExit(ErrorLevel);
-
-	}}
-	catch (...)
+#ifndef _DEBUG
+	catch( ... )
 	{
-		// Chained abort.  Do cleanup.
-		return CleanUpOnExit(1);
-	}}
+		// Crashed.
+		ErrorLevel = 1;
+		GIsGuarded = 0;
+		Error.HandleError();
+	}
+#endif
+	appExit();
+	GIsStarted = 0;
+	return ErrorLevel;
 }

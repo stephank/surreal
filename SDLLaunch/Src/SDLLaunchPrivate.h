@@ -6,10 +6,14 @@ Revision history:
 	* Created by Brandon Reinhart.
 =============================================================================*/
 
+#if WIN32
+	#include <windows.h>
+#else
+	#include <errno.h>
+	#include <sys/stat.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <sys/stat.h>
 #include <malloc.h>
 #include <fcntl.h>
 #include "SDL.h"
