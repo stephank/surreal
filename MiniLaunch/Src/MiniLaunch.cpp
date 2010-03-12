@@ -106,14 +106,35 @@ static void MainLoop( UEngine* Engine )
 	INT TickCount = 0;
 	while( GIsRunning && !GIsRequestingExit )
 	{
+		FTime NewTime = appSeconds();
+		FLOAT DeltaTime = NewTime - OldTime;
+		OldTime = NewTime;
+
+#ifdef WIN32
+		// Handle all incoming messages.
+		guard(MessagePump);
+		MSG Msg;
+		while( PeekMessage(&Msg,NULL,0,0,PM_REMOVE) )
+		{
+			if( Msg.message == WM_QUIT )
+				GIsRequestingExit = 1;
+
+			guard(TranslateMessage);
+			TranslateMessage( &Msg );
+			unguardf(( TEXT("%08X %i"), (INT)Msg.hwnd, Msg.message ));
+
+			guard(DispatchMessage);
+			DispatchMessage( &Msg );
+			unguardf(( TEXT("%08X %i"), (INT)Msg.hwnd, Msg.message ));
+		}
+		unguard;
+#endif
+
 		// Update the world.
 		guard(UpdateWorld);
-		FTime NewTime   = appSeconds();
-		FLOAT  DeltaTime = NewTime - OldTime;
 		Engine->Tick( DeltaTime );
 		if( GWindowManager )
 			GWindowManager->Tick( DeltaTime );
-		OldTime = NewTime;
 		TickCount++;
 		if( OldTime > SecondStartTime + 1 )
 		{
