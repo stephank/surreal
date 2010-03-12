@@ -137,9 +137,10 @@ UBOOL USDLClient::Exec( const TCHAR* Cmd, FOutputDevice& Ar )
 void USDLClient::Tick()
 {
 	guard(USDLClient::Tick);
+	INT i;
 
 	// Tick the viewports.
-  	for( INT i=0; i<Viewports.Num(); i++ )
+	for( i=0; i<Viewports.Num(); i++ )
 	{
 		USDLViewport* Viewport = CastChecked<USDLViewport>(Viewports(i));
 		Viewport->Tick();
@@ -147,7 +148,7 @@ void USDLClient::Tick()
 
 	// Blit any viewports that need blitting.
 	USDLViewport* BestViewport = NULL;
-  	for( i=0; i<Viewports.Num(); i++ )
+	for( i=0; i<Viewports.Num(); i++ )
 	{
 		USDLViewport* Viewport = CastChecked<USDLViewport>(Viewports(i));
 		check(!Viewport->HoldCount);
@@ -160,7 +161,7 @@ void USDLClient::Tick()
 			return;
 		}
 		*/
-  		//else
+		//else
 		if
 		(	Viewport->IsRealtime()
 		&&	Viewport->SizeX

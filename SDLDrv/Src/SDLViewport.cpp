@@ -47,6 +47,7 @@ USDLViewport::USDLViewport()
 ,	ViewportStatus( SDL_ViewportOpening )
 {
 	guard(USDLViewport::USDLViewport);
+	INT i;
 
 	// Query current bit depth
 	int depth = SDL_GetVideoInfo()->vfmt->BitsPerPixel;
@@ -73,7 +74,7 @@ USDLViewport::USDLViewport()
 	}
 	
 	// Zero out Keysym map.
-	for (INT i=0; i<65536; i++)
+	for (i=0; i<65536; i++)
 		KeysymMap[i] = 0;
 		
 	// Remap important keys.
