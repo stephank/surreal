@@ -33,13 +33,23 @@ For building, you need development files for the following libraries:
  * MikMod 3.x
 
 
-Building
---------
+Building on Windows
+-------------------
 
-Currently, only the Linux build system is in place. The project files for
-Visual C++ that were distributed with the public source for version 432 are
-still in place, but don't nearly cover all packages. Help in this area is
-much appreciated.
+On Windows, building was tested using Visual Studio 2008 express. This is a
+free download from Microsoft. You can simply open the solution file
+`Surreal.sln` and build from there.
+
+The biggest hurdle is getting the dependencies in place. You will likely
+need to reconfigure the additional include and library paths for many of the
+projects in order to build.
+
+In addition, if you want to build D3D9Drv, or build SDL from source, you will
+need the DirectX SDK. This is also a free download from Microsoft.
+
+
+Building on Linux
+-----------------
 
 To build on Linux, you must first place the packages for which source code is
 not available in the `System` directory. The files required are `Core.so`,
