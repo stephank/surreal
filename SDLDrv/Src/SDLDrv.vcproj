@@ -149,7 +149,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\Inc;..\..\Core\Inc;..\..\Engine\Inc;&quot;..\..\..\SDL-1.2.14\include&quot;"
-				PreprocessorDefinitions="WIN32;ThisPackage=SDLDrv"
+				PreprocessorDefinitions="WIN32;ThisPackage=SDLDrv;_REALLY_WANT_DEBUG"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"

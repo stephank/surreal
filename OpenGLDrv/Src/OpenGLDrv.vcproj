@@ -148,8 +148,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\Core\Inc,..\..\Engine\Inc"
-				PreprocessorDefinitions="_DEBUG;_REALLY_WANT_DEBUG;_WINDOWS;WIN32;UNICODE;NO_UNICODE_OS_SUPPORT;WIN32_LEAN_AND_MEAN"
+				AdditionalIncludeDirectories="..\..\Core\Inc,..\..\Engine\Inc;&quot;..\..\..\SDL-1.2.14\include&quot;"
+				PreprocessorDefinitions="WIN32;ThisPackage=OpenGLDrv;_REALLY_WANT_DEBUG"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -178,10 +178,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib ..\..\Core\Lib\Core.lib ..\..\Engine\Lib\Engine.lib"
+				AdditionalDependencies="SDL.lib ..\..\Core\Lib\Core.lib ..\..\Engine\Lib\Engine.lib"
 				OutputFile="..\..\System\OpenGLDrv.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
+				AdditionalLibraryDirectories="&quot;..\..\..\SDL-1.2.14\VisualC\SDL\Release&quot;"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\..\Lib/OpenGLDrv.pdb"
 				GenerateMapFile="true"

@@ -149,7 +149,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\Core\Inc;..\..\Engine\Inc;&quot;$(DXSDK_DIR)Include&quot;"
-				PreprocessorDefinitions="_DEBUG;_REALLY_WANT_DEBUG;_WINDOWS;WIN32;UNICODE;NO_UNICODE_OS_SUPPORT;WIN32_LEAN_AND_MEAN"
+				PreprocessorDefinitions="WIN32;ThisPackage=D3D9Drv;_REALLY_WANT_DEBUG"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"

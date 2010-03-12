@@ -64,6 +64,7 @@
 				ProgramDataBaseFileName=".\Release/"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
+				DebugInformationFormat="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -148,8 +149,9 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\Core\Inc,..\..\Engine\Inc,&quot;C:\Program Files\OpenAL 1.1 SDK\include&quot;,&quot;..\..\..\alure-1.0\include&quot;"
-				PreprocessorDefinitions="WIN32;ThisPackage=ALAudio"
+				InlineFunctionExpansion="0"
+				AdditionalIncludeDirectories="..\..\Core\Inc;..\..\Engine\Inc;&quot;C:\Program Files\OpenAL 1.1 SDK\include&quot;;&quot;..\..\..\alure-1.0\include\AL&quot;;&quot;..\..\..\libmikmod-3.1.11\include&quot;"
+				PreprocessorDefinitions="WIN32;ThisPackage=ALAudio;_REALLY_WANT_DEBUG"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -178,11 +180,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\..\Core\Lib\Core.lib ..\..\Engine\Lib\Engine.lib OpenAL32.lib ALURE32.lib"
+				AdditionalDependencies="..\..\Core\Lib\Core.lib ..\..\Engine\Lib\Engine.lib OpenAL32.lib ALURE32.lib mikmod.lib"
 				OutputFile="..\..\System\ALAudio.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="&quot;C:\Program Files\OpenAL 1.1 SDK\libs\Win32&quot;;&quot;..\..\..\alure-1.0\build\Release&quot;"
+				AdditionalLibraryDirectories="&quot;C:\Program Files\OpenAL 1.1 SDK\libs\Win32&quot;;&quot;..\..\..\alure-1.0\build\Release&quot;;&quot;..\..\..\libmikmod-3.1.11\win32&quot;"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\..\Lib/ALAudio.pdb"
 				GenerateMapFile="true"
