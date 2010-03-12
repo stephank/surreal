@@ -17,6 +17,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SDLLaunch", "SDLLaunch\Src\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SDLDrv", "SDLDrv\Src\SDLDrv.vcproj", "{699AE7A0-2DDD-11DF-9095-7B1D56D89593}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ALAudio", "ALAudio\Src\ALAudio.vcproj", "{3F24EF9A-2DE0-11DF-BC24-3D3356D89593}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -55,6 +57,10 @@ Global
 		{699AE7A0-2DDD-11DF-9095-7B1D56D89593}.Debug|Win32.Build.0 = Release|Win32
 		{699AE7A0-2DDD-11DF-9095-7B1D56D89593}.Release|Win32.ActiveCfg = Release|Win32
 		{699AE7A0-2DDD-11DF-9095-7B1D56D89593}.Release|Win32.Build.0 = Release|Win32
+		{3F24EF9A-2DE0-11DF-BC24-3D3356D89593}.Debug|Win32.ActiveCfg = Release|Win32
+		{3F24EF9A-2DE0-11DF-BC24-3D3356D89593}.Debug|Win32.Build.0 = Release|Win32
+		{3F24EF9A-2DE0-11DF-BC24-3D3356D89593}.Release|Win32.ActiveCfg = Release|Win32
+		{3F24EF9A-2DE0-11DF-BC24-3D3356D89593}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
