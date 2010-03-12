@@ -48,7 +48,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\Core\Inc,..\..\Engine\Inc"
+				AdditionalIncludeDirectories="..\..\Core\Inc,..\..\Engine\Inc;&quot;..\..\..\SDL-1.2.14\include&quot;"
 				PreprocessorDefinitions="NDEBUG;_WINDOWS;WIN32;UNICODE;NO_UNICODE_OS_SUPPORT;WIN32_LEAN_AND_MEAN"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -78,10 +78,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib ..\..\Core\Lib\Core.lib ..\..\Engine\Lib\Engine.lib"
+				AdditionalDependencies="SDL.lib ..\..\Core\Lib\Core.lib ..\..\Engine\Lib\Engine.lib"
 				OutputFile="..\..\System\OpenGLDrv.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
+				AdditionalLibraryDirectories="&quot;..\..\..\SDL-1.2.14\VisualC\SDL\Release&quot;"
 				ProgramDatabaseFile=".\..\Lib/OpenGLDrv.pdb"
 				GenerateMapFile="true"
 				MapFileName=".\Release/OpenGLDrv.map"

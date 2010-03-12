@@ -52,10 +52,6 @@ TODO:
 #include "OpenGLDrv.h"
 #include "OpenGL.h"
 
-#ifdef WIN32
-#include <mmsystem.h>
-#endif
-
 
 /*-----------------------------------------------------------------------------
 	Globals.
@@ -907,7 +903,6 @@ void UOpenGLRenderDevice::StaticConstructor() {
 	SC_AddBoolConfigParam(1,  TEXT("UseVertexProgram"), CPP_PROPERTY_LOCAL_DCV(UseVertexProgram), 0);
 	SC_AddBoolConfigParam(0,  TEXT("UseFragmentProgram"), CPP_PROPERTY_LOCAL_DCV(UseFragmentProgram), 0);
 	SC_AddIntConfigParam(TEXT("SwapInterval"), CPP_PROPERTY_LOCAL(SwapInterval), -1);
-	SC_AddIntConfigParam(TEXT("FrameRateLimit"), CPP_PROPERTY_LOCAL(FrameRateLimit), 0);
 	SC_AddBoolConfigParam(3,  TEXT("SceneNodeHack"), CPP_PROPERTY_LOCAL(SceneNodeHack), 1);
 	SC_AddBoolConfigParam(2,  TEXT("SmoothMaskedTextures"), CPP_PROPERTY_LOCAL(SmoothMaskedTextures), 0);
 	SC_AddBoolConfigParam(1,  TEXT("MaskedTextureHack"), CPP_PROPERTY_LOCAL(MaskedTextureHack), 1);
@@ -941,9 +936,6 @@ void UOpenGLRenderDevice::StaticConstructor() {
 
 	//Mark fragment program names as not allocated
 	m_allocatedFragmentProgramNames = false;
-
-	//Frame rate limit timer not yet initialized
-	m_frameRateLimitTimerInitialized = false;
 
 	unguard;
 }
@@ -1085,37 +1077,6 @@ l_no_sse2:
 	return bSupportsSSE2;
 }
 #endif //UTGLR_INCLUDE_SSE_CODE
-
-
-void UOpenGLRenderDevice::InitFrameRateLimitTimerSafe(void) {
-	//Only initialize once
-	if (m_frameRateLimitTimerInitialized) {
-		return;
-	}
-	m_frameRateLimitTimerInitialized = true;
-
-#ifdef WIN32
-	//Request high resolution timer
-	timeBeginPeriod(1);
-#endif
-
-	return;
-}
-
-void UOpenGLRenderDevice::ShutdownFrameRateLimitTimer(void) {
-	//Only shutdown once
-	if (!m_frameRateLimitTimerInitialized) {
-		return;
-	}
-	m_frameRateLimitTimerInitialized = false;
-
-#ifdef WIN32
-	//Release high resolution timer
-	timeEndPeriod(1);
-#endif
-
-	return;
-}
 
 
 static void FASTCALL Buffer3Verts(UOpenGLRenderDevice *pRD, FTransTexture** Pts) {
@@ -1743,47 +1704,10 @@ void UOpenGLRenderDevice::SetGamma(FLOAT GammaCorrection) {
 
 	BuildGammaRamp(GammaCorrection + GammaOffsetRed, GammaCorrection + GammaOffsetGreen, GammaCorrection + GammaOffsetBlue, Brightness, gammaRamp);
 
-#ifdef __LINUX__
 	// vogel: FIXME (talk to Sam)
 	// SDL_SetGammaRamp( Ramp.red, Ramp.green, Ramp.blue );
 	FLOAT gamma = 0.4 + 2 * GammaCorrection; 
 	SDL_SetGamma(gamma, gamma, gamma);
-#else
-	if (g_gammaFirstTime) {
-		if (GetDeviceGammaRamp(m_hDC, &g_originalGammaRamp)) {
-			g_haveOriginalGammaRamp = true;
-		}
-		g_gammaFirstTime = false;
-	}
-
-	m_setGammaRampSucceeded = false;
-	if (SetDeviceGammaRamp(m_hDC, &gammaRamp)) {
-		m_setGammaRampSucceeded = true;
-		SavedGammaCorrection = GammaCorrection;
-	}
-#endif
-
-	return;
-}
-
-void UOpenGLRenderDevice::ResetGamma(void) {
-#ifdef __LINUX__
-
-#else
-	//Restore gamma ramp if original was successfully saved
-	if (g_haveOriginalGammaRamp) {
-		HWND hDesktopWnd;
-		HDC hDC;
-
-		hDesktopWnd = GetDesktopWindow();
-		hDC = GetDC(hDesktopWnd);
-
-		// vogel: grrr, UClient::destroy is called before this gets called so hDC is invalid
-		SetDeviceGammaRamp(hDC, &g_originalGammaRamp);
-
-		ReleaseDC(hDesktopWnd, hDC);
-	}
-#endif
 
 	return;
 }
@@ -1834,23 +1758,9 @@ bool UOpenGLRenderDevice::FindExt(const char *pName) {
 
 void UOpenGLRenderDevice::FindProc(void*& ProcAddress, const char *pName, const char *pSupportName, bool& Supports, bool AllowExt) {
 	guard(UOpenGLRenderDevice::FindProc);
-#ifdef __LINUX__
 	if (!ProcAddress) {
 		ProcAddress = (void*)SDL_GL_GetProcAddress(pName);
 	}
-#else
-#if DYNAMIC_BIND
-	if (!ProcAddress) {
-		ProcAddress = GetProcAddress(hModuleGlMain, pName);
-	}
-	if (!ProcAddress) {
-		ProcAddress = GetProcAddress(hModuleGlGdi, pName);
-	}
-#endif
-	if (!ProcAddress && Supports && AllowExt) {
-		ProcAddress = wglGetProcAddress(pName);
-	}
-#endif
 	if (!ProcAddress) {
 		if (Supports) {
 			debugf(TEXT("   Missing function '%s' for '%s' support"), appFromAnsi(pName), appFromAnsi(pSupportName));
@@ -1889,7 +1799,6 @@ void UOpenGLRenderDevice::Exit() {
 	guard(UOpenGLRenderDevice::Exit);
 	check(NumDevices > 0);
 
-#ifdef __LINUX__
 	UnsetRes();
 
 	// Shut down global GL.
@@ -1908,48 +1817,6 @@ void UOpenGLRenderDevice::Exit() {
 		//Texture ids and memory for non zero prefix tex id pool are not freed on exit
 		m_sharedRGBA8TexPool.clear(&m_TexPoolMap_Allocator);
 	}
-#else
-	// Shut down RC.
-	if (m_hRC) {
-		UnsetRes();
-	}
-
-	//Reset gamma ramp
-	ResetGamma();
-
-	//Timer shutdown
-	ShutdownFrameRateLimitTimer();
-
-	// Shut down this GL context. May fail if window was already destroyed.
-	if (m_hDC) {
-		ReleaseDC(m_hWnd, m_hDC);
-	}
-
-	// Shut down global GL.
-	if (--NumDevices == 0) {
-#if DYNAMIC_BIND && 0 /* Broken on some drivers */
-		// Free modules.
-		if (hModuleGlMain)
-			verify(FreeLibrary(hModuleGlMain));
-		if (hModuleGlGdi)
-			verify(FreeLibrary(hModuleGlGdi));
-#endif
-		{
-			unsigned int u;
-
-			for (u = 0; u < NUM_CTTree_TREES; u++) {
-				m_sharedZeroPrefixBindTrees[u].clear(&m_DWORD_CTTree_Allocator);
-			}
-			for (u = 0; u < NUM_CTTree_TREES; u++) {
-				m_sharedNonZeroPrefixBindTrees[u].clear(&m_QWORD_CTTree_Allocator);
-			}
-		}
-		m_sharedNonZeroPrefixBindChain.mark_as_clear();
-		//Texture ids and memory for non zero prefix tex id pool are not freed on exit
-		m_sharedRGBA8TexPool.clear(&m_TexPoolMap_Allocator);
-		AllContexts.~TArray<HGLRC>();
-	}
-#endif
 	unguard;
 }
 
@@ -1965,9 +1832,6 @@ void UOpenGLRenderDevice::ShutdownAfterError() {
 #endif
 
 	//ChangeDisplaySettings(NULL, 0);
-
-	//Reset gamma ramp
-	ResetGamma();
 
 	unguard;
 }
@@ -1989,7 +1853,6 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 	if (DebugBit(DEBUG_BIT_ANY)) dout << TEXT("utglr: DebugBits = ") << m_debugBits << std::endl;
 #endif
 
-#ifdef __LINUX__
 	UnsetRes();
 
 	INT MinDepthBits;
@@ -2023,118 +1886,6 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 
 	// Change window size.
 	Viewport->ResizeViewport(Fullscreen ? (BLIT_Fullscreen | BLIT_OpenGL) : (BLIT_HardwarePaint | BLIT_OpenGL), NewX, NewY, NewColorBytes);
-#else
-	debugf(TEXT("Enter SetRes()"));
-
-	// If not fullscreen, and color bytes hasn't changed, do nothing.
-	if (m_hRC && !Fullscreen && !WasFullscreen && NewColorBytes == Viewport->ColorBytes) {
-		if (!Viewport->ResizeViewport(BLIT_HardwarePaint | BLIT_OpenGL, NewX, NewY, NewColorBytes)) {
-			return 0;
-		}
-		glViewport(0, 0, NewX, NewY);
-
-		return 1;
-	}
-
-	// Exit res.
-	if (m_hRC) {
-		debugf(TEXT("UnSetRes() -> hRC != NULL"));
-		UnsetRes();
-	}
-
-#if !STDGL
-	Fullscreen = 1; /* Minidrivers are fullscreen only!! */
-#endif
-
-	// Change display settings.
-	if (Fullscreen && STDGL) {
-		INT FindX = NewX, FindY = NewY, BestError = MAXINT;
-		for (INT i = 0; i < Modes.Num(); i++) {
-			if (Modes(i).Z==NewColorBytes*8) {
-				INT Error
-				=	(Modes(i).X-FindX)*(Modes(i).X-FindX)
-				+	(Modes(i).Y-FindY)*(Modes(i).Y-FindY);
-				if (Error < BestError) {
-					NewX      = Modes(i).X;
-					NewY      = Modes(i).Y;
-					BestError = Error;
-				}
-			}
-		}
-		{
-			DEVMODEA dma;
-			DEVMODEW dmw;
-			bool tryNoRefreshRate = true;
-
-			ZeroMemory(&dma, sizeof(dma));
-			ZeroMemory(&dmw, sizeof(dmw));
-			dma.dmSize = sizeof(dma);
-			dmw.dmSize = sizeof(dmw);
-			dma.dmPelsWidth = dmw.dmPelsWidth = NewX;
-			dma.dmPelsHeight = dmw.dmPelsHeight = NewY;
-			dma.dmBitsPerPel = dmw.dmBitsPerPel = NewColorBytes * 8;
-			dma.dmFields = dmw.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT;// | DM_BITSPERPEL;
-			if (RefreshRate) {
-				dma.dmDisplayFrequency = dmw.dmDisplayFrequency = RefreshRate;
-				dma.dmFields |= DM_DISPLAYFREQUENCY;
-				dmw.dmFields |= DM_DISPLAYFREQUENCY;
-
-				if (TCHAR_CALL_OS(ChangeDisplaySettingsW(&dmw, CDS_FULLSCREEN), ChangeDisplaySettingsA(&dma, CDS_FULLSCREEN)) != DISP_CHANGE_SUCCESSFUL) {
-					debugf(TEXT("ChangeDisplaySettings failed: %ix%i, %i Hz"), NewX, NewY, RefreshRate);
-					dma.dmFields &= ~DM_DISPLAYFREQUENCY;
-					dmw.dmFields &= ~DM_DISPLAYFREQUENCY;
-				}
-				else {
-					tryNoRefreshRate = false;
-				}
-			}
-			if (tryNoRefreshRate) {
-				if (TCHAR_CALL_OS(ChangeDisplaySettingsW(&dmw, CDS_FULLSCREEN), ChangeDisplaySettingsA(&dma, CDS_FULLSCREEN)) != DISP_CHANGE_SUCCESSFUL) {
-					debugf(TEXT("ChangeDisplaySettings failed: %ix%i"), NewX, NewY);
-
-					return 0;
-				}
-			}
-		}
-	}
-
-	// Change window size.
-	UBOOL Result = Viewport->ResizeViewport(Fullscreen ? (BLIT_Fullscreen | BLIT_OpenGL) : (BLIT_HardwarePaint | BLIT_OpenGL), NewX, NewY, NewColorBytes);
-	if (!Result) {
-		if (Fullscreen) {
-			TCHAR_CALL_OS(ChangeDisplaySettingsW(NULL,0), ChangeDisplaySettingsA(NULL,0));
-		}
-
-		return 0;
-	}
-
-
-	//Set default numDepthBits in case any failures might prevent it from being set later
-	m_numDepthBits = 16;
-
-	//Restrict NumAASamples range
-	if (NumAASamples < 1) NumAASamples = 1;
-
-	m_usingAA = false;
-	m_curAAEnable = true;
-	m_defAAEnable = true;
-
-	bool doBasicInit = true;
-	if (UseAA) {
-		if (SetAAPixelFormat(NewColorBytes)) {
-			doBasicInit = false;
-			m_usingAA = true;
-		}
-	}
-	if (doBasicInit) {
-		SetBasicPixelFormat(NewColorBytes);
-	}
-
-	if (ShareLists && AllContexts.Num()) {
-		verify(wglShareLists(AllContexts(0), m_hRC) == 1);
-	}
-	AllContexts.AddItem(m_hRC);
-#endif
 
 	//Reset previous SwapBuffers status to okay
 	m_prevSwapBuffersStatus = true;
@@ -2145,17 +1896,6 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 	debugf(NAME_Init, TEXT("GL_VENDOR     : %s"), appFromAnsi((const ANSICHAR *)glGetString(GL_VENDOR)));
 	debugf(NAME_Init, TEXT("GL_RENDERER   : %s"), appFromAnsi((const ANSICHAR *)glGetString(GL_RENDERER)));
 	debugf(NAME_Init, TEXT("GL_VERSION    : %s"), appFromAnsi((const ANSICHAR *)glGetString(GL_VERSION)));
-
-	// vogel: logging of more than 1024 characters is dangerous at the moment.
-	const char *pGLExtensions = (const char *)glGetString(GL_EXTENSIONS);
-	if (strlen(pGLExtensions) < 1024) {
-		debugf(NAME_Init, TEXT("GL_EXTENSIONS : %s"), appFromAnsi(pGLExtensions));
-	}
-	else {
-#ifdef __LINUX__
-		printf("GL_EXTENSIONS : %s\n", pGLExtensions);
-#endif
-	}
 
 	FindProcs(true);
 
@@ -2225,7 +1965,6 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 		UTGLR_DEBUG_SHOW_PARAM_DCV(UseVertexProgram);
 		UTGLR_DEBUG_SHOW_PARAM_DCV(UseFragmentProgram);
 		UTGLR_DEBUG_SHOW_PARAM_REG(SwapInterval);
-		UTGLR_DEBUG_SHOW_PARAM_REG(FrameRateLimit);
 		UTGLR_DEBUG_SHOW_PARAM_REG(SceneNodeHack);
 		UTGLR_DEBUG_SHOW_PARAM_REG(SmoothMaskedTextures);
 		UTGLR_DEBUG_SHOW_PARAM_REG(MaskedTextureHack);
@@ -2238,33 +1977,6 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 		#undef UTGLR_DEBUG_SHOW_PARAM_DCV
 	}
 #endif
-
-	//Special handling for WGL_EXT_swap_control
-	//Restricted to a maximum of 10
-	if ((SwapInterval >= 0) && (SwapInterval <= 10)) {
-#ifdef WIN32
-		const char *pWGLExtensions = NULL;
-		PFNWGLGETEXTENSIONSSTRINGARBPROC p_wglGetExtensionsStringARB = reinterpret_cast<PFNWGLGETEXTENSIONSSTRINGARBPROC>(wglGetProcAddress("wglGetExtensionsStringARB"));
-		if (p_wglGetExtensionsStringARB != NULL) {
-			pWGLExtensions = p_wglGetExtensionsStringARB(m_hDC);
-		}
-
-		//See if WGL extension string was retrieved
-		if (pWGLExtensions != NULL) {
-			//See if WGL_EXT_swap_control is supported
-			if (IsGLExtensionSupported(pWGLExtensions, "WGL_EXT_swap_control")) {
-				//Get the extension function pointer and use it if successful
-				PFNWGLSWAPINTERVALEXTPROC p_wglSwapIntervalEXT = reinterpret_cast<PFNWGLSWAPINTERVALEXTPROC>(wglGetProcAddress("wglSwapIntervalEXT"));
-				if (p_wglSwapIntervalEXT != NULL) {
-					//Set the swap interval
-					p_wglSwapIntervalEXT(SwapInterval);
-				}
-			}
-		}
-#else
-		//Add non-win32 swap control code here
-#endif
-	}
 
 
 #ifdef UTGLR_INCLUDE_SSE_CODE
@@ -2573,10 +2285,6 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 void UOpenGLRenderDevice::UnsetRes() {
 	guard(UOpenGLRenderDevice::UnsetRes);
 
-#ifdef WIN32
-	check(m_hRC)
-#endif
-
 	//Flush textures
 	Flush(1);
 
@@ -2596,32 +2304,6 @@ void UOpenGLRenderDevice::UnsetRes() {
 	//Free fragment programs if they were allocated and leave fragment program mode if necessary
 	ShutdownFragmentProgramMode();
 
-#ifdef WIN32
-	hCurrentRC = NULL;
-	wglMakeCurrent(NULL, NULL);
-//	verify(wglDeleteContext(m_hRC));
-	wglDeleteContext(m_hRC);
-	verify(AllContexts.RemoveItem(m_hRC) == 1);
-	m_hRC = NULL;
-	if (WasFullscreen) {
-		TCHAR_CALL_OS(ChangeDisplaySettingsW(NULL, 0), ChangeDisplaySettingsA(NULL, 0));
-	}
-#endif
-
-	unguard;
-}
-
-
-void UOpenGLRenderDevice::MakeCurrent(void) {
-	guard(UOpenGLRenderDevice::MakeCurrent);
-#ifdef WIN32
-	check(m_hRC);
-	check(m_hDC);
-	if (hCurrentRC != m_hRC) {
-		verify(wglMakeCurrent(m_hDC, m_hRC));
-		hCurrentRC = m_hRC;
-	}
-#endif
 	unguard;
 }
 
@@ -2724,289 +2406,6 @@ void UOpenGLRenderDevice::ConfigValidate_Main(void) {
 }
 
 
-#ifdef WIN32
-void UOpenGLRenderDevice::InitARBPixelFormat(INT NewColorBytes, InitARBPixelFormatRet_t *pRet) {
-	guard(UOpenGLRenderDevice::InitARBPixelFormat);
-
-	HINSTANCE hInstance = TCHAR_CALL_OS(GetModuleHandleW(NULL), GetModuleHandleA(NULL));
-	struct tagWNDCLASSA wcA;
-	struct tagWNDCLASSW wcW;
-	const CHAR *pClassNameA = "UOpenGLRenderDevice::InitARBPixelFormat";
-	const WCHAR *pClassNameW = L"UOpenGLRenderDevice::InitARBPixelFormat";
-	InitARBPixelFormatWndProcParams_t initParams;
-	HWND hWnd;
-
-	wcA.style = wcW.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
-	wcA.lpfnWndProc = wcW.lpfnWndProc = UOpenGLRenderDevice::InitARBPixelFormatWndProc;
-	wcA.cbClsExtra = wcW.cbClsExtra = 0;
-	wcA.cbWndExtra = wcW.cbWndExtra = 0;
-	wcA.hInstance = wcW.hInstance = hInstance;
-	wcA.hIcon = wcW.hIcon = NULL;
-	wcA.hCursor = wcW.hCursor = TCHAR_CALL_OS(LoadCursorW(NULL, MAKEINTRESOURCEW(32512)/*IDC_ARROW*/), LoadCursorA(NULL, MAKEINTRESOURCEA(32512)/*IDC_ARROW*/));
-	wcA.hbrBackground = wcW.hbrBackground = NULL;
-	wcA.lpszMenuName = NULL;
-	wcW.lpszMenuName = NULL;
-	wcA.lpszClassName = pClassNameA;
-	wcW.lpszClassName = pClassNameW;
-
-	if (TCHAR_CALL_OS(RegisterClassW(&wcW), RegisterClassA(&wcA)) == 0) {
-		return;
-	}
-
-	initParams.NewColorBytes = NewColorBytes;
-	initParams.p_wglChoosePixelFormatARB = NULL;
-	initParams.haveWGLMultisampleARB = false;
-
-	hWnd = TCHAR_CALL_OS(
-		CreateWindowW(
-		pClassNameW,
-		pClassNameW,
-		WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
-		0, 0,
-		20, 20,
-		NULL,
-		NULL,
-		hInstance,
-		&initParams),
-		CreateWindowA(
-		pClassNameA,
-		pClassNameA,
-		WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
-		0, 0,
-		20, 20,
-		NULL,
-		NULL,
-		hInstance,
-		&initParams)
-		);
-	if (hWnd == NULL) {
-		TCHAR_CALL_OS(UnregisterClassW(pClassNameW, hInstance), UnregisterClassA(pClassNameA, hInstance));
-		return;
-	}
-
-	DestroyWindow(hWnd);
-
-	TCHAR_CALL_OS(UnregisterClassW(pClassNameW, hInstance), UnregisterClassA(pClassNameA, hInstance));
-
-	pRet->p_wglChoosePixelFormatARB = initParams.p_wglChoosePixelFormatARB;
-	pRet->haveWGLMultisampleARB = initParams.haveWGLMultisampleARB;
-
-	return;
-
-	unguard;
-}
-
-LRESULT CALLBACK UOpenGLRenderDevice::InitARBPixelFormatWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-	switch(uMsg) {
-	case WM_CREATE:
-		{
-			InitARBPixelFormatWndProcParams_t *pInitParams = (InitARBPixelFormatWndProcParams_t *)((LPCREATESTRUCT)lParam)->lpCreateParams;
-
-			HDC hDC = GetDC(hWnd);
-
-			INT NewColorBytes = pInitParams->NewColorBytes;
-			INT nPixelFormat;
-			BYTE DesiredColorBits   = (NewColorBytes <= 2) ? 16 : 24;
-			BYTE DesiredDepthBits   = 32;
-			BYTE DesiredStencilBits = 0;
-			PIXELFORMATDESCRIPTOR pfd =
-			{
-				sizeof(PIXELFORMATDESCRIPTOR),
-				1,
-				PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
-				PFD_TYPE_RGBA,
-				DesiredColorBits,
-				0,0,0,0,0,0,
-				0,0,
-				0,0,0,0,0,
-				DesiredDepthBits,
-				DesiredStencilBits,
-				0,
-				PFD_MAIN_PLANE,
-				0,
-				0,0,0
-			};
-
-			nPixelFormat = ChoosePixelFormat(hDC, &pfd);
-			if (!nPixelFormat) {
-				pfd.cDepthBits = 24;
-				nPixelFormat = ChoosePixelFormat(hDC, &pfd);
-			}
-			if (!nPixelFormat) {
-				pfd.cDepthBits = 16;
-				nPixelFormat = ChoosePixelFormat(hDC, &pfd);
-			}
-			if (nPixelFormat == 0) {
-				break;
-			}
-
-			if (SetPixelFormat(hDC, nPixelFormat, &pfd) == FALSE) {
-				break;
-			}
-			HGLRC hGLRC = wglCreateContext(hDC);
-			if (hGLRC == NULL) {
-				break;
-			}
-			if (wglMakeCurrent(hDC, hGLRC) == FALSE) {
-				wglDeleteContext(hGLRC);
-				break;
-			}
-
-			PFNWGLGETEXTENSIONSSTRINGARBPROC p_wglGetExtensionsStringARB = reinterpret_cast<PFNWGLGETEXTENSIONSSTRINGARBPROC>(wglGetProcAddress("wglGetExtensionsStringARB"));
-			if (p_wglGetExtensionsStringARB != NULL) {
-				const char *pWGLExtensions = p_wglGetExtensionsStringARB(hDC);
-				if (pWGLExtensions != NULL) {
-					pInitParams->haveWGLMultisampleARB = IsGLExtensionSupported(pWGLExtensions, "WGL_ARB_multisample");
-				}
-			}
-			pInitParams->p_wglChoosePixelFormatARB = reinterpret_cast<PFNWGLCHOOSEPIXELFORMATARBPROC>(wglGetProcAddress("wglChoosePixelFormatARB"));
-
-			wglMakeCurrent(NULL, NULL);
-			wglDeleteContext(hGLRC);
-		}
-		break;
-
-	default:
-		return TCHAR_CALL_OS(DefWindowProcW(hWnd, uMsg, wParam, lParam), DefWindowProcA(hWnd, uMsg, wParam, lParam));
-	}
-
-	return 0;
-}
-
-
-void UOpenGLRenderDevice::SetBasicPixelFormat(INT NewColorBytes) {
-	// Set res.
-	INT nPixelFormat;
-	BYTE DesiredColorBits   = (NewColorBytes <= 2) ? 16 : 24;
-	BYTE DesiredDepthBits   = 32;
-	BYTE DesiredStencilBits = 0;
-	PIXELFORMATDESCRIPTOR pfd =
-	{
-		sizeof(PIXELFORMATDESCRIPTOR),
-		1,
-		PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
-		PFD_TYPE_RGBA,
-		DesiredColorBits,
-		0,0,0,0,0,0,
-		0,0,
-		0,0,0,0,0,
-		DesiredDepthBits,
-		DesiredStencilBits,
-		0,
-		PFD_MAIN_PLANE,
-		0,
-		0,0,0
-	};
-
-#ifndef UTGLR_DONT_DEBUG_AT_ALL
-	if (DebugBit(DEBUG_BIT_BASIC)) dout << TEXT("utglr: BasicInit") << std::endl;
-#endif
-
-	nPixelFormat = ChoosePixelFormat(m_hDC, &pfd);
-	if (!nPixelFormat) {
-		pfd.cDepthBits = 24;
-		nPixelFormat = ChoosePixelFormat(m_hDC, &pfd);
-	}
-	if (!nPixelFormat) {
-		pfd.cDepthBits = 16;
-		nPixelFormat = ChoosePixelFormat(m_hDC, &pfd);
-	}
-
-	Parse(appCmdLine(), TEXT("PIXELFORMAT="), nPixelFormat);
-	debugf(NAME_Init, TEXT("Using pixel format %i"), nPixelFormat);
-	check(nPixelFormat);
-
-	verify(SetPixelFormat(m_hDC, nPixelFormat, &pfd));
-	m_hRC = wglCreateContext(m_hDC);
-	check(m_hRC);
-
-	//Get actual number of depth bits
-	if (DescribePixelFormat(m_hDC, nPixelFormat, sizeof(pfd), &pfd)) {
-		m_numDepthBits = pfd.cDepthBits;
-	}
-
-	MakeCurrent();
-
-	return;
-}
-
-bool UOpenGLRenderDevice::SetAAPixelFormat(INT NewColorBytes) {
-	InitARBPixelFormatRet_t iapfRet;
-	BOOL bRet;
-	int iFormats[1];
-	int iAttributes[30];
-	UINT nNumFormats;
-	PIXELFORMATDESCRIPTOR tempPfd;
-
-	iapfRet.p_wglChoosePixelFormatARB = NULL;
-	iapfRet.haveWGLMultisampleARB = false;
-	InitARBPixelFormat(NewColorBytes, &iapfRet);
-
-	if ((iapfRet.p_wglChoosePixelFormatARB == NULL) || (iapfRet.haveWGLMultisampleARB != true)) {
-		return false;
-	}
-
-#ifndef UTGLR_DONT_DEBUG_AT_ALL
-	if (DebugBit(DEBUG_BIT_BASIC)) dout << TEXT("utglr: AAInit") << std::endl;
-#endif
-
-	iAttributes[0] = WGL_SUPPORT_OPENGL_ARB;
-	iAttributes[1] = GL_TRUE;
-	iAttributes[2] = WGL_DRAW_TO_WINDOW_ARB;
-	iAttributes[3] = GL_TRUE;
-	iAttributes[4] = WGL_COLOR_BITS_ARB;
-	iAttributes[5] = (NewColorBytes <= 2) ? 16 : 24;
-	iAttributes[6] = WGL_DEPTH_BITS_ARB;
-	iAttributes[7] = 32;
-	iAttributes[8] = WGL_DOUBLE_BUFFER_ARB;
-	iAttributes[9] = GL_TRUE;
-	iAttributes[10] = WGL_SAMPLE_BUFFERS_ARB;
-	iAttributes[11] = GL_TRUE;
-	iAttributes[12] = WGL_SAMPLES_ARB;
-	iAttributes[13] = NumAASamples;
-	iAttributes[14] = 0;
-	iAttributes[15] = 0;
-
-	bRet = iapfRet.p_wglChoosePixelFormatARB(m_hDC, iAttributes, NULL, 1, iFormats, &nNumFormats);
-	if ((bRet == FALSE) || (nNumFormats == 0)) {
-		iAttributes[7] = 24;
-		bRet = iapfRet.p_wglChoosePixelFormatARB(m_hDC, iAttributes, NULL, 1, iFormats, &nNumFormats);
-	}
-	if ((bRet == FALSE) || (nNumFormats == 0)) {
-		iAttributes[7] = 16;
-		bRet = iapfRet.p_wglChoosePixelFormatARB(m_hDC, iAttributes, NULL, 1, iFormats, &nNumFormats);
-	}
-	if ((bRet == FALSE) || (nNumFormats == 0)) {
-#ifndef UTGLR_DONT_DEBUG_AT_ALL
-		if (DebugBit(DEBUG_BIT_BASIC)) dout << TEXT("utglr: AAInit failed") << std::endl;
-#endif
-		return false;
-	}
-
-	appMemzero(&tempPfd, sizeof(tempPfd));
-	tempPfd.nSize = sizeof(tempPfd);
-	verify(SetPixelFormat(m_hDC, iFormats[0], &tempPfd));
-	m_hRC = wglCreateContext(m_hDC);
-	check(m_hRC);
-
-	MakeCurrent();
-
-	//Get actual number of depth bits
-	PFNWGLGETPIXELFORMATATTRIBIVARBPROC p_wglGetPixelFormatAttribivARB = reinterpret_cast<PFNWGLGETPIXELFORMATATTRIBIVARBPROC>(wglGetProcAddress("wglGetPixelFormatAttribivARB"));
-	if (p_wglGetPixelFormatAttribivARB != NULL) {
-		int iAttribute = WGL_DEPTH_BITS_ARB;
-		int iValue = m_numDepthBits;
-
-		if (p_wglGetPixelFormatAttribivARB(m_hDC, iFormats[0], 0, 1, &iAttribute, &iValue)) {
-			m_numDepthBits = iValue;
-		}
-	}
-
-	return true;
-}
-#endif
-
-
 UBOOL UOpenGLRenderDevice::Init(UViewport* InViewport, INT NewX, INT NewY, INT NewColorBytes, UBOOL Fullscreen) {
 	guard(UOpenGLRenderDevice::Init);
 
@@ -3017,7 +2416,6 @@ UBOOL UOpenGLRenderDevice::Init(UViewport* InViewport, INT NewX, INT NewY, INT N
 		g_haveOriginalGammaRamp = false;
 	}
 
-#ifdef __LINUX__
 	// Init global GL.
 	if (NumDevices == 0) {
 		// Bind the library.
@@ -3030,8 +2428,8 @@ UBOOL UOpenGLRenderDevice::Init(UViewport* InViewport, INT NewX, INT NewY, INT N
 		if (!GLLoaded) {
 			// Only call it once as succeeding calls will 'fail'.
 			debugf(TEXT("binding %s"), *OpenGLLibName);
-			if (SDL_GL_LoadLibrary(*OpenGLLibName) == -1) {
-				appErrorf(TEXT(SDL_GetError()));
+			if (SDL_GL_LoadLibrary(appToAnsi(*OpenGLLibName)) == -1) {
+				appErrorf(appFromAnsi(SDL_GetError()));
 			}
 			GLLoaded = true;
 		}
@@ -3042,64 +2440,6 @@ UBOOL UOpenGLRenderDevice::Init(UViewport* InViewport, INT NewX, INT NewY, INT N
 			return 0;
 		}
 	}
-#else
-	// Get list of device modes.
-	for (INT i = 0; ; i++) {
-		UBOOL UnicodeOS;
-
-#if defined(NO_UNICODE_OS_SUPPORT) || !defined(UNICODE)
-		UnicodeOS = 0;
-#elif defined(NO_ANSI_OS_SUPPORT)
-		UnicodeOS = 1;
-#else
-		UnicodeOS = GUnicodeOS;
-#endif
-
-		if (!UnicodeOS) {
-#if defined(NO_UNICODE_OS_SUPPORT) || !defined(UNICODE) || !defined(NO_ANSI_OS_SUPPORT)
-			DEVMODEA Tmp;
-			appMemzero(&Tmp, sizeof(Tmp));
-			Tmp.dmSize = sizeof(Tmp);
-			if (!EnumDisplaySettingsA(NULL, i, &Tmp)) {
-				break;
-			}
-			Modes.AddUniqueItem(FPlane(Tmp.dmPelsWidth, Tmp.dmPelsHeight, Tmp.dmBitsPerPel, Tmp.dmDisplayFrequency));
-#endif
-		}
-		else {
-#if !defined(NO_UNICODE_OS_SUPPORT) && defined(UNICODE)
-			DEVMODEW Tmp;
-			appMemzero(&Tmp, sizeof(Tmp));
-			Tmp.dmSize = sizeof(Tmp);
-			if (!EnumDisplaySettingsW(NULL, i, &Tmp)) {
-				break;
-			}
-			Modes.AddUniqueItem(FPlane(Tmp.dmPelsWidth, Tmp.dmPelsHeight, Tmp.dmBitsPerPel, Tmp.dmDisplayFrequency));
-#endif
-		}
-	}
-
-	// Init global GL.
-	if (NumDevices == 0) {
-#if DYNAMIC_BIND
-		// Find DLL's.
-		hModuleGlMain = LoadLibraryA(GL_DLL);
-		if (!hModuleGlMain) {
-			debugf(NAME_Init, LocalizeError("NoFindGL"), appFromAnsi(GL_DLL));
-			return 0;
-		}
-		hModuleGlGdi = LoadLibraryA("GDI32.dll");
-		check(hModuleGlGdi);
-
-		// Find functions.
-		SUPPORTS_GL = 1;
-		FindProcs(false);
-		if (!SUPPORTS_GL) {
-			return 0;
-		}
-#endif
-	}
-#endif
 
 	NumDevices++;
 
@@ -3111,13 +2451,6 @@ UBOOL UOpenGLRenderDevice::Init(UViewport* InViewport, INT NewX, INT NewY, INT N
 	m_RGBA8TexPool = ShareLists ? &m_sharedRGBA8TexPool : &m_localRGBA8TexPool;
 
 	Viewport = InViewport;
-
-#ifndef __LINUX__
-	m_hWnd = (HWND)InViewport->GetWindow();
-	check(m_hWnd);
-	m_hDC = GetDC(m_hWnd);
-	check(m_hDC);
-#endif
 
 #if 0
 	{
@@ -3153,14 +2486,6 @@ UBOOL UOpenGLRenderDevice::Exec(const TCHAR* Cmd, FOutputDevice& Ar) {
 			debugf(TEXT("BUFFERTRIS [%i]"), BufferActorTris);
 			return 1;
 		}
-		else if (ParseCommand(&Cmd, TEXT("BUILD"))) {
-#ifdef __LINUX__
-			debugf(TEXT("OpenGL renderer built: %s %s"), __DATE__, __TIME__);
-#else
-			debugf(TEXT("OpenGL renderer built: VOGEL FIXME"));
-#endif
-			return 1;
-		}
 		else if (ParseCommand(&Cmd, TEXT("AA"))) {
 			if (m_usingAA) {
 				m_defAAEnable = !m_defAAEnable;
@@ -3172,7 +2497,6 @@ UBOOL UOpenGLRenderDevice::Exec(const TCHAR* Cmd, FOutputDevice& Ar) {
 		return 0;
 	}
 	else if (ParseCommand(&Cmd, TEXT("GetRes"))) {
-#ifdef __LINUX__
 		// Changing Resolutions:
 		// Entries in the resolution box in the console is
 		// apparently controled building a string of relevant 
@@ -3180,7 +2504,7 @@ UBOOL UOpenGLRenderDevice::Exec(const TCHAR* Cmd, FOutputDevice& Ar) {
 
 		// Here I am querying SDL_ListModes for available resolutions,
 		// and populating the dropbox with its output.
-		FString Str = "";
+		FString Str = TEXT("");
 		SDL_Rect **modes;
 		INT i, j;
 
@@ -3210,24 +2534,6 @@ UBOOL UOpenGLRenderDevice::Exec(const TCHAR* Cmd, FOutputDevice& Ar) {
 		// Send the resolution string to the engine.
 		Ar.Log(*Str.LeftChop(1));
 		return 1;
-#else
-		TArray<FPlane> Relevant;
-		INT i;
-		for (i = 0; i < Modes.Num(); i++) {
-			if (Modes(i).Z == (Viewport->ColorBytes * 8))
-				if
-				(	(Modes(i).X!=320 || Modes(i).Y!=200)
-				&&	(Modes(i).X!=640 || Modes(i).Y!=400) )
-				Relevant.AddUniqueItem(FPlane(Modes(i).X, Modes(i).Y, 0, 0));
-		}
-		appQsort(&Relevant(0), Relevant.Num(), sizeof(FPlane), (QSORT_COMPARE)CompareRes);
-		FString Str;
-		for (i = 0; i < Relevant.Num(); i++) {
-			Str += FString::Printf(TEXT("%ix%i "), (INT)Relevant(i).X, (INT)Relevant(i).Y);
-		}
-		Ar.Log(*Str.LeftChop(1));
-		return 1;
-#endif
 	}
 
 	return 0;
@@ -3257,9 +2563,6 @@ void UOpenGLRenderDevice::Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane Sc
 	m_stat0Count = 0;
 	m_stat1Count = 0;
 
-
-	// Make this context current.
-	MakeCurrent();
 
 	// Clear the Z buffer if needed.
 	if (!UseZTrick || GIsEditor || (RenderLockFlags & LOCKR_ClearScreen)) {
@@ -3715,20 +3018,7 @@ void UOpenGLRenderDevice::Unlock(UBOOL Blit) {
 
 	if (Blit) {
 		CheckGLErrorFlag(TEXT("please report this bug"));
-#ifdef __LINUX__
 		SDL_GL_SwapBuffers();
-#else
-		{
-			bool SwapBuffersStatus;
-
-			SwapBuffersStatus = (SwapBuffers(m_hDC)) ? true : false;
-
-			if (!m_prevSwapBuffersStatus) {
-				check(SwapBuffersStatus);
-			}
-			m_prevSwapBuffersStatus = SwapBuffersStatus;
-		}
-#endif
 	}
 
 	--LockCount;
@@ -3772,34 +3062,6 @@ void UOpenGLRenderDevice::Unlock(UBOOL Blit) {
 
 	//Increment current frame count
 	m_currentFrameCount++;
-
-	//Check for optional frame rate limit
-	if (FrameRateLimit >= 20) {
-#if defined UTGLR_DX_BUILD || defined UTGLR_UNREAL_BUILD || defined UTGLR_RUNE_BUILD
-		FLOAT curFrameTimestamp;
-#else
-		FTime curFrameTimestamp;
-#endif
-		float timeDiff;
-		float rcpFrameRateLimit;
-
-		//First time timer init if necessary
-		InitFrameRateLimitTimerSafe();
-
-		curFrameTimestamp = appSeconds();
-		timeDiff = curFrameTimestamp - m_prevFrameTimestamp;
-		m_prevFrameTimestamp = curFrameTimestamp;
-
-		rcpFrameRateLimit = 1.0f / FrameRateLimit;
-		if (timeDiff < rcpFrameRateLimit) {
-			float sleepTime;
-
-			sleepTime = rcpFrameRateLimit - timeDiff;
-			appSleep(sleepTime);
-
-			m_prevFrameTimestamp = appSeconds();
-		}
-	}
 
 
 #if 0
@@ -8210,20 +7472,10 @@ void UOpenGLRenderDevice::EndTileBufferingNoCheck(void) {
 // Static variables.
 INT		UOpenGLRenderDevice::NumDevices		= 0;
 INT		UOpenGLRenderDevice::LockCount		= 0;
-#ifdef WIN32
-HGLRC		UOpenGLRenderDevice::hCurrentRC		= NULL;
-HMODULE		UOpenGLRenderDevice::hModuleGlMain	= NULL;
-HMODULE		UOpenGLRenderDevice::hModuleGlGdi	= NULL;
-TArray<HGLRC>	UOpenGLRenderDevice::AllContexts;
-#else
 UBOOL 		UOpenGLRenderDevice::GLLoaded	= false;
-#endif
 
 bool UOpenGLRenderDevice::g_gammaFirstTime = false;
 bool UOpenGLRenderDevice::g_haveOriginalGammaRamp = false;
-#ifdef WIN32
-UOpenGLRenderDevice::FGammaRamp UOpenGLRenderDevice::g_originalGammaRamp;
-#endif
 
 UOpenGLRenderDevice::DWORD_CTTree_t UOpenGLRenderDevice::m_sharedZeroPrefixBindTrees[NUM_CTTree_TREES];
 UOpenGLRenderDevice::QWORD_CTTree_t UOpenGLRenderDevice::m_sharedNonZeroPrefixBindTrees[NUM_CTTree_TREES];

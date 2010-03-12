@@ -22,9 +22,8 @@
 
 #ifdef WIN32
 #include <windows.h>
-#else
-#include "SDL.h"
 #endif
+#include "SDL.h"
 #include <GL/gl.h>
 #ifdef WIN32
 #include "glext.h"

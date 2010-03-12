@@ -692,20 +692,6 @@ struct FGLMapDot {
 };
 
 
-#ifdef WIN32
-typedef struct {
-	PFNWGLCHOOSEPIXELFORMATARBPROC p_wglChoosePixelFormatARB;
-	bool haveWGLMultisampleARB;
-} InitARBPixelFormatRet_t;
-
-typedef struct {
-	INT NewColorBytes;
-	PFNWGLCHOOSEPIXELFORMATARBPROC p_wglChoosePixelFormatARB;
-	bool haveWGLMultisampleARB;
-} InitARBPixelFormatWndProcParams_t;
-#endif
-
-
 //
 // An OpenGL rendering device attached to a viewport.
 //
@@ -917,16 +903,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 		BYTE blue[256];
 	};
 
-#ifdef WIN32
-	// Permanent variables.
-	HGLRC m_hRC;
-	HWND m_hWnd;
-	HDC m_hDC;
-#endif
-
 	UBOOL WasFullscreen;
-
-	bool m_frameRateLimitTimerInitialized;
 
 	bool m_prevSwapBuffersStatus;
 
@@ -1042,7 +1019,6 @@ class UOpenGLRenderDevice : public URenderDevice {
 	UBOOL UseVertexProgram;
 	UBOOL UseFragmentProgram;
 	INT SwapInterval;
-	INT FrameRateLimit;
 #if defined UTGLR_DX_BUILD || defined UTGLR_UNREAL_BUILD || defined UTGLR_RUNE_BUILD
 	FLOAT m_prevFrameTimestamp;
 #else
@@ -1183,20 +1159,10 @@ class UOpenGLRenderDevice : public URenderDevice {
 	static INT NumDevices;
 	static INT LockCount;
 
-#ifdef WIN32
-	static TArray<HGLRC> AllContexts;
-	static HGLRC   hCurrentRC;
-	static HMODULE hModuleGlMain;
-	static HMODULE hModuleGlGdi;
-#else
 	static UBOOL GLLoaded;
-#endif
 
 	static bool g_gammaFirstTime;
 	static bool g_haveOriginalGammaRamp;
-#ifdef WIN32
-	static FGammaRamp g_originalGammaRamp;
-#endif
 
 	// GL functions.
 	#define GL_EXT(name) static bool SUPPORTS##name;
@@ -1440,13 +1406,9 @@ class UOpenGLRenderDevice : public URenderDevice {
 	static bool CPU_DetectSSE2(void);
 #endif //UTGLR_INCLUDE_SSE_CODE
 
-	void InitFrameRateLimitTimerSafe(void);
-	void ShutdownFrameRateLimitTimer(void);
-
 	void BuildGammaRamp(float redGamma, float greenGamma, float blueGamma, int brightness, FGammaRamp &ramp);
 	void BuildGammaRamp(float redGamma, float greenGamma, float blueGamma, int brightness, FByteGammaRamp &ramp);
 	void SetGamma(FLOAT GammaCorrection);
-	void ResetGamma(void);
 
 	static bool FASTCALL IsGLExtensionSupported(const char *pExtensionsString, const char *pExtensionName);
 	bool FASTCALL FindExt(const char *pName);
@@ -1460,47 +1422,11 @@ class UOpenGLRenderDevice : public URenderDevice {
 	UBOOL SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL Fullscreen);
 	void UnsetRes();
 
-	void MakeCurrent(void);
 	void CheckGLErrorFlag(const TCHAR *pTag);
 
 	void ConfigValidate_RefreshDCV(void);
 	void ConfigValidate_RequiredExtensions(void);
 	void ConfigValidate_Main(void);
-
-#ifdef WIN32
-	void FASTCALL InitARBPixelFormat(INT NewColorBytes, InitARBPixelFormatRet_t *pRet);
-	static LRESULT CALLBACK InitARBPixelFormatWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-	void FASTCALL SetBasicPixelFormat(INT NewColorBytes);
-	bool FASTCALL SetAAPixelFormat(INT NewColorBytes);
-#endif
-
-
-#ifndef __LINUX__
-	void PrintFormat(HDC hDC, INT nPixelFormat) {
-		guard(UOpenGlRenderDevice::PrintFormat);
-		TCHAR Flags[1024] = TEXT("");
-		PIXELFORMATDESCRIPTOR pfd;
-		DescribePixelFormat(hDC, nPixelFormat, sizeof(pfd), &pfd);
-		if (pfd.dwFlags & PFD_DRAW_TO_WINDOW) appStrcat(Flags, TEXT(" PFD_DRAW_TO_WINDOW"));
-		if (pfd.dwFlags & PFD_DRAW_TO_BITMAP) appStrcat(Flags, TEXT(" PFD_DRAW_TO_BITMAP"));
-		if (pfd.dwFlags & PFD_SUPPORT_GDI) appStrcat(Flags, TEXT(" PFD_SUPPORT_GDI"));
-		if (pfd.dwFlags & PFD_SUPPORT_OPENGL) appStrcat(Flags, TEXT(" PFD_SUPPORT_OPENGL"));
-		if (pfd.dwFlags & PFD_GENERIC_ACCELERATED) appStrcat(Flags, TEXT(" PFD_GENERIC_ACCELERATED"));
-		if (pfd.dwFlags & PFD_GENERIC_FORMAT) appStrcat(Flags, TEXT(" PFD_GENERIC_FORMAT"));
-		if (pfd.dwFlags & PFD_NEED_PALETTE) appStrcat(Flags, TEXT(" PFD_NEED_PALETTE"));
-		if (pfd.dwFlags & PFD_NEED_SYSTEM_PALETTE) appStrcat(Flags, TEXT(" PFD_NEED_SYSTEM_PALETTE"));
-		if (pfd.dwFlags & PFD_DOUBLEBUFFER) appStrcat(Flags, TEXT(" PFD_DOUBLEBUFFER"));
-		if (pfd.dwFlags & PFD_STEREO) appStrcat(Flags, TEXT(" PFD_STEREO"));
-		if (pfd.dwFlags & PFD_SWAP_LAYER_BUFFERS) appStrcat(Flags, TEXT("PFD_SWAP_LAYER_BUFFERS"));
-		debugf(NAME_Init, TEXT("Pixel format %i:"), nPixelFormat);
-		debugf(NAME_Init, TEXT("   Flags:%s"), Flags);
-		debugf(NAME_Init, TEXT("   Pixel Type: %i"), pfd.iPixelType);
-		debugf(NAME_Init, TEXT("   Bits: Color=%i R=%i G=%i B=%i A=%i"), pfd.cColorBits, pfd.cRedBits, pfd.cGreenBits, pfd.cBlueBits, pfd.cAlphaBits);
-		debugf(NAME_Init, TEXT("   Bits: Accum=%i Depth=%i Stencil=%i"), pfd.cAccumBits, pfd.cDepthBits, pfd.cStencilBits);
-		unguard;
-	}
-#endif
 
 	UBOOL Init(UViewport* InViewport, INT NewX, INT NewY, INT NewColorBytes, UBOOL Fullscreen);
 

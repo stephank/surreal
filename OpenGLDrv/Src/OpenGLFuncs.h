@@ -367,26 +367,6 @@ GL_PROX(_GL,void,glVertex4sv,(const GLshort *v))
 GL_PROC(_GL,void,glVertexPointer,(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer))
 GL_PROC(_GL,void,glViewport,(GLint x, GLint y, GLsizei width, GLsizei height))
 
-#ifdef WIN32
-// WGL functions.
-GL_PROC(_GL,BOOL,wglCopyContext,(HGLRC,HGLRC,UINT))
-GL_PROC(_GL,HGLRC,wglCreateContext,(HDC))
-GL_PROC(_GL,HGLRC,wglCreateLayerContext,(HGLRC))
-GL_PROC(_GL,BOOL,wglDeleteContext,(HGLRC))
-GL_PROC(_GL,HGLRC,wglGetCurrentContext,(VOID))
-GL_PROC(_GL,HDC,wglGetCurrentDC,(VOID))
-GL_PROC(_GL,PROC,wglGetProcAddress,(LPCSTR))
-GL_PROC(_GL,BOOL,wglMakeCurrent,(HDC, HGLRC))
-GL_PROC(_GL,BOOL,wglShareLists,(HGLRC,HGLRC))
-
-// GDI functions.
-GL_PROC(_GL,INT,ChoosePixelFormat,(HDC hDC,CONST PIXELFORMATDESCRIPTOR*))
-GL_PROC(_GL,INT,DescribePixelFormat,(HDC,INT,UINT,PIXELFORMATDESCRIPTOR*))
-GL_PROC(_GL,BOOL,GetPixelFormat,(HDC))
-GL_PROC(_GL,BOOL,SetPixelFormat,(HDC,INT,CONST PIXELFORMATDESCRIPTOR*))
-GL_PROC(_GL,BOOL,SwapBuffers,(HDC hDC))
-#endif
-
 #endif
 
 /*-----------------------------------------------------------------------------
