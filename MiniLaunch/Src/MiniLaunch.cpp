@@ -16,6 +16,10 @@ Revision history:
 #include <stdlib.h>
 #include <malloc.h>
 #include <fcntl.h>
+
+// Tell Core to use the timeGetTime variant of appSeconds on Windows.
+#define USE_TIMEGETTIME
+
 #include "Engine.h"
 #include "UnRender.h"
 
@@ -172,6 +176,11 @@ int main( int argc, char* argv[] )
 		__Context::StaticInit();
 	#endif
 
+	#ifdef WIN32
+	// Windows MM timer early initialization
+	timeBeginPeriod( appSecondsGranularity );
+	#endif
+
 	INT ErrorLevel = 0;
 	GIsStarted     = 1;
 #ifndef _DEBUG
@@ -250,6 +259,9 @@ int main( int argc, char* argv[] )
 	}
 #endif
 	appExit();
+#ifdef WIN32
+	timeEndPeriod( appSecondsGranularity );
+#endif
 	GIsStarted = 0;
 	return ErrorLevel;
 }

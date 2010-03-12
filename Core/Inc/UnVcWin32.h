@@ -251,7 +251,16 @@ inline DWORD appCycles()
 //
 // Seconds, arbitrarily based.
 //
-#if ASM
+#if defined( USE_TIMEGETTIME )
+// This variant can be switched on and off, in order to allow
+// packages to not link against winmm.
+#define DEFINED_appSeconds 1
+#define appSecondsGranularity 5
+inline FTime appSeconds()
+{
+	return (FLOAT)timeGetTime() / 1000.f;
+}
+#elif ASM
 #define DEFINED_appSeconds 1
 #pragma warning (push)
 #pragma warning (disable : 4035)
