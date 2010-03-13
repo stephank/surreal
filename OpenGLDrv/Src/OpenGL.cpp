@@ -1693,22 +1693,14 @@ void UOpenGLRenderDevice::BuildGammaRamp(float redGamma, float greenGamma, float
 }
 
 void UOpenGLRenderDevice::SetGamma(FLOAT GammaCorrection) {
-	FGammaRamp gammaRamp;
-
 	GammaCorrection += GammaOffset;
-
 	//Do not attempt to set gamma if <= zero
-	if (GammaCorrection <= 0.0f) {
+	if (GammaCorrection <= 0.0f)
 		return;
-	}
 
-	BuildGammaRamp(GammaCorrection + GammaOffsetRed, GammaCorrection + GammaOffsetGreen, GammaCorrection + GammaOffsetBlue, Brightness, gammaRamp);
-
-	// vogel: FIXME (talk to Sam)
-	// SDL_SetGammaRamp( Ramp.red, Ramp.green, Ramp.blue );
-	FLOAT gamma = 0.4 + 2 * GammaCorrection; 
-	SDL_SetGamma(gamma, gamma, gamma);
-
+	FGammaRamp Ramp;
+	BuildGammaRamp(GammaCorrection + GammaOffsetRed, GammaCorrection + GammaOffsetGreen, GammaCorrection + GammaOffsetBlue, Brightness, Ramp);
+	SDL_SetGammaRamp( Ramp.red, Ramp.green, Ramp.blue );
 	return;
 }
 
