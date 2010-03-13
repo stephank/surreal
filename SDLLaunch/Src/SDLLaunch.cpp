@@ -53,7 +53,7 @@ static void OpenSplash()
 		appErrorf( TEXT("Couldn't initialize SDL: %s\n"), SDL_GetError() );
 
 	// Load the splash.
-	SDL_Surface* Splash = SDL_LoadBMP( SplashPath );
+	SDL_Surface* Splash = SDL_LoadBMP( appToAnsi(SplashPath) );
 	if( Splash == NULL )
 		return;
 
