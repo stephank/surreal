@@ -148,12 +148,12 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
+				Optimization="1"
 				InlineFunctionExpansion="0"
 				AdditionalIncludeDirectories="..\..\Core\Inc;..\..\Engine\Inc;&quot;C:\Program Files\OpenAL 1.1 SDK\include&quot;;&quot;..\..\..\alure-1.0\include\AL&quot;;&quot;..\..\..\libmikmod-3.1.11\include&quot;"
 				PreprocessorDefinitions="WIN32;ThisPackage=ALAudio;_REALLY_WANT_DEBUG"
 				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
+				BasicRuntimeChecks="0"
 				RuntimeLibrary="1"
 				StructMemberAlignment="3"
 				BufferSecurityCheck="false"
@@ -165,7 +165,7 @@
 				ProgramDataBaseFileName=".\Debug/"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
-				DebugInformationFormat="4"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
