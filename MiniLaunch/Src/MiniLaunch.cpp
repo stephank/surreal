@@ -170,7 +170,16 @@ static void MainLoop( UEngine* Engine )
 //
 // Entry point.
 //
+#ifdef WIN32
+int WINAPI wWinMain(
+	HINSTANCE hInstance,
+	HINSTANCE hPrevInstance,
+	LPWSTR lpCmdLine,
+	int nCmdShow
+)
+#else
 int main( int argc, char* argv[] )
+#endif
 {
 	#if !_MSC_VER
 		__Context::StaticInit();
@@ -198,6 +207,9 @@ int main( int argc, char* argv[] )
 		appStrcpy( GPackage, appPackage() );
 
 		// Get the command line.
+#ifdef WIN32
+		const TCHAR* CmdLine = appFromUnicode(lpCmdLine);
+#else
 		TCHAR CmdLine[1024], *CmdLinePtr=CmdLine;
 		*CmdLinePtr = 0;
 		for( INT i=1; i<argc; i++ )
@@ -206,6 +218,7 @@ int main( int argc, char* argv[] )
 				appStrcat( CmdLine, TEXT(" ") );
 			appStrcat( CmdLine, appFromAnsi(argv[i]) );
 		}
+#endif
 
 		// Init core.
 		GIsClient = 1;
