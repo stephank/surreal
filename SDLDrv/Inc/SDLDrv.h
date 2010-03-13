@@ -17,12 +17,13 @@ Revision history:
 // System includes.
 #include <stdlib.h>
 
+// SDL includes
+#include "SDL.h"
+#include "SDL_syswm.h"
+
 // Unreal includes.
 #include "Engine.h"
 #include "UnRender.h"
-
-// SDL includes
-#include "SDL.h"
 
 
 /*-----------------------------------------------------------------------------

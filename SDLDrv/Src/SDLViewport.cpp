@@ -461,7 +461,15 @@ void USDLViewport::UpdateWindowFrame()
 void* USDLViewport::GetWindow()
 {
 	guard(USDLViewport::GetWindow);
-     	return NULL;
+
+	#ifdef WIN32
+	SDL_SysWMinfo WindowInfo;
+	SDL_VERSION( &WindowInfo.version );
+	if( SDL_GetWMInfo(&WindowInfo) == 1 )
+		return WindowInfo.window;
+	#endif
+
+	return NULL;
 	unguard;
 }
 
