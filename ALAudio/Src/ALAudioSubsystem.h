@@ -75,6 +75,7 @@ protected:
 	BYTE			MusicVolume;
 	BYTE			SoundVolume;
 	FLOAT			AmbientFactor;
+	FLOAT			DopplerFactor;
 	BITFIELD		HighQualityMusic;
 
 	// Variables.

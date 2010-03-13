@@ -57,6 +57,7 @@ void UOpenALAudioSubsystem::StaticConstructor()
 	new(GetClass(),TEXT("MusicVolume"),			RF_Public) UByteProperty(	CPP_PROPERTY(MusicVolume),		TEXT("Audio"), CPF_Config );
 	new(GetClass(),TEXT("SoundVolume"),			RF_Public) UByteProperty(	CPP_PROPERTY(SoundVolume),		TEXT("Audio"), CPF_Config );
 	new(GetClass(),TEXT("AmbientFactor"),		RF_Public) UFloatProperty(	CPP_PROPERTY(AmbientFactor),	TEXT("Audio"), CPF_Config );
+	new(GetClass(),TEXT("DopplerFactor"),		RF_Public) UFloatProperty(	CPP_PROPERTY(DopplerFactor),	TEXT("Audio"), CPF_Config );
 	new(GetClass(),TEXT("HighQualityMusic"),	RF_Public) UBoolProperty(	CPP_PROPERTY(HighQualityMusic),	TEXT("Audio"), CPF_Config );
 
 	unguard;
@@ -74,6 +75,7 @@ void UOpenALAudioSubsystem::PostEditChange()
 	OutputRate		= Clamp(OutputRate,(BYTE)0,(BYTE)6);
 	NumSources 		= Clamp(NumSources,1,256);
 	AmbientFactor   = Clamp(AmbientFactor,0.f,10.f);
+	DopplerFactor   = Clamp(DopplerFactor,0.f,10.f);
 	SetVolumes();
 
 	unguard;
@@ -144,6 +146,9 @@ UBOOL UOpenALAudioSubsystem::Init()
 
 	alDistanceModel( AL_LINEAR_DISTANCE_CLAMPED );
 	CheckALErrorFlag( TEXT("alDistanceModel") );
+
+	alDopplerFactor( DopplerFactor );
+	CheckALErrorFlag( TEXT("alDopplerFactor") );
 
 	// Metre per second to units per second, where units per meter is 52.5.
 	// Taken from: http://wiki.beyondunreal.com/Legacy:General_Scale_And_Dimensions
