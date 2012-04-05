@@ -64,8 +64,8 @@ referenced by `Core.so` is `SDL_Quit`, so it's no biggy. Apply the patch with:
     chmod a+x System/Core.so
 
 Finally, you need G++ 2.95. This is required to keep binary compatibility with
-the above binaries. I personally use Ubuntu 6.06.2 (Dapper Drake) in a virtual
-machine, which is the last Ubuntu to distribute this old version of G++.
+the above binaries. One solution is to use Ubuntu 6.06.2 (Dapper Drake) in a
+virtual machine, which is the last Ubuntu to distribute this old version.
 
 Now you should be able to simply run `make`.
 
@@ -80,8 +80,5 @@ Because I could not find a license in the 432 source code release, with the
 exception of the vague guideline in the Help file, I have assumed that both
 these official releases are distributed with the Artistic License.
 
-Chris Dohnal has yet to respond to me by email. I'm hoping he will forgive me
-for my sins.
-
-
--- Stéphan Kochen
+The updated renderers by Chris Dohnal are based on OpenUT source code. Both his
+work and original work done here will also use the Artistic License.
