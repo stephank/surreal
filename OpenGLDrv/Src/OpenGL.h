@@ -6,6 +6,35 @@
 
 =============================================================================*/
 
+
+//Make sure valid build config selected
+#undef UTGLR_VALID_BUILD_CONFIG
+
+#ifdef UTGLR_UT_BUILD
+#define UTGLR_VALID_BUILD_CONFIG 1
+#endif
+#ifdef UTGLR_DX_BUILD
+#define UTGLR_VALID_BUILD_CONFIG 1
+#endif
+#ifdef UTGLR_RUNE_BUILD
+#define UTGLR_VALID_BUILD_CONFIG 1
+#endif
+#ifdef UTGLR_UNREAL_227_BUILD
+#define UTGLR_VALID_BUILD_CONFIG 1
+#endif
+
+#if !UTGLR_VALID_BUILD_CONFIG
+#error Valid build config not selected.
+#endif
+#undef UTGLR_VALID_BUILD_CONFIG
+
+
+#include <math.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdarg.h>
+
+
 #include <map>
 #pragma warning(disable : 4663)
 #pragma warning(disable : 4018)
@@ -15,16 +44,18 @@
 #pragma warning(disable : 4245)
 
 #pragma warning(disable : 4146)
-#include <sstream>
-#include <iostream>
-#include <iomanip>
+
+#include "c_gclip.h"
+
+
+#ifdef _WIN32
 
 //Optional ASM code
 #define UTGLR_USE_ASM_CODE
 
 //Optional SSE code
-#ifndef __GNUC__
 #define UTGLR_INCLUDE_SSE_CODE
+
 #endif
 
 #ifdef UTGLR_INCLUDE_SSE_CODE
@@ -45,7 +76,7 @@
 #define UTGLR_USE_FASTCALL
 
 #ifdef UTGLR_USE_FASTCALL
-	#ifdef WIN32
+	#ifdef _WIN32
 	#define FASTCALL	__fastcall
 	#else
 	#define FASTCALL
@@ -56,19 +87,37 @@
 
 
 //Debug defines
-#ifdef __GNUC__
-#define UTGLR_DONT_DEBUG_AT_ALL
-#endif
-//#ifndef UTGLR_DONT_DEBUG_AT_ALL
 //#define UTGLR_DEBUG_SHOW_TEX_CONVERT_COUNTS
 //#define UTGLR_DEBUG_SHOW_CALL_COUNTS
 //#define UTGLR_DEBUG_WORLD_WIREFRAME
 //#define UTGLR_DEBUG_ACTOR_WIREFRAME
 //#define UTGLR_DEBUG_Z_RANGE_HACK_WIREFRAME
-//#endif
 
-//Controls the loading of a subset of OpenGL procs
-//#define UTGLR_ALL_GL_PROCS
+
+#ifdef UTGLR_DEBUG_SHOW_CALL_COUNTS
+#define UTGLR_DEBUG_CALL_COUNT(name) \
+	{ \
+		static unsigned int s_c; \
+		dbgPrintf("utglr: " #name " = %u\n", s_c); \
+		s_c++; \
+	}
+#else
+#define UTGLR_DEBUG_CALL_COUNT(name)
+#endif
+
+#ifdef UTGLR_DEBUG_SHOW_TEX_CONVERT_COUNTS
+#define UTGLR_DEBUG_TEX_CONVERT_COUNT(name) \
+	{ \
+		static unsigned int s_c; \
+		dbgPrintf("utglr: " #name " = %u\n", s_c); \
+		s_c++; \
+	}
+#else
+#define UTGLR_DEBUG_TEX_CONVERT_COUNT(name)
+#endif
+
+
+#include "c_rbtree.h"
 
 
 /*-----------------------------------------------------------------------------
@@ -81,10 +130,8 @@
 //Must be at least 2000
 #define VERTEX_ARRAY_SIZE	4000	// vogel: better safe than sorry
 
-#ifdef WIN32
-#define STDGL 1					// Use standard GL driver or minidriver by default
-#define DYNAMIC_BIND 1			// If 0, must static link to OpenGL32, Gdi32
-#define GL_DLL (STDGL ? "OpenGL32.dll" : "3dfxgl.dll")
+#ifdef _WIN32
+#define GL_DLL ("OpenGL32.dll")
 #endif
 
 
@@ -93,408 +140,6 @@
 -----------------------------------------------------------------------------*/
 
 class UOpenGLRenderDevice;
-
-
-template <class ClassT> class rbtree_allocator {
-public:
-	typedef typename ClassT::node_t node_t;
-
-public:
-	rbtree_allocator() {
-	}
-	~rbtree_allocator() {
-	}
-
-	node_t *alloc_node(void) {
-		return new node_t;
-	}
-
-	void free_node(node_t *pNode) {
-		delete pNode;
-	}
-};
-
-template <class KeyT, class DataT> class rbtree {
-private:
-	enum { RED_NODE, BLACK_NODE };
-	enum { Left = 0, Right = 1 };
-
-public:
-	struct node_t {
-		struct node_t *pC[2], *pParent;
-		unsigned char color;
-		KeyT key;
-		DataT data;
-	};
-
-private:
-	rbtree(const rbtree &);
-	rbtree &operator=(const rbtree &);
-
-public:
-	rbtree() {
-		m_pRoot = &m_NIL;
-		m_NIL.color = BLACK_NODE;
-		m_NIL.pParent = 0;
-		m_NIL.pC[Left] = 0;
-		m_NIL.pC[Right] = 0;
-	}
-	~rbtree() {
-	}
-
-	node_t *find(KeyT key) {
-		node_t *px;
-
-		px = m_pRoot;
-		while (px != &m_NIL) {
-			if (key == px->key) {
-				return px;
-			}
-			px = px->pC[(key < px->key) ? Left : Right];
-		}
-
-		return 0;
-	}
-
-	bool insert(node_t *pNode) {
-		//Attempt to insert the new node
-		if (m_pRoot == &m_NIL) {
-			m_pRoot = pNode;
-			pNode->pParent = &m_NIL;
-			pNode->pC[Left] = &m_NIL;
-			pNode->pC[Right] = &m_NIL;
-			pNode->color = BLACK_NODE;
-
-			return true;
-		}
-
-		node_t *px, *py;
-		unsigned int compLR = Left;
-
-		px = m_pRoot;
-		py = 0;
-
-		while (px != &m_NIL) {
-			py = px;
-
-			if (pNode->key == px->key) {
-				return false;
-			}
-
-			compLR = (pNode->key < px->key) ? Left : Right;
-			px = px->pC[compLR];
-		}
-
-		py->pC[compLR] = pNode;
-		pNode->pParent = py;
-		pNode->pC[Left] = &m_NIL;
-		pNode->pC[Right] = &m_NIL;
-		pNode->color = RED_NODE;
-
-		//Rebalance the tree
-		px = pNode;
-		node_t *pxParent;
-		while (((pxParent = px->pParent) != &m_NIL) && (pxParent->color == RED_NODE)) {
-			node_t *pxParentParent;
-
-			pxParentParent = pxParent->pParent;
-			pxParentParent->color = RED_NODE;
-			if (pxParent == pxParentParent->pC[Left]) {
-				py = pxParentParent->pC[Right];
-				if (py->color == RED_NODE) {
-					py->color = BLACK_NODE;
-					pxParent->color = BLACK_NODE;
-					px = pxParentParent;
-				}
-				else {
-					if (px == pxParent->pC[Right]) {
-						px = pxParent;
-						left_rotate(px);
-						pxParent = px->pParent;
-					}
-					pxParent->color = BLACK_NODE;
-					right_rotate(pxParentParent);
-				}
-			}
-			else {
-				py = pxParentParent->pC[Left];
-				if (py->color == RED_NODE) {
-					py->color = BLACK_NODE;
-					pxParent->color = BLACK_NODE;
-					px = pxParentParent;
-				}
-				else {
-					if (px == pxParent->pC[Left]) {
-						px = pxParent;
-						right_rotate(px);
-						pxParent = px->pParent;
-					}
-					pxParent->color = BLACK_NODE;
-					left_rotate(pxParentParent);
-				}
-			}
-		}
-
-		m_pRoot->color = BLACK_NODE;
-
-		return true;
-	}
-
-	void remove(node_t *pNode) {
-		node_t *px, *py;
-
-		py = pNode;
-		if (py->pC[Left] == &m_NIL) {
-			px = py->pC[Right];
-		}
-		else if (py->pC[Right] == &m_NIL) {
-			px = py->pC[Left];
-		}
-		else {
-			py = py->pC[Right];
-			while (py->pC[Left] != &m_NIL) {
-				py = py->pC[Left];
-			}
-			px = py->pC[Right];
-		}
-
-		if (py != pNode) {
-			pNode->pC[Left]->pParent = py;
-			py->pC[Left] = pNode->pC[Left];
-			if (py != pNode->pC[Right]) {
-				px->pParent = py->pParent;
-				py->pParent->pC[Left] = px;
-				py->pC[Right] = pNode->pC[Right];
-				pNode->pC[Right]->pParent = py;
-			}
-			else {
-				px->pParent = py;
-			}
-
-			if (m_pRoot == pNode) {
-				m_pRoot = py;
-			}
-			else {
-				pNode->pParent->pC[(pNode->pParent->pC[Left] == pNode) ? Left : Right] = py;
-			}
-			py->pParent = pNode->pParent;
-
-			unsigned char tempColor = pNode->color;
-			pNode->color = py->color;
-			py->color = tempColor;
-
-			py = pNode;
-		}
-		else {
-			px->pParent = py->pParent;
-
-			if (m_pRoot == pNode) {
-				m_pRoot = px;
-			}
-			else {
-				py->pParent->pC[(py->pParent->pC[Left] == py) ? Left : Right] = px;
-			}
-		}
-
-		if (py->color == BLACK_NODE) {
-			node_t *pxp;
-
-			while (((pxp = px->pParent) != &m_NIL) && (px->color == BLACK_NODE)) {
-				if (px == pxp->pC[Left]) {
-					node_t *pw;
-
-					pw = pxp->pC[Right];
-					if (pw->color == RED_NODE) {
-						pw->color = BLACK_NODE;
-						pxp->color = RED_NODE;
-						left_rotate(pxp);
-						pw = pxp->pC[Right];
-					}
-					//if ((pw->pC[Left]->color == BLACK_NODE) & (pw->pC[Right]->color == BLACK_NODE))
-					if (((pw->pC[Left]->color ^ BLACK_NODE) | (pw->pC[Right]->color ^ BLACK_NODE)) == 0) {
-						pw->color = RED_NODE;
-						px = pxp;
-					}
-					else {
-						if (pw->pC[Right]->color == BLACK_NODE) {
-							pw->pC[Left]->color = BLACK_NODE;
-							pw->color = RED_NODE;
-							right_rotate(pw);
-							pw = pxp->pC[Right];
-						}
-						pw->color = pxp->color;
-						pxp->color = BLACK_NODE;
-						pw->pC[Right]->color = BLACK_NODE;
-						left_rotate(pxp);
-						break;
-					}
-				}
-				else {
-					node_t *pw;
-
-					pw = pxp->pC[Left];
-					if (pw->color == RED_NODE) {
-						pw->color = BLACK_NODE;
-						pxp->color = RED_NODE;
-						right_rotate(pxp);
-						pw = pxp->pC[Left];
-					}
-					//if ((pw->pC[Right]->color == BLACK_NODE) & (pw->pC[Left]->color == BLACK_NODE))
-					if (((pw->pC[Right]->color ^ BLACK_NODE) | (pw->pC[Left]->color ^ BLACK_NODE)) == 0) {
-						pw->color = RED_NODE;
-						px = pxp;
-					}
-					else {
-						if (pw->pC[Left]->color == BLACK_NODE) {
-							pw->pC[Right]->color = BLACK_NODE;
-							pw->color = RED_NODE;
-							left_rotate(pw);
-							pw = pxp->pC[Left];
-						}
-						pw->color = pxp->color;
-						pxp->color = BLACK_NODE;
-						pw->pC[Left]->color = BLACK_NODE;
-						right_rotate(pxp);
-						break;
-					}
-				}
-			}
-			px->color = BLACK_NODE;
-		}
-
-		return;
-	}
-
-	node_t * FASTCALL next_node(node_t *pNode) {
-		node_t *px;
-
-		if (pNode->pC[Right] != &m_NIL) {
-			pNode = pNode->pC[Right];
-			while (pNode->pC[Left] != &m_NIL) {
-				pNode = pNode->pC[Left];
-			}
-			return pNode;
-		}
-
-		if (pNode->pParent == &m_NIL) {
-			return &m_NIL;
-		}
-
-		px = pNode->pParent;
-		while (pNode == px->pC[Right]) {
-			pNode = px;
-			if (pNode->pParent == &m_NIL) {
-				return &m_NIL;
-			}
-			px = pNode->pParent;
-		}
-
-		return px;
-	}
-
-	node_t *begin(void) {
-		node_t *px;
-
-		if (m_pRoot == &m_NIL) {
-			return &m_NIL;
-		}
-
-		for (px = m_pRoot; px->pC[Left] != &m_NIL; px = px->pC[Left]);
-
-		return px;
-	}
-
-	node_t *end(void) {
-		return &m_NIL;
-	}
-
-	void FASTCALL clear(rbtree_allocator<rbtree<KeyT, DataT> > *pAllocator) {
-		node_t *px;
-
-		px = begin();
-		while (px != end()) {
-			node_t *py = next_node(px);
-			remove(px);
-			pAllocator->free_node(px);
-			px = py;
-		}
-
-		return;
-	}
-
-	unsigned int calc_size(void) {
-		node_t *px;
-		unsigned int size;
-
-		px = begin();
-		size = 0;
-		while (px != end()) {
-			px = next_node(px);
-			size++;
-		}
-
-		return size;
-	}
-
-private:
-	void FASTCALL left_rotate(node_t *px) {
-		node_t *py;
-
-		py = px->pC[Right];
-
-		node_t *pyLeft = py->pC[Left];
-		px->pC[Right] = pyLeft;
-		if (pyLeft != &m_NIL) {
-			pyLeft->pParent = px;
-		}
-
-		node_t *pxParent = px->pParent;
-		py->pParent = pxParent;
-
-		if (pxParent == &m_NIL) {
-			m_pRoot = py;
-		}
-		else {
-			pxParent->pC[(px == pxParent->pC[Left]) ? Left : Right] = py;
-		}
-
-		py->pC[Left] = px;
-		px->pParent = py;
-
-		return;
-	}
-
-	void FASTCALL right_rotate(node_t *px) {
-		node_t *py;
-
-		py = px->pC[Left];
-
-		node_t *pyRight = py->pC[Right];
-		px->pC[Left] = pyRight;
-		if (pyRight != &m_NIL) {
-			pyRight->pParent = px;
-		}
-
-		node_t *pxParent = px->pParent;
-		py->pParent = pxParent;
-
-		if (pxParent == &m_NIL) {
-			m_pRoot = py;
-		}
-		else {
-			pxParent->pC[(px == pxParent->pC[Right]) ? Right : Left] = py;
-		}
-
-		py->pC[Right] = px;
-		px->pParent = py;
-
-		return;
-	}
-
-private:
-	node_t m_NIL;
-	node_t *m_pRoot;
-};
 
 
 enum bind_type_t {
@@ -515,20 +160,18 @@ enum bind_type_t {
 
 #define CT_ANISOTROPIC_FILTER_BIT				0x10
 
-#define CT_GENERATE_MIPMAPS_BIT					0x20
-
-#define CT_HAS_MIPMAPS_BIT						0x40
-
-#define CT_DEFAULT_TEXTURE_MAX_LEVEL			1000
+#define CT_ADDRESS_U_CLAMP						0x20
+#define CT_ADDRESS_V_CLAMP						0x40
 
 struct tex_params_t {
-	BYTE first;
-	BYTE second;
-	_WORD maxLevel;
+	BYTE filter;
+	bool hasMipmaps;
+	BYTE texObjFilter;
+	BYTE reserved3;
 };
 
 //Default texture parameters for new OpenGL texture
-const tex_params_t CT_DEFAULT_TEX_PARAMS = { CT_MIN_FILTER_NEAREST_MIPMAP_LINEAR | CT_MAG_FILTER_NEAREST_OR_LINEAR_BIT, 0, CT_DEFAULT_TEXTURE_MAX_LEVEL };
+const tex_params_t CT_DEFAULT_TEX_PARAMS = { CT_MIN_FILTER_NEAREST_MIPMAP_LINEAR | CT_MAG_FILTER_NEAREST_OR_LINEAR_BIT, true, 0, 0 };
 
 #define DT_NO_SMOOTH_BIT	0x01
 
@@ -544,7 +187,7 @@ struct FCachedTexture {
 	BYTE bindType;
 	BYTE treeIndex;
 	BYTE dynamicTexBits;
-	tex_params_t texParams; 
+	tex_params_t texParams;
 	GLenum texSourceFormat;
 	GLenum texInternalFormat;
 	union {
@@ -567,11 +210,11 @@ public:
 		m_tail.pPrev = &m_head;
 	}
 
-	inline void unlink(FCachedTexture *pCT) {
+	inline void FASTCALL unlink(FCachedTexture *pCT) {
 		pCT->pPrev->pNext = pCT->pNext;
 		pCT->pNext->pPrev = pCT->pPrev;
 	}
-	inline void link_to_tail(FCachedTexture *pCT) {
+	inline void FASTCALL link_to_tail(FCachedTexture *pCT) {
 		pCT->pPrev = m_tail.pPrev;
 		pCT->pNext = &m_tail;
 		m_tail.pPrev->pNext = pCT;
@@ -601,7 +244,7 @@ public:
 	~rbtree_node_pool() {
 	}
 
-	inline void add(node_t *pNode) {
+	inline void FASTCALL add(node_t *pNode) {
 		pNode->pParent = m_pTail;
 
 		m_pTail = pNode;
@@ -651,27 +294,27 @@ struct FTexInfo {
 	FLOAT VPan;
 };
 
-// Geometry
+//Geometry
 struct FGLVertex {
 	FLOAT x;
 	FLOAT y;
 	FLOAT z;
 };
 
-// Normals
+//Normals
 struct FGLNormal {
 	FLOAT x;
 	FLOAT y;
 	FLOAT z;
 };
 
-// Texcoords
+//Tex coords
 struct FGLTexCoord {
 	FLOAT u;
 	FLOAT v;
 };
 
-// Primary and secondary (specular) color
+//Primary and secondary (specular) color
 struct FGLSingleColor {
 	DWORD color;
 };
@@ -692,65 +335,36 @@ struct FGLMapDot {
 };
 
 
+#ifdef _WIN32
+typedef struct {
+	PFNWGLCHOOSEPIXELFORMATARBPROC p_wglChoosePixelFormatARB;
+	bool haveWGLMultisampleARB;
+} InitARBPixelFormatRet_t;
+
+typedef struct {
+	INT NewColorBytes;
+	PFNWGLCHOOSEPIXELFORMATARBPROC p_wglChoosePixelFormatARB;
+	bool haveWGLMultisampleARB;
+} InitARBPixelFormatWndProcParams_t;
+#endif
+
+
 //
 // An OpenGL rendering device attached to a viewport.
 //
 class UOpenGLRenderDevice : public URenderDevice {
-#if defined UTGLR_DX_BUILD || defined UTGLR_UNREAL_BUILD
+#if defined UTGLR_DX_BUILD
 	DECLARE_CLASS(UOpenGLRenderDevice, URenderDevice, CLASS_Config)
 #else
 	DECLARE_CLASS(UOpenGLRenderDevice, URenderDevice, CLASS_Config, OpenGLDrv)
 #endif
 
-#ifndef UTGLR_DONT_DEBUG_AT_ALL
-	class ods_buf : public std::basic_stringbuf<TCHAR, std::char_traits<TCHAR> > {
-	public:
-		virtual ~ods_buf() {
-			sync();
-		}
-
-	protected:
-		int sync() {
-#ifdef WIN32
-			//Output the string
-			TCHAR_CALL_OS(OutputDebugStringW(str().c_str()), OutputDebugStringA(appToAnsi(str().c_str())));
-#else
-			//Add non-win32 debug output code here
-#endif
-
-			//Clear the buffer
-			str(std::basic_string<TCHAR>());
-			
-			return 0;
-		}
-	};
-	class ods_stream : public std::basic_ostream<TCHAR, std::char_traits<TCHAR> > {
-	public:
-		ods_stream() : std::basic_ostream<TCHAR, std::char_traits<TCHAR> >(new ods_buf()) {
-		}
-		~ods_stream() {
-			delete rdbuf();
-		}
-	};
-
-	std::basic_string<TCHAR> HexString(DWORD data, DWORD numBits = 4) {
-		std::basic_ostringstream<TCHAR> strHexNum;
-
-		strHexNum << std::hex;
-		strHexNum.fill('0');
-		strHexNum << std::uppercase;
-		strHexNum << std::setw(((numBits + 3) & -4) / 4);
-		strHexNum << data;
-
-		return strHexNum.str();
-	}
-
-	//Debug stream
-	ods_stream dout;
+	//Debug print function
+	int dbgPrintf(const char *format, ...);
 
 	//Debug bits
 	DWORD m_debugBits;
-	inline bool DebugBit(DWORD debugBit) {
+	inline bool FASTCALL DebugBit(DWORD debugBit) {
 		return ((m_debugBits & debugBit) != 0);
 	}
 	enum {
@@ -758,12 +372,11 @@ class UOpenGLRenderDevice : public URenderDevice {
 		DEBUG_BIT_GL_ERROR	= 0x00000002,
 		DEBUG_BIT_ANY		= 0xFFFFFFFF
 	};
-#endif
 
 	//Fixed texture cache ids
-	#define TEX_CACHE_ID_UNUSED		0xFFFFFFFFFFFFFFFFLL
-	#define TEX_CACHE_ID_NO_TEX		0xFFFFFFFF00000010LL
-	#define TEX_CACHE_ID_ALPHA_TEX	0xFFFFFFFF00000020LL
+	#define TEX_CACHE_ID_UNUSED		0xFFFFFFFFFFFFFFFFULL
+	#define TEX_CACHE_ID_NO_TEX		0xFFFFFFFF00000010ULL
+	#define TEX_CACHE_ID_ALPHA_TEX	0xFFFFFFFF00000020ULL
 
 	//Texture cache id flags
 	enum {
@@ -776,8 +389,11 @@ class UOpenGLRenderDevice : public URenderDevice {
 
 	// Information about a cached texture.
 	enum tex_type_t {
+		TEX_TYPE_NONE,
 		TEX_TYPE_COMPRESSED_DXT1,
 		TEX_TYPE_COMPRESSED_DXT1_TO_DXT3,
+		TEX_TYPE_COMPRESSED_DXT3,
+		TEX_TYPE_COMPRESSED_DXT5,
 		TEX_TYPE_PALETTED,
 		TEX_TYPE_HAS_PALETTE,
 		TEX_TYPE_NORMAL
@@ -797,25 +413,25 @@ class UOpenGLRenderDevice : public URenderDevice {
 	BYTE m_localTexComposeBuffer[LOCAL_TEX_COMPOSE_BUFFER_SIZE + 16];
 
 
-	inline void *AlignMemPtr(void *ptr, DWORD align) {
+	inline void * FASTCALL AlignMemPtr(void *ptr, DWORD align) {
 		return (void *)(((DWORD)ptr + (align - 1)) & -align);
 	}
 	enum { VERTEX_ARRAY_ALIGN = 64 };	//Must be even multiple of 16B for SSE
 	enum { VERTEX_ARRAY_TAIL_PADDING = 72 };	//Must include 8B for half SSE tail
 
-	// Geometry
+	//Geometry
 	FGLVertex *VertexArray;
 	BYTE m_VertexArrayMem[(sizeof(FGLVertex) * VERTEX_ARRAY_SIZE) + VERTEX_ARRAY_ALIGN + VERTEX_ARRAY_TAIL_PADDING];
 
-	// Normals
+	//Normals
 	FGLNormal *NormalArray;
 	BYTE m_NormalArrayMem[(sizeof(FGLNormal) * VERTEX_ARRAY_SIZE) + VERTEX_ARRAY_ALIGN + VERTEX_ARRAY_TAIL_PADDING];
 
-	// Texcoords
+	//Tex coords
 	FGLTexCoord *TexCoordArray[MAX_TMUNITS];
 	BYTE m_TexCoordArrayMem[MAX_TMUNITS][(sizeof(FGLTexCoord) * VERTEX_ARRAY_SIZE) + VERTEX_ARRAY_ALIGN + VERTEX_ARRAY_TAIL_PADDING];
 
-	// Primary and secondary (specular) color
+	//Primary and secondary (specular) color
 	FGLSingleColor *SingleColorArray;
 	FGLDoubleColor *DoubleColorArray;
 	BYTE m_ColorArrayMem[(sizeof(FGLColorAlloc) * VERTEX_ARRAY_SIZE) + VERTEX_ARRAY_ALIGN + VERTEX_ARRAY_TAIL_PADDING];
@@ -850,40 +466,32 @@ class UOpenGLRenderDevice : public URenderDevice {
 	BYTE m_texEnableBits;
 	BYTE m_clientTexEnableBits;
 
-	//Vertex program cache information
-	bool m_vpModeEnabled;
+	//Vertex program and fragment program cache information
 	GLuint m_vpCurrent;
+	GLuint m_fpCurrent;
+
+	//Vertex program and fragment program id tracking
+	bool m_allocatedShaderNames;
+
 	//Vertex program ids
-	bool m_allocatedVertexProgramNames;
 	GLuint m_vpDefaultRenderingState;
 	GLuint m_vpDefaultRenderingStateWithFog;
-#ifdef UTGLR_RUNE_BUILD
 	GLuint m_vpDefaultRenderingStateWithLinearFog;
-#endif
 	GLuint m_vpComplexSurface[MAX_TMUNITS];
-	GLuint m_vpComplexSurfaceDetailAlpha;
-	GLuint m_vpComplexSurfaceSingleTextureAndDetailTexture;
-	GLuint m_vpComplexSurfaceDualTextureAndDetailTexture;
 	GLuint m_vpComplexSurfaceSingleTextureWithPos;
 	GLuint m_vpComplexSurfaceDualTextureWithPos;
 	GLuint m_vpComplexSurfaceTripleTextureWithPos;
 
-	//Fragment program cache information
-	bool m_fpModeEnabled;
-	GLuint m_fpCurrent;
 	//Fragment program ids
-	bool m_allocatedFragmentProgramNames;
 	GLuint m_fpDefaultRenderingState;
 	GLuint m_fpDefaultRenderingStateWithFog;
-#ifdef UTGLR_RUNE_BUILD
 	GLuint m_fpDefaultRenderingStateWithLinearFog;
-#endif
 	GLuint m_fpComplexSurfaceSingleTexture;
 	GLuint m_fpComplexSurfaceDualTextureModulated;
-	GLuint m_fpComplexSurfaceDualTextureModulated2X;
+	GLuint m_fpComplexSurfaceTripleTextureModulated;
 	GLuint m_fpComplexSurfaceSingleTextureWithFog;
 	GLuint m_fpComplexSurfaceDualTextureModulatedWithFog;
-	GLuint m_fpComplexSurfaceDualTextureModulated2XWithFog;
+	GLuint m_fpComplexSurfaceTripleTextureModulatedWithFog;
 	GLuint m_fpDetailTexture;
 	GLuint m_fpDetailTextureTwoLayer;
 	GLuint m_fpSingleTextureAndDetailTexture;
@@ -903,7 +511,16 @@ class UOpenGLRenderDevice : public URenderDevice {
 		BYTE blue[256];
 	};
 
+#ifdef _WIN32
+	// Permanent variables.
+	HGLRC m_hRC;
+	HWND m_hWnd;
+	HDC m_hDC;
+#endif
+
 	UBOOL WasFullscreen;
+
+	bool m_frameRateLimitTimerInitialized;
 
 	bool m_prevSwapBuffersStatus;
 
@@ -912,19 +529,19 @@ class UOpenGLRenderDevice : public URenderDevice {
 	typedef rbtree<QWORD, FCachedTexture> QWORD_CTTree_t;
 	typedef rbtree_allocator<QWORD_CTTree_t> QWORD_CTTree_Allocator_t;
 	typedef rbtree_node_pool<QWORD_CTTree_t> QWORD_CTTree_NodePool_t;
-	typedef DWORD TexPoolMapKey_t;
+	typedef _WORD TexPoolMapKey_t;
 	typedef rbtree<TexPoolMapKey_t, QWORD_CTTree_NodePool_t> TexPoolMap_t;
 	typedef rbtree_allocator<TexPoolMap_t> TexPoolMap_Allocator_t;
 
 	enum { NUM_CTTree_TREES = 16 }; //Must be a power of 2
-	inline DWORD CTZeroPrefixCacheIDSuffixToTreeIndex(DWORD CacheIDSuffix) {
+	inline DWORD FASTCALL CTZeroPrefixCacheIDSuffixToTreeIndex(DWORD CacheIDSuffix) {
 		return ((CacheIDSuffix >> 12) & (NUM_CTTree_TREES - 1));
 	}
-	inline DWORD CTNonZeroPrefixCacheIDSuffixToTreeIndex(DWORD CacheIDSuffix) {
+	inline DWORD FASTCALL CTNonZeroPrefixCacheIDSuffixToTreeIndex(DWORD CacheIDSuffix) {
 		return ((CacheIDSuffix >> 20) & (NUM_CTTree_TREES - 1));
 	}
-	inline DWORD MakeTexPoolMapKey(DWORD UBits, DWORD VBits) {
-		return ((UBits << 16) | VBits);
+	inline _WORD FASTCALL MakeTexPoolMapKey(DWORD UBits, DWORD VBits) {
+		return (((UBits << 8) | VBits) & 0xFFFF);
 	}
 
 	DWORD_CTTree_t m_localZeroPrefixBindTrees[NUM_CTTree_TREES], *m_zeroPrefixBindTrees;
@@ -963,13 +580,9 @@ class UOpenGLRenderDevice : public URenderDevice {
 	struct {
 		UBOOL SinglePassFog;
 		UBOOL SinglePassDetail;
-		UBOOL UseVertexProgram;
 		UBOOL UseFragmentProgram;
 	} DCV;
 
-#ifdef UTGLR_UNREAL_BUILD
-	UBOOL DetailTextures;
-#endif
 	FLOAT LODBias;
 	FLOAT GammaOffset;
 	FLOAT GammaOffsetRed;
@@ -994,13 +607,10 @@ class UOpenGLRenderDevice : public URenderDevice {
 	UBOOL AlwaysMipmap;
 	UBOOL UsePrecache;
 	UBOOL UseTrilinear;
-	UBOOL AutoGenerateMipmaps;
 	UBOOL UseVertexSpecular;
 	UBOOL UseAlphaPalette;
 	UBOOL UseS3TC;
 	UBOOL Use16BitTextures;
-	UBOOL UseTNT; 					// vogel: REMOVE ME - HACK!
-	UBOOL UseCVA;
 	UBOOL NoFiltering;
 	INT DetailMax;
 	UBOOL UseDetailAlpha;
@@ -1016,10 +626,10 @@ class UOpenGLRenderDevice : public URenderDevice {
 	INT DynamicTexIdRecycleLevel;
 	UBOOL TexDXT1ToDXT3;
 	UBOOL UseMultiDrawArrays;
-	UBOOL UseVertexProgram;
 	UBOOL UseFragmentProgram;
 	INT SwapInterval;
-#if defined UTGLR_DX_BUILD || defined UTGLR_UNREAL_BUILD || defined UTGLR_RUNE_BUILD
+	INT FrameRateLimit;
+#if defined UTGLR_DX_BUILD || defined UTGLR_RUNE_BUILD
 	FLOAT m_prevFrameTimestamp;
 #else
 	FTime m_prevFrameTimestamp;
@@ -1058,9 +668,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 	UBOOL PL_UseTrilinear;
 	UBOOL PL_Use16BitTextures;
 	UBOOL PL_TexDXT1ToDXT3;
-	UBOOL PL_AutoGenerateMipmaps;
 	INT PL_MaxAnisotropy;
-	UBOOL PL_UseTNT;
 	UBOOL PL_SmoothMaskedTextures;
 	UBOOL PL_MaskedTextureHack;
 	FLOAT PL_LODBias;
@@ -1068,7 +676,6 @@ class UOpenGLRenderDevice : public URenderDevice {
 	UBOOL PL_UseAlphaPalette;
 	UBOOL PL_UseDetailAlpha;
 	UBOOL PL_SinglePassDetail;
-	UBOOL PL_UseVertexProgram;
 	UBOOL PL_UseFragmentProgram;
 	UBOOL PL_UseSSE;
 	UBOOL PL_UseSSE2;
@@ -1092,8 +699,12 @@ class UOpenGLRenderDevice : public URenderDevice {
 	DWORD (FASTCALL UOpenGLRenderDevice::*m_pBufferDetailTextureDataProc)(FLOAT);
 
 	// Hit info.
-	BYTE* HitData;
-	INT* HitSize;
+	BYTE* m_HitData;
+	INT* m_HitSize;
+	INT m_HitBufSize;
+	INT m_HitCount;
+	CGClip m_gclip;
+
 
 	DWORD m_currentFrameCount;
 
@@ -1108,16 +719,20 @@ class UOpenGLRenderDevice : public URenderDevice {
 	bool m_usingAA;
 	bool m_curAAEnable;
 	bool m_defAAEnable;
+	INT m_initNumAASamples;
 
 	enum {
 		PF2_NEAR_Z_RANGE_HACK	= 0x01
 	};
 	DWORD m_curBlendFlags;
 	DWORD m_smoothMaskedTexturesBit;
+	bool m_useAlphaToCoverageForMasked;
+	bool m_alphaToCoverageEnabled;
 	DWORD m_curPolyFlags;
 	DWORD m_curPolyFlags2;
 	INT m_bufferActorTrisCutoff;
 
+	FLOAT m_complexSurfaceColor3f_1f[4];
 	FLOAT m_detailTextureColor3f_1f[4];
 	DWORD m_detailTextureColor4ub;
 
@@ -1131,10 +746,9 @@ class UOpenGLRenderDevice : public URenderDevice {
 	};
 	BYTE m_currentColorFlags;
 	BYTE m_requestedColorFlags;
-#ifdef UTGLR_RUNE_BUILD
+
 	BYTE m_gpAlpha;
 	bool m_gpFogEnabled;
-#endif
 
 	DWORD m_curTexEnvFlags[MAX_TMUNITS];
 	FTexInfo TexInfo[MAX_TMUNITS];
@@ -1144,8 +758,6 @@ class UOpenGLRenderDevice : public URenderDevice {
 	void (FASTCALL *m_pBuffer3FoggedVertsProc)(UOpenGLRenderDevice *, FTransTexture **);
 
 	void (FASTCALL *m_pBuffer3VertsProc)(UOpenGLRenderDevice *, FTransTexture **);
-
-	TArray<INT> GLHitData;
 
 	GLuint m_noTextureId;
 	GLuint m_alphaTextureId;
@@ -1159,34 +771,47 @@ class UOpenGLRenderDevice : public URenderDevice {
 	static INT NumDevices;
 	static INT LockCount;
 
+#ifdef _WIN32
+	static HGLRC   hCurrentRC;
+	static HMODULE hModuleGlMain;
+	static TArray<HGLRC> AllContexts;
+#else
 	static UBOOL GLLoaded;
+#endif
 
 	static bool g_gammaFirstTime;
 	static bool g_haveOriginalGammaRamp;
-
-	// GL functions.
-	#define GL_EXT(name) static bool SUPPORTS##name;
-	#define GL_PROC(ext,ret,func,parms) static ret (STDCALL *func)parms;
-#ifdef UTGLR_ALL_GL_PROCS
-	#define GL_PROX(ext,ret,func,parms) static ret (STDCALL *func)parms;
-#else
-	#define GL_PROX(ext,ret,func,parms)
+#ifdef _WIN32
+	static FGammaRamp g_originalGammaRamp;
 #endif
-	#include "OpenGLFuncs.h"
-	#undef GL_EXT
-	#undef GL_PROC
-	#undef GL_PROX
+
+	//OpenGL 1.x function pointers for remaining subset to be used with OpenGL 3.2
+	#define GL1_PROC(ret, func, params) static ret (STDCALL *func)params;
+	#include "OpenGL1Funcs.h"
+	#undef GL1_PROC
+
+	//OpenGL extension function pointers
+	#define GL_EXT_NAME(name) static bool SUPPORTS##name;
+	#define GL_EXT_PROC(ext, ret, func, params) static ret (STDCALL *func)params;
+	#include "OpenGLExtFuncs.h"
+	#undef GL_EXT_NAME
+	#undef GL_EXT_PROC
 
 
 #ifdef RGBA_MAKE
 #undef RGBA_MAKE
 #endif
+#if __INTEL_BYTE_ORDER__
 	static inline DWORD RGBA_MAKE(BYTE r, BYTE g, BYTE b, BYTE a) {	// vogel: I hate macros...
 		return (a << 24) | (b << 16) | (g << 8) | r;
 	}																// vogel: ... and macros hate me
+#else
+    static inline DWORD RGBA_MAKE(BYTE r, BYTE g, BYTE b, BYTE a){
+		return (r << 24) | (g <<16) | ( b<< 8) | a;
+	}
+#endif
 
-
-#if defined WIN32 && defined UTGLR_USE_ASM_CODE
+#if defined _WIN32 && defined UTGLR_USE_ASM_CODE
 	static inline DWORD FPlaneTo_RGB_A255(const FPlane *pPlane) {
 		static FLOAT f255 = 255.0f;
 		INT iR, iG, iB;
@@ -1205,7 +830,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 		return RGBA_MAKE(iR, iG, iB, 255);
 	}
 #else
-	static inline DWORD FPlaneTo_RGB_A255(const FPlane *pPlane) {
+	static inline DWORD FASTCALL FPlaneTo_RGB_A255(const FPlane *pPlane) {
 		return RGBA_MAKE(
 					appRound(pPlane->X * 255.0f),
 					appRound(pPlane->Y * 255.0f),
@@ -1214,7 +839,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 	}
 #endif
 
-#if defined WIN32 && defined UTGLR_USE_ASM_CODE
+#if defined _WIN32 && defined UTGLR_USE_ASM_CODE
 	static inline DWORD FPlaneTo_RGBClamped_A255(const FPlane *pPlane) {
 		static FLOAT f255 = 255.0f;
 		INT iR, iG, iB;
@@ -1233,7 +858,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 		return RGBA_MAKE(Clamp(iR, 0, 255), Clamp(iG, 0, 255), Clamp(iB, 0, 255), 255);
 	}
 #else
-	static inline DWORD FPlaneTo_RGBClamped_A255(const FPlane *pPlane) {
+	static inline DWORD FASTCALL FPlaneTo_RGBClamped_A255(const FPlane *pPlane) {
 		return RGBA_MAKE(
 					Clamp(appRound(pPlane->X * 255.0f), 0, 255),
 					Clamp(appRound(pPlane->Y * 255.0f), 0, 255),
@@ -1242,7 +867,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 	}
 #endif
 
-#if defined WIN32 && defined UTGLR_USE_ASM_CODE
+#if defined _WIN32 && defined UTGLR_USE_ASM_CODE
 	static inline DWORD FPlaneTo_RGB_A0(const FPlane *pPlane) {
 		static FLOAT f255 = 255.0f;
 		INT iR, iG, iB;
@@ -1261,7 +886,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 		return RGBA_MAKE(iR, iG, iB, 0);
 	}
 #else
-	static inline DWORD FPlaneTo_RGB_A0(const FPlane *pPlane) {
+	static inline DWORD FASTCALL FPlaneTo_RGB_A0(const FPlane *pPlane) {
 		return RGBA_MAKE(
 					appRound(pPlane->X * 255.0f),
 					appRound(pPlane->Y * 255.0f),
@@ -1270,7 +895,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 	}
 #endif
 
-#if defined WIN32 && defined UTGLR_USE_ASM_CODE
+#if defined _WIN32 && defined UTGLR_USE_ASM_CODE
 	static inline DWORD FPlaneTo_RGB_Aub(const FPlane *pPlane, BYTE alpha) {
 		static FLOAT f255 = 255.0f;
 		INT iR, iG, iB;
@@ -1289,7 +914,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 		return RGBA_MAKE(iR, iG, iB, alpha);
 	}
 #else
-	static inline DWORD FPlaneTo_RGB_Aub(const FPlane *pPlane, BYTE alpha) {
+	static inline DWORD FASTCALL FPlaneTo_RGB_Aub(const FPlane *pPlane, BYTE alpha) {
 		return RGBA_MAKE(
 					appRound(pPlane->X * 255.0f),
 					appRound(pPlane->Y * 255.0f),
@@ -1298,7 +923,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 	}
 #endif
 
-#if defined WIN32 && defined UTGLR_USE_ASM_CODE
+#if defined _WIN32 && defined UTGLR_USE_ASM_CODE
 	static inline DWORD FPlaneTo_RGBA(const FPlane *pPlane) {
 		static FLOAT f255 = 255.0f;
 		INT iR, iG, iB, iA;
@@ -1320,7 +945,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 		return RGBA_MAKE(iR, iG, iB, iA);
 	}
 #else
-	static inline DWORD FPlaneTo_RGBA(const FPlane *pPlane) {
+	static inline DWORD FASTCALL FPlaneTo_RGBA(const FPlane *pPlane) {
 		return RGBA_MAKE(
 					appRound(pPlane->X * 255.0f),
 					appRound(pPlane->Y * 255.0f),
@@ -1329,7 +954,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 	}
 #endif
 
-#if defined WIN32 && defined UTGLR_USE_ASM_CODE
+#if defined _WIN32 && defined UTGLR_USE_ASM_CODE
 	static inline DWORD FPlaneTo_RGBAClamped(const FPlane *pPlane) {
 		static FLOAT f255 = 255.0f;
 		INT iR, iG, iB, iA;
@@ -1351,7 +976,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 		return RGBA_MAKE(Clamp(iR, 0, 255), Clamp(iG, 0, 255), Clamp(iB, 0, 255), Clamp(iA, 0, 255));
 	}
 #else
-	static inline DWORD FPlaneTo_RGBAClamped(const FPlane *pPlane) {
+	static inline DWORD FASTCALL FPlaneTo_RGBAClamped(const FPlane *pPlane) {
 		return RGBA_MAKE(
 					Clamp(appRound(pPlane->X * 255.0f), 0, 255),
 					Clamp(appRound(pPlane->Y * 255.0f), 0, 255),
@@ -1360,7 +985,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 	}
 #endif
 
-#if defined WIN32 && defined UTGLR_USE_ASM_CODE
+#if defined _WIN32 && defined UTGLR_USE_ASM_CODE
 	static inline DWORD FPlaneTo_RGBScaled_A255(const FPlane *pPlane, FLOAT rgbScale) {
 		INT iR, iG, iB;
 		__asm {
@@ -1378,7 +1003,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 		return RGBA_MAKE(iR, iG, iB, 255);
 	}
 #else
-	static inline DWORD FPlaneTo_RGBScaled_A255(const FPlane *pPlane, FLOAT rgbScale) {
+	static inline DWORD FASTCALL FPlaneTo_RGBScaled_A255(const FPlane *pPlane, FLOAT rgbScale) {
 		return RGBA_MAKE(
 					appRound(pPlane->X * rgbScale),
 					appRound(pPlane->Y * rgbScale),
@@ -1397,8 +1022,8 @@ class UOpenGLRenderDevice : public URenderDevice {
 	void FASTCALL SC_AddIntConfigParam(const TCHAR *pName, INT &param, ECppProperty EC_CppProperty, INT InOffset, INT defaultValue);
 	void FASTCALL SC_AddFloatConfigParam(const TCHAR *pName, FLOAT &param, ECppProperty EC_CppProperty, INT InOffset, FLOAT defaultValue);
 
-	void FASTCALL DbgPrintInitParam(const TCHAR *pName, INT value);
-	void FASTCALL DbgPrintInitParam(const TCHAR *pName, FLOAT value);
+	void FASTCALL DbgPrintInitParam(const char *pName, INT value);
+	void FASTCALL DbgPrintInitParam(const char *pName, FLOAT value);
 
 #ifdef UTGLR_INCLUDE_SSE_CODE
 	static bool CPU_DetectCPUID(void);
@@ -1406,14 +1031,20 @@ class UOpenGLRenderDevice : public URenderDevice {
 	static bool CPU_DetectSSE2(void);
 #endif //UTGLR_INCLUDE_SSE_CODE
 
+	void InitFrameRateLimitTimerSafe(void);
+	void ShutdownFrameRateLimitTimer(void);
+
 	void BuildGammaRamp(float redGamma, float greenGamma, float blueGamma, int brightness, FGammaRamp &ramp);
 	void BuildGammaRamp(float redGamma, float greenGamma, float blueGamma, int brightness, FByteGammaRamp &ramp);
 	void SetGamma(FLOAT GammaCorrection);
+	void ResetGamma(void);
 
 	static bool FASTCALL IsGLExtensionSupported(const char *pExtensionsString, const char *pExtensionName);
-	bool FASTCALL FindExt(const char *pName);
-	void FASTCALL FindProc(void*& ProcAddress, const char *pName, const char *pSupportName, bool& Supports, bool AllowExt);
-	void FASTCALL FindProcs(bool AllowExt);
+	bool FASTCALL GetGL1Proc(void*& ProcAddress, const char *pName);
+	bool FASTCALL GetGL1Procs(void);
+	bool FASTCALL FindGLExt(const char *pName);
+	void FASTCALL GetGLExtProc(void*& ProcAddress, const char *pName, const char *pSupportName, bool& Supports);
+	void FASTCALL GetGLExtProcs(void);
 
 	UBOOL FailedInitf(const TCHAR* Fmt, ...);
 	void Exit();
@@ -1422,28 +1053,59 @@ class UOpenGLRenderDevice : public URenderDevice {
 	UBOOL SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL Fullscreen);
 	void UnsetRes();
 
+	void MakeCurrent(void);
 	void CheckGLErrorFlag(const TCHAR *pTag);
 
 	void ConfigValidate_RefreshDCV(void);
 	void ConfigValidate_RequiredExtensions(void);
 	void ConfigValidate_Main(void);
 
+#ifdef _WIN32
+	void FASTCALL InitARBPixelFormat(INT NewColorBytes, InitARBPixelFormatRet_t *pRet);
+	static LRESULT CALLBACK InitARBPixelFormatWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+	void FASTCALL SetBasicPixelFormat(INT NewColorBytes);
+	bool FASTCALL SetAAPixelFormat(INT NewColorBytes);
+#endif
+
+
+#ifndef __UNIX__
+	void PrintFormat(HDC hDC, INT nPixelFormat) {
+		guard(UOpenGlRenderDevice::PrintFormat);
+		TCHAR Flags[1024] = TEXT("");
+		PIXELFORMATDESCRIPTOR pfd;
+		DescribePixelFormat(hDC, nPixelFormat, sizeof(pfd), &pfd);
+		if (pfd.dwFlags & PFD_DRAW_TO_WINDOW) appStrcat(Flags, TEXT(" PFD_DRAW_TO_WINDOW"));
+		if (pfd.dwFlags & PFD_DRAW_TO_BITMAP) appStrcat(Flags, TEXT(" PFD_DRAW_TO_BITMAP"));
+		if (pfd.dwFlags & PFD_SUPPORT_GDI) appStrcat(Flags, TEXT(" PFD_SUPPORT_GDI"));
+		if (pfd.dwFlags & PFD_SUPPORT_OPENGL) appStrcat(Flags, TEXT(" PFD_SUPPORT_OPENGL"));
+		if (pfd.dwFlags & PFD_GENERIC_ACCELERATED) appStrcat(Flags, TEXT(" PFD_GENERIC_ACCELERATED"));
+		if (pfd.dwFlags & PFD_GENERIC_FORMAT) appStrcat(Flags, TEXT(" PFD_GENERIC_FORMAT"));
+		if (pfd.dwFlags & PFD_NEED_PALETTE) appStrcat(Flags, TEXT(" PFD_NEED_PALETTE"));
+		if (pfd.dwFlags & PFD_NEED_SYSTEM_PALETTE) appStrcat(Flags, TEXT(" PFD_NEED_SYSTEM_PALETTE"));
+		if (pfd.dwFlags & PFD_DOUBLEBUFFER) appStrcat(Flags, TEXT(" PFD_DOUBLEBUFFER"));
+		if (pfd.dwFlags & PFD_STEREO) appStrcat(Flags, TEXT(" PFD_STEREO"));
+		if (pfd.dwFlags & PFD_SWAP_LAYER_BUFFERS) appStrcat(Flags, TEXT("PFD_SWAP_LAYER_BUFFERS"));
+		debugf(NAME_Init, TEXT("Pixel format %i:"), nPixelFormat);
+		debugf(NAME_Init, TEXT("   Flags:%s"), Flags);
+		debugf(NAME_Init, TEXT("   Pixel Type: %i"), pfd.iPixelType);
+		debugf(NAME_Init, TEXT("   Bits: Color=%i R=%i G=%i B=%i A=%i"), pfd.cColorBits, pfd.cRedBits, pfd.cGreenBits, pfd.cBlueBits, pfd.cAlphaBits);
+		debugf(NAME_Init, TEXT("   Bits: Accum=%i Depth=%i Stencil=%i"), pfd.cAccumBits, pfd.cDepthBits, pfd.cStencilBits);
+		unguard;
+	}
+#endif
+
 	UBOOL Init(UViewport* InViewport, INT NewX, INT NewY, INT NewColorBytes, UBOOL Fullscreen);
 
 	static QSORT_RETURN CDECL CompareRes(const FPlane* A, const FPlane* B) {
-		return (QSORT_RETURN) (((A->X - B->X) != 0.0) ? (A->X - B->X) : (A->Y - B->Y));
+		return (QSORT_RETURN) (((A->X - B->X) != 0.0f) ? (A->X - B->X) : (A->Y - B->Y));
 	}
 
 	UBOOL Exec(const TCHAR* Cmd, FOutputDevice& Ar);
 	void Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane ScreenClear, DWORD RenderLockFlags, BYTE* InHitData, INT* InHitSize);
 	void SetSceneNode(FSceneNode* Frame);
 	void Unlock(UBOOL Blit);
-#ifdef UTGLR_UNREAL_BUILD
-	void Flush();
-	inline void Flush(UBOOL AllowPrecache) { Flush(); };
-#else
 	void Flush(UBOOL AllowPrecache);
-#endif
 
 	void DrawComplexSurface(FSceneNode* Frame, FSurfaceInfo& Surface, FSurfaceFacet& Facet);
 #ifdef UTGLR_RUNE_BUILD
@@ -1456,8 +1118,8 @@ class UOpenGLRenderDevice : public URenderDevice {
 	void DrawGouraudPolygonOld(FSceneNode* Frame, FTextureInfo& Info, FTransTexture** Pts, INT NumPts, DWORD PolyFlags, FSpanBuffer* Span);
 	void DrawGouraudPolygon(FSceneNode* Frame, FTextureInfo& Info, FTransTexture** Pts, INT NumPts, DWORD PolyFlags, FSpanBuffer* Span);
 	void DrawTile(FSceneNode* Frame, FTextureInfo& Info, FLOAT X, FLOAT Y, FLOAT XL, FLOAT YL, FLOAT U, FLOAT V, FLOAT UL, FLOAT VL, class FSpanBuffer* Span, FLOAT Z, FPlane Color, FPlane Fog, DWORD PolyFlags);
-	void Draw2DLine(FSceneNode* Frame, FPlane Color, DWORD LineFlags, FVector P1, FVector P2);
 	void Draw3DLine(FSceneNode* Frame, FPlane Color, DWORD LineFlags, FVector P1, FVector P2);
+	void Draw2DLine(FSceneNode* Frame, FPlane Color, DWORD LineFlags, FVector P1, FVector P2);
 	void Draw2DPoint(FSceneNode* Frame, FPlane Color, DWORD LineFlags, FLOAT X1, FLOAT Y1, FLOAT X2, FLOAT Y2, FLOAT Z);
 
 	void ClearZ(FSceneNode* Frame);
@@ -1472,9 +1134,10 @@ class UOpenGLRenderDevice : public URenderDevice {
 	void InitNoTextureSafe(void);
 	void InitAlphaTextureSafe(void);
 
+	void ScanForDeletedTextures(void);
 	void ScanForOldTextures(void);
 
-	inline void SetNoTexture(INT Multi) {
+	inline void FASTCALL SetNoTexture(INT Multi) {
 		if (TexInfo[Multi].CurrentCacheID != TEX_CACHE_ID_NO_TEX) {
 			SetNoTextureNoCheck(Multi);
 		}
@@ -1488,14 +1151,14 @@ class UOpenGLRenderDevice : public URenderDevice {
 	void FASTCALL SetNoTextureNoCheck(INT Multi);
 	void FASTCALL SetAlphaTextureNoCheck(INT Multi);
 
-	inline void SetTexture(INT Multi, FTextureInfo& Info, DWORD PolyFlags, FLOAT PanBias) {
+	inline void FASTCALL SetTexture(INT Multi, FTextureInfo& Info, DWORD PolyFlags, FLOAT PanBias) {
 		FTexInfo& Tex = TexInfo[Multi];
 		QWORD CacheID;
 		DWORD DynamicPolyFlags;
 
 		// Set panning.
-		Tex.UPan = Info.Pan.X + PanBias * Info.UScale;
-		Tex.VPan = Info.Pan.Y + PanBias * Info.VScale;
+		Tex.UPan = Info.Pan.X + (PanBias * Info.UScale);
+		Tex.VPan = Info.Pan.Y + (PanBias * Info.VScale);
 
 		//PF_Memorized used internally to indicate 16-bit texture
 		PolyFlags &= ~PF_Memorized;
@@ -1534,7 +1197,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 		return;
 	}
 
-	inline void SetTextureNoPanBias(INT Multi, FTextureInfo& Info, DWORD PolyFlags) {
+	inline void FASTCALL SetTextureNoPanBias(INT Multi, FTextureInfo& Info, DWORD PolyFlags) {
 		FTexInfo& Tex = TexInfo[Multi];
 		QWORD CacheID;
 		DWORD DynamicPolyFlags;
@@ -1580,7 +1243,18 @@ class UOpenGLRenderDevice : public URenderDevice {
 		return;
 	}
 
+	inline void FASTCALL SetTexFilter(FCachedTexture *pBind, BYTE texFilter) {
+		if (pBind->texParams.filter != texFilter) {
+			SetTexFilterNoCheck(pBind, texFilter);
+		}
+	}
+
+	FCachedTexture *FindCachedTexture(QWORD CacheID);
+	QWORD_CTTree_NodePool_t::node_t * FASTCALL TryAllocFromTexPool(TexPoolMapKey_t texPoolKey);
+	BYTE FASTCALL GenerateTexFilterParams(DWORD PolyFlags, FCachedTexture *pBind);
+	void FASTCALL SetTexFilterNoCheck(FCachedTexture *pBind, BYTE texFilter);
 	void FASTCALL SetTextureNoCheck(FTexInfo& Tex, FTextureInfo& Info, DWORD PolyFlags);
+	void FASTCALL UploadTextureExec(FTextureInfo& Info, DWORD PolyFlags, FCachedTexture *pBind, bool existingBind, bool needTexAllocate);
 	void FASTCALL CacheTextureInfo(FCachedTexture *pBind, const FTextureInfo &Info, DWORD PolyFlags);
 
 	void FASTCALL ConvertDXT1_DXT3(const FMipmapBase *Mip, INT Level);
@@ -1592,7 +1266,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 	void FASTCALL ConvertBGRA7777_BGRA8888_NoClamp(const FMipmapBase *Mip, INT Level);
 	void FASTCALL ConvertBGRA7777_RGBA8888(const FMipmapBase *Mip, INT Level);
 
-	inline void SetBlend(DWORD PolyFlags) {
+	inline void FASTCALL SetBlend(DWORD PolyFlags) {
 #ifdef UTGLR_RUNE_BUILD
 		if (PolyFlags & PF_AlphaBlend) {
 			if (!(PolyFlags & PF_Masked)) {
@@ -1614,6 +1288,8 @@ class UOpenGLRenderDevice : public URenderDevice {
 		//Only check relevant blend flags
 #ifdef UTGLR_RUNE_BUILD
 		DWORD blendFlags = PolyFlags & (PF_Translucent | PF_Modulated | PF_Invisible | PF_Occlude | PF_Masked | PF_Highlighted | PF_AlphaBlend);
+#elif  UTGLR_UNREAL_227_BUILD
+		DWORD blendFlags = PolyFlags & (PF_Translucent | PF_Modulated | PF_Invisible | PF_Occlude | PF_Masked | PF_Highlighted | PF_AlphaBlend);
 #else
 		DWORD blendFlags = PolyFlags & (PF_Translucent | PF_Modulated | PF_Invisible | PF_Occlude | PF_Masked | PF_Highlighted);
 #endif
@@ -1623,7 +1299,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 	}
 	void FASTCALL SetBlendNoCheck(DWORD blendFlags);
 
-	inline void SetTexEnv(DWORD texUnit, DWORD PolyFlags) {
+	inline void FASTCALL SetTexEnv(DWORD texUnit, DWORD PolyFlags) {
 		//Only check relevant tex env flags
 		DWORD texEnvFlags = PolyFlags & (PF_Modulated | PF_Highlighted | PF_Memorized | PF_FlatShaded);
 		//Modulated by default
@@ -1699,7 +1375,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 		return;
 	}
 
-	inline void DisableSubsequentTextures(DWORD firstTexUnit) {
+	inline void FASTCALL DisableSubsequentTextures(DWORD firstTexUnit) {
 		DWORD texUnit;
 		BYTE texBit = 1U << firstTexUnit;
 
@@ -1721,7 +1397,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 		return;
 	}
 
-	inline void DisableSubsequentClientTextures(DWORD firstTexUnit) {
+	inline void FASTCALL DisableSubsequentClientTextures(DWORD firstTexUnit) {
 		DWORD texUnit;
 		BYTE texBit = 1U << firstTexUnit;
 
@@ -1743,108 +1419,30 @@ class UOpenGLRenderDevice : public URenderDevice {
 		return;
 	}
 
-	inline void SetDefaultVertexProgramState(void) {
+	inline void SetDefaultShaderState(void) {
 		//Keep vertex programs enabled if using vertex program mode
-		if (UseVertexProgram) {
-			SetVertexProgram(m_vpDefaultRenderingState);
-			return;
+		GLuint vpId = (UseFragmentProgram) ? m_vpDefaultRenderingState : 0;
+		if (m_vpCurrent != vpId) {
+			SetVertexProgramNoCheck(vpId);
 		}
 
-		//See if vertex program mode is enabled
-		if (m_vpModeEnabled == true) {
-			//Mark vertex program mode as disabled
-			m_vpModeEnabled = false;
-
-			//Disable vertex program mode
-			glDisable(GL_VERTEX_PROGRAM_ARB);
-		}
-
-		return;
-	}
-
-	inline void SetVertexProgram(GLuint program) {
-		//See if vertex program mode is disabled
-		if (m_vpModeEnabled == false) {
-			//Mark vertex program mode as enabled
-			m_vpModeEnabled = true;
-
-			//Enable vertex program mode
-			glEnable(GL_VERTEX_PROGRAM_ARB);
-
-			m_vpEnableCount++;
-		}
-
-		//See if the requested program is not already bound
-		if (program != m_vpCurrent) {
-			//Save the new current vertex program
-			m_vpCurrent = program;
-
-			//Bind the vertex program
-			glBindProgramARB(GL_VERTEX_PROGRAM_ARB, program);
-
-			m_vpSwitchCount++;
-		}
-
-		return;
-	}
-
-	inline void SetDisabledFragmentProgramState(void) {
-		//See if fragment program mode is enabled
-		if (m_fpModeEnabled == true) {
-			//Mark fragment program mode as disabled
-			m_fpModeEnabled = false;
-
-			//Disable fragment program mode
-			glDisable(GL_FRAGMENT_PROGRAM_ARB);
-		}
-
-		return;
-	}
-
-	inline void SetDefaultFragmentProgramState(void) {
 		//Keep fragment programs enabled if using fragment program mode
-		if (UseFragmentProgram) {
-			SetFragmentProgram(m_fpDefaultRenderingState);
-			return;
+		GLuint fpId = (UseFragmentProgram) ? m_fpDefaultRenderingState : 0;
+		if (m_fpCurrent != fpId) {
+			SetFragmentProgramNoCheck(fpId);
 		}
-
-		//See if fragment program mode is enabled
-		if (m_fpModeEnabled == true) {
-			//Mark fragment program mode as disabled
-			m_fpModeEnabled = false;
-
-			//Disable fragment program mode
-			glDisable(GL_FRAGMENT_PROGRAM_ARB);
+	}
+	inline void FASTCALL SetShaderState(GLuint vpId, GLuint fpId) {
+		if (m_vpCurrent != vpId) {
+			SetVertexProgramNoCheck(vpId);
 		}
-
-		return;
+		if (m_fpCurrent != fpId) {
+			SetFragmentProgramNoCheck(fpId);
+		}
 	}
 
-	inline void SetFragmentProgram(GLuint program) {
-		//See if fragment program mode is disabled
-		if (m_fpModeEnabled == false) {
-			//Mark fragment program mode as enabled
-			m_fpModeEnabled = true;
-
-			//Enable fragment program mode
-			glEnable(GL_FRAGMENT_PROGRAM_ARB);
-
-			m_fpEnableCount++;
-		}
-
-		//See if the requested program is not already bound
-		if (program != m_fpCurrent) {
-			//Save the new current fragment program
-			m_fpCurrent = program;
-
-			//Bind the fragment program
-			glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, program);
-
-			m_fpSwitchCount++;
-		}
-
-		return;
-	}
+	void FASTCALL SetVertexProgramNoCheck(GLuint vpId);
+	void FASTCALL SetFragmentProgramNoCheck(GLuint fpId);
 
 	inline void SetDefaultColorState(void) {
 		if (m_currentColorFlags != 0) {
@@ -1867,7 +1465,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 		}
 	}
 
-	inline void SetProjectionState(bool requestNearZRangeHackProjection) {
+	inline void FASTCALL SetProjectionState(bool requestNearZRangeHackProjection) {
 		if (requestNearZRangeHackProjection != m_nearZRangeHackProjectionActive) {
 			//Set requested projection state
 			SetProjectionStateNoCheck(requestNearZRangeHackProjection);
@@ -1886,17 +1484,12 @@ class UOpenGLRenderDevice : public URenderDevice {
 	}
 	void FASTCALL SetAAStateNoCheck(bool AAEnable);
 
-	void AllocateVertexProgramNamesSafe(void);
-	void FreeVertexProgramNamesSafe(void);
-	bool InitializeVertexPrograms(void);
-	bool FASTCALL LoadVertexProgram(GLuint, const char *, const TCHAR *);
-	void TryInitializeVertexProgramMode(void);
-	void ShutdownVertexProgramMode(void);
+	bool FASTCALL LoadVertexProgram(GLuint, const char *, const char *);
+	bool FASTCALL LoadFragmentProgram(GLuint, const char *, const char *);
 
 	void AllocateFragmentProgramNamesSafe(void);
 	void FreeFragmentProgramNamesSafe(void);
 	bool InitializeFragmentPrograms(void);
-	bool FASTCALL LoadFragmentProgram(GLuint, const char *, const TCHAR *);
 	void TryInitializeFragmentProgramMode(void);
 	void ShutdownFragmentProgramMode(void);
 
@@ -1908,11 +1501,11 @@ class UOpenGLRenderDevice : public URenderDevice {
 			RenderPassesExec();
 		}
 	}
-	inline void RenderPasses_SingleOrDualTextureAndDetailTexture(FTextureInfo &DetailTextureInfo) {
+	inline void FASTCALL RenderPasses_SingleOrDualTextureAndDetailTexture(FTextureInfo &DetailTextureInfo) {
 		RenderPassesExec_SingleOrDualTextureAndDetailTexture(DetailTextureInfo);
 	}
 
-	inline void AddRenderPass(FTextureInfo* Info, DWORD PolyFlags, FLOAT PanBias) {
+	inline void FASTCALL AddRenderPass(FTextureInfo* Info, DWORD PolyFlags, FLOAT PanBias) {
 		INT rpPassCount = m_rpPassCount;
 
 		MultiPass.TMU[rpPassCount].Info      = Info;
@@ -1932,9 +1525,8 @@ class UOpenGLRenderDevice : public URenderDevice {
 	void FASTCALL RenderPassesExec_SingleOrDualTextureAndDetailTexture(FTextureInfo &DetailTextureInfo);
 
 	void RenderPassesNoCheckSetup(void);
-	void RenderPassesNoCheckSetup_VP(void);
+	void RenderPassesNoCheckSetup_FP(void);
 	void FASTCALL RenderPassesNoCheckSetup_SingleOrDualTextureAndDetailTexture(FTextureInfo &);
-	void FASTCALL RenderPassesNoCheckSetup_SingleOrDualTextureAndDetailTexture_VP(FTextureInfo &);
 	void FASTCALL RenderPassesNoCheckSetup_SingleOrDualTextureAndDetailTexture_FP(FTextureInfo &);
 
 	INT FASTCALL BufferStaticComplexSurfaceGeometry(const FSurfaceFacet&);
@@ -1945,7 +1537,6 @@ class UOpenGLRenderDevice : public URenderDevice {
 #endif //UTGLR_INCLUDE_SSE_CODE
 
 	void FASTCALL DrawDetailTexture(FTextureInfo &, INT, bool);
-	void FASTCALL DrawDetailTexture_VP(FTextureInfo &);
 	void FASTCALL DrawDetailTexture_FP(FTextureInfo &);
 
 	inline void EndGouraudPolygonBuffering(void) {
@@ -1971,6 +1562,18 @@ class UOpenGLRenderDevice : public URenderDevice {
 
 	void FASTCALL BufferAdditionalClippedVerts(FTransTexture** Pts, INT NumPts);
 };
+
+#ifdef UTGLR_UNREAL_227_BUILD
+
+#if __STATIC_LINK
+
+/* No native execs. */
+
+#define AUTO_INITIALIZE_REGISTRANTS_OPENGLDRV \
+	UOpenGLRenderDevice::StaticClass();
+#endif
+
+#endif
 
 /*-----------------------------------------------------------------------------
 	The End.

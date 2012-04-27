@@ -49,8 +49,9 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\Core\Inc,..\..\Engine\Inc;&quot;..\..\..\SDL-1.2.14\include&quot;"
-				PreprocessorDefinitions="NDEBUG;_WINDOWS;WIN32;UNICODE;NO_UNICODE_OS_SUPPORT;WIN32_LEAN_AND_MEAN"
+				PreprocessorDefinitions="NDEBUG;_WINDOWS;WIN32;UNICODE;NO_UNICODE_OS_SUPPORT;WIN32_LEAN_AND_MEAN;UTGLR_UT_BUILD"
 				StringPooling="true"
+				ExceptionHandling="2"
 				RuntimeLibrary="0"
 				StructMemberAlignment="3"
 				BufferSecurityCheck="false"
@@ -149,8 +150,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\Core\Inc,..\..\Engine\Inc;&quot;..\..\..\SDL-1.2.14\include&quot;"
-				PreprocessorDefinitions="WIN32;ThisPackage=OpenGLDrv;_REALLY_WANT_DEBUG"
+				PreprocessorDefinitions="_DEBUG;_REALLY_WANT_DEBUG;_WINDOWS;WIN32;UNICODE;NO_UNICODE_OS_SUPPORT;WIN32_LEAN_AND_MEAN;UTGLR_UT_BUILD"
 				MinimalRebuild="true"
+				ExceptionHandling="2"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				StructMemberAlignment="3"
@@ -225,11 +227,27 @@
 			Filter="*.cpp;*.h"
 			>
 			<File
+				RelativePath=".\c_gclip.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\c_gclip.h"
+				>
+			</File>
+			<File
+				RelativePath=".\c_rbtree.h"
+				>
+			</File>
+			<File
 				RelativePath=".\OpenGL.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\OpenGL.h"
+				>
+			</File>
+			<File
+				RelativePath=".\OpenGL1Funcs.h"
 				>
 			</File>
 			<File
@@ -241,7 +259,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\OpenGLFuncs.h"
+				RelativePath=".\OpenGLExtFuncs.h"
 				>
 			</File>
 		</Filter>

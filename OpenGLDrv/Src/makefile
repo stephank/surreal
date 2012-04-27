@@ -26,7 +26,8 @@ BUILD_DIR	= $(OPENGLDRV_BUILD)
 CXX		= $(STD_CXX)
 CXXFLAGS	= $(STD_CXXFLAGS) $(SDL_CFLAGS) -Werror -fPIC -I$(OPENGLDRV_INC) \
 			-I$(ENGINE_INC) -I$(CORE_INC) \
-			-DGPackage=GPackageOpenGLDrv
+			-DGPackage=GPackageOpenGLDrv \
+			-DUTGLR_UT_BUILD=1
 LDFLAGS		= $(STD_LDFLAGS) -shared -Wl,-soname,$(OPENGLDRV_SONAME)
 LIBS		= $(STD_LIBS) $(CORE) $(SDL_LIBS)
 
@@ -35,6 +36,7 @@ LIBS		= $(STD_LIBS) $(CORE) $(SDL_LIBS)
 #-----------------------------------------------------------------------------
 
 OBJS =			\
+	c_gclip.o	\
 	OpenGL.o	\
 	OpenGLDrv.o
 

@@ -31,9 +31,9 @@
 	* Various modifications and additions by Chris Dohnal
 	* Initial TruForm based on TruForm renderer modifications by NitroGL
 	* Additional TruForm and Deus Ex updates by Leonhard Gruenschloss
+	* Various modifications and additions by Smirftsch / Oldunreal
 
 
-	UseTNT			workaround for buggy TNT/TNT2 drivers
 	UseTrilinear	whether to use trilinear filtering
 	UseAlphaPalette	set to 0 for buggy drivers (GeForce)
 	UseS3TC			whether to use compressed textures
@@ -56,10 +56,6 @@ TODO:
 /*-----------------------------------------------------------------------------
 	Globals.
 -----------------------------------------------------------------------------*/
-
-#ifdef UTGLR_UNREAL_BUILD
-const DWORD GUglyHackFlags = 0;
-#endif
 
 static const TCHAR *g_pSection = TEXT("OpenGLDrv.OpenGLRenderDevice");
 
@@ -89,7 +85,6 @@ static const char *g_vpDefaultRenderingStateWithFog =
 	"END\n"
 ;
 
-#ifdef UTGLR_RUNE_BUILD
 static const char *g_vpDefaultRenderingStateWithLinearFog =
 	"!!ARBvp1.0\n"
 	"OPTION ARB_position_invariant;\n"
@@ -101,7 +96,6 @@ static const char *g_vpDefaultRenderingStateWithLinearFog =
 
 	"END\n"
 ;
-#endif
 
 static const char *g_vpComplexSurfaceSingleTexture =
 	"!!ARBvp1.0\n"
@@ -229,123 +223,6 @@ static const char *g_vpComplexSurfaceQuadTexture =
 	"MOV t2, defTexCoord;\n"
 	"SUB t2.xy, t1.xyxy, texInfo0.xyxy;\n"
 	"MUL t2.xy, t2.xyxy, texInfo0.zwzw;\n"
-	"MOV oTex0, t2;\n"
-
-	"MOV t2, defTexCoord;\n"
-	"SUB t2.xy, t1.xyxy, texInfo1.xyxy;\n"
-	"MUL t2.xy, t2.xyxy, texInfo1.zwzw;\n"
-	"MOV oTex1, t2;\n"
-
-	"MOV t2, defTexCoord;\n"
-	"SUB t2.xy, t1.xyxy, texInfo2.xyxy;\n"
-	"MUL t2.xy, t2.xyxy, texInfo2.zwzw;\n"
-	"MOV oTex2, t2;\n"
-
-	"MOV t2, defTexCoord;\n"
-	"SUB t2.xy, t1.xyxy, texInfo3.xyxy;\n"
-	"MUL t2.xy, t2.xyxy, texInfo3.zwzw;\n"
-	"MOV oTex3, t2;\n"
-
-	"END\n"
-;
-
-static const char *g_vpComplexSurfaceDetailAlpha =
-	"!!ARBvp1.0\n"
-	"OPTION ARB_position_invariant;\n"
-
-	"ATTRIB iPos = vertex.position;\n"
-	"ATTRIB fxInfo = vertex.attrib[6];\n"
-	"ATTRIB fyInfo = vertex.attrib[7];\n"
-	"ATTRIB texInfo1 = vertex.attrib[9];\n"
-	"PARAM defTexCoord = { 0, 0.5, 0, 1 };\n" //Shared with initializing V coord for alpha texture
-	"PARAM RNearZ = 0.002631578947;\n"
-	"TEMP t1;\n"
-	"TEMP t2;\n"
-	"OUTPUT oTex0 = result.texcoord[0];\n"
-	"OUTPUT oTex1 = result.texcoord[1];\n"
-
-	"MOV result.color, vertex.color;\n"
-
-	"DPH t1.x, iPos, fxInfo;\n"
-	"DPH t1.y, iPos, fyInfo;\n"
-
-	"MOV t2, defTexCoord;\n"
-	"MUL t2.x, iPos.z, RNearZ;\n"
-	"MOV oTex0, t2;\n"
-
-	"MOV t2, defTexCoord;\n"
-	"SUB t2.xy, t1.xyxy, texInfo1.xyxy;\n"
-	"MUL t2.xy, t2.xyxy, texInfo1.zwzw;\n"
-	"MOV oTex1, t2;\n"
-
-	"END\n"
-;
-
-static const char *g_vpComplexSurfaceSingleTextureAndDetailTexture =
-	"!!ARBvp1.0\n"
-	"OPTION ARB_position_invariant;\n"
-
-	"ATTRIB iPos = vertex.position;\n"
-	"ATTRIB fxInfo = vertex.attrib[6];\n"
-	"ATTRIB fyInfo = vertex.attrib[7];\n"
-	"ATTRIB texInfo1 = vertex.attrib[9];\n"
-	"ATTRIB texInfo2 = vertex.attrib[10];\n"
-	"PARAM defTexCoord = { 0, 0.5, 0, 1 };\n" //Shared with initializing V coord for alpha texture
-	"PARAM RNearZ = 0.002631578947;\n"
-	"TEMP t1;\n"
-	"TEMP t2;\n"
-	"OUTPUT oTex0 = result.texcoord[0];\n"
-	"OUTPUT oTex1 = result.texcoord[1];\n"
-	"OUTPUT oTex2 = result.texcoord[2];\n"
-
-	"MOV result.color, vertex.color;\n"
-
-	"DPH t1.x, iPos, fxInfo;\n"
-	"DPH t1.y, iPos, fyInfo;\n"
-
-	"MOV t2, defTexCoord;\n"
-	"MUL t2.x, iPos.z, RNearZ;\n"
-	"MOV oTex0, t2;\n"
-
-	"MOV t2, defTexCoord;\n"
-	"SUB t2.xy, t1.xyxy, texInfo1.xyxy;\n"
-	"MUL t2.xy, t2.xyxy, texInfo1.zwzw;\n"
-	"MOV oTex1, t2;\n"
-
-	"MOV t2, defTexCoord;\n"
-	"SUB t2.xy, t1.xyxy, texInfo2.xyxy;\n"
-	"MUL t2.xy, t2.xyxy, texInfo2.zwzw;\n"
-	"MOV oTex2, t2;\n"
-
-	"END\n"
-;
-
-static const char *g_vpComplexSurfaceDualTextureAndDetailTexture =
-	"!!ARBvp1.0\n"
-	"OPTION ARB_position_invariant;\n"
-
-	"ATTRIB iPos = vertex.position;\n"
-	"ATTRIB fxInfo = vertex.attrib[6];\n"
-	"ATTRIB fyInfo = vertex.attrib[7];\n"
-	"ATTRIB texInfo1 = vertex.attrib[9];\n"
-	"ATTRIB texInfo2 = vertex.attrib[10];\n"
-	"ATTRIB texInfo3 = vertex.attrib[11];\n"
-	"PARAM defTexCoord = { 0, 0.5, 0, 1 };\n" //Shared with initializing V coord for alpha texture
-	"PARAM RNearZ = 0.002631578947;\n"
-	"TEMP t1;\n"
-	"TEMP t2;\n"
-	"OUTPUT oTex0 = result.texcoord[0];\n"
-	"OUTPUT oTex1 = result.texcoord[1];\n"
-	"OUTPUT oTex2 = result.texcoord[2];\n"
-	"OUTPUT oTex3 = result.texcoord[3];\n"
-
-	"MOV result.color, vertex.color;\n"
-
-	"DPH t1.x, iPos, fxInfo;\n"
-	"DPH t1.y, iPos, fyInfo;\n"
-
-	"MOV t2, defTexCoord;\n"
-	"MUL t2.x, iPos.z, RNearZ;\n"
 	"MOV oTex0, t2;\n"
 
 	"MOV t2, defTexCoord;\n"
@@ -508,7 +385,6 @@ static const char *g_fpDefaultRenderingStateWithFog =
 	"END\n"
 ;
 
-#ifdef UTGLR_RUNE_BUILD
 static const char *g_fpDefaultRenderingStateWithLinearFog =
 	"!!ARBfp1.0\n"
 	"OPTION ARB_fog_linear;\n"
@@ -523,7 +399,6 @@ static const char *g_fpDefaultRenderingStateWithLinearFog =
 
 	"END\n"
 ;
-#endif
 
 static const char *g_fpComplexSurfaceSingleTexture =
 	"!!ARBfp1.0\n"
@@ -538,22 +413,7 @@ static const char *g_fpComplexSurfaceSingleTexture =
 static const char *g_fpComplexSurfaceDualTextureModulated =
 	"!!ARBfp1.0\n"
 
-	"ATTRIB iTC0 = fragment.texcoord[0];\n"
-	"ATTRIB iTC1 = fragment.texcoord[1];\n"
-	"TEMP t0;\n"
-	"TEMP t1;\n"
-
-	"TEX t0, iTC0, texture[0], 2D;\n"
-	"TEX t1, iTC1, texture[1], 2D;\n"
-
-	"MUL result.color, t0, t1;\n"
-
-	"END\n"
-;
-
-static const char *g_fpComplexSurfaceDualTextureModulated2X =
-	"!!ARBfp1.0\n"
-
+	"ATTRIB iColor = fragment.color.primary;\n"
 	"ATTRIB iTC0 = fragment.texcoord[0];\n"
 	"ATTRIB iTC1 = fragment.texcoord[1];\n"
 	"TEMP t0;\n"
@@ -563,8 +423,35 @@ static const char *g_fpComplexSurfaceDualTextureModulated2X =
 	"TEX t1, iTC1, texture[1], 2D;\n"
 
 	"MUL t0, t0, t1;\n"
-	"MOV result.color.a, t0.a;\n"
-	"ADD result.color.rgb, t0, t0;\n"
+	"MAD t0.rgb, t0, iColor.aaaa, t0;\n"
+
+	"MOV result.color, t0;\n"
+
+	"END\n"
+;
+
+static const char *g_fpComplexSurfaceTripleTextureModulated =
+	"!!ARBfp1.0\n"
+
+	"ATTRIB iColor = fragment.color.primary;\n"
+	"ATTRIB iTC0 = fragment.texcoord[0];\n"
+	"ATTRIB iTC1 = fragment.texcoord[1];\n"
+	"ATTRIB iTC2 = fragment.texcoord[2];\n"
+	"TEMP t0;\n"
+	"TEMP t1;\n"
+	"TEMP t2;\n"
+
+	"TEX t0, iTC0, texture[0], 2D;\n"
+	"TEX t1, iTC1, texture[1], 2D;\n"
+	"TEX t2, iTC2, texture[2], 2D;\n"
+
+	"MUL t0, t0, t1;\n"
+	"MAD t0.rgb, t0, iColor.aaaa, t0;\n"
+
+	"MUL t0, t0, t2;\n"
+	"MAD t0.rgb, t0, iColor.aaaa, t0;\n"
+
+	"MOV result.color, t0;\n"
 
 	"END\n"
 ;
@@ -592,6 +479,7 @@ static const char *g_fpComplexSurfaceSingleTextureWithFog =
 static const char *g_fpComplexSurfaceDualTextureModulatedWithFog =
 	"!!ARBfp1.0\n"
 
+	"ATTRIB iColor = fragment.color.primary;\n"
 	"ATTRIB iTC0 = fragment.texcoord[0];\n"
 	"ATTRIB iTC1 = fragment.texcoord[1];\n"
 	"ATTRIB iTC2 = fragment.texcoord[2];\n"
@@ -603,37 +491,45 @@ static const char *g_fpComplexSurfaceDualTextureModulatedWithFog =
 	"TEX t1, iTC1, texture[1], 2D;\n"
 	"TEX t2, iTC2, texture[2], 2D;\n"
 
-	"SUB t2.a, 1.0, t2.a;\n"
-
 	"MUL t0, t0, t1;\n"
-	"MOV result.color.a, t0.a;\n"
+	"MAD t0.rgb, t0, iColor.aaaa, t0;\n"
 
-	"MAD result.color.rgb, t0, t2.aaaa, t2;\n"
+	"SUB t2.a, 1.0, t2.a;\n"
+	"MAD t0.rgb, t0, t2.aaaa, t2;\n"
+
+	"MOV result.color, t0;\n"
 
 	"END\n"
 ;
 
-static const char *g_fpComplexSurfaceDualTextureModulated2XWithFog =
+static const char *g_fpComplexSurfaceTripleTextureModulatedWithFog =
 	"!!ARBfp1.0\n"
 
+	"ATTRIB iColor = fragment.color.primary;\n"
 	"ATTRIB iTC0 = fragment.texcoord[0];\n"
 	"ATTRIB iTC1 = fragment.texcoord[1];\n"
 	"ATTRIB iTC2 = fragment.texcoord[2];\n"
+	"ATTRIB iTC3 = fragment.texcoord[3];\n"
 	"TEMP t0;\n"
 	"TEMP t1;\n"
 	"TEMP t2;\n"
+	"TEMP t3;\n"
 
 	"TEX t0, iTC0, texture[0], 2D;\n"
 	"TEX t1, iTC1, texture[1], 2D;\n"
 	"TEX t2, iTC2, texture[2], 2D;\n"
-
-	"SUB t2.a, 1.0, t2.a;\n"
+	"TEX t3, iTC3, texture[3], 2D;\n"
 
 	"MUL t0, t0, t1;\n"
-	"MOV result.color.a, t0.a;\n"
-	"ADD t0, t0, t0;\n"
+	"MAD t0.rgb, t0, iColor.aaaa, t0;\n"
 
-	"MAD result.color.rgb, t0, t2.aaaa, t2;\n"
+	"MUL t0, t0, t2;\n"
+	"MAD t0.rgb, t0, iColor.aaaa, t0;\n"
+
+	"SUB t3.a, 1.0, t3.a;\n"
+	"MAD t0.rgb, t0, t3.aaaa, t3;\n"
+
+	"MOV result.color, t0;\n"
 
 	"END\n"
 ;
@@ -833,6 +729,30 @@ static const char *g_fpDualTextureAndDetailTextureTwoLayer =
 IMPLEMENT_CLASS(UOpenGLRenderDevice);
 
 
+int UOpenGLRenderDevice::dbgPrintf(const char *format, ...) {
+	const unsigned int DBG_PRINT_BUF_SIZE = 1024;
+	char dbgPrintBuf[DBG_PRINT_BUF_SIZE];
+	va_list vaArgs;
+	int iRet = 0;
+
+	va_start(vaArgs, format);
+
+#ifdef _WIN32
+#pragma warning(push)
+#pragma warning(disable : 4996)
+	iRet = vsnprintf(dbgPrintBuf, DBG_PRINT_BUF_SIZE, format, vaArgs);
+	dbgPrintBuf[DBG_PRINT_BUF_SIZE - 1] = '\0';
+#pragma warning(pop)
+
+	TCHAR_CALL_OS(OutputDebugStringW(appFromAnsi(dbgPrintBuf)), OutputDebugStringA(dbgPrintBuf));
+#endif
+
+	va_end(vaArgs);
+
+	return iRet;
+}
+
+
 void UOpenGLRenderDevice::StaticConstructor() {
 	guard(UOpenGLRenderDevice::StaticConstructor);
 
@@ -858,9 +778,6 @@ void UOpenGLRenderDevice::StaticConstructor() {
 #define CPP_PROPERTY_LOCAL_DCV(_name) DCV._name, CPP_PROPERTY(DCV._name)
 
 	//Set parameter defaults and add parameters
-#ifdef UTGLR_UNREAL_BUILD
-	SC_AddBoolConfigParam(0,  TEXT("DetailTextures"), CPP_PROPERTY_LOCAL(DetailTextures), 0);
-#endif
 	SC_AddFloatConfigParam(TEXT("LODBias"), CPP_PROPERTY_LOCAL(LODBias), 0.0f);
 	SC_AddFloatConfigParam(TEXT("GammaOffset"), CPP_PROPERTY_LOCAL(GammaOffset), 0.0f);
 	SC_AddFloatConfigParam(TEXT("GammaOffsetRed"), CPP_PROPERTY_LOCAL(GammaOffsetRed), 0.0f);
@@ -869,18 +786,17 @@ void UOpenGLRenderDevice::StaticConstructor() {
 	SC_AddBoolConfigParam(1,  TEXT("GammaCorrectScreenshots"), CPP_PROPERTY_LOCAL(GammaCorrectScreenshots), 0);
 	SC_AddBoolConfigParam(0,  TEXT("OneXBlending"), CPP_PROPERTY_LOCAL(OneXBlending), UTGLR_DEFAULT_OneXBlending);
 	SC_AddIntConfigParam(TEXT("MinLogTextureSize"), CPP_PROPERTY_LOCAL(MinLogTextureSize), 0);
-	SC_AddIntConfigParam(TEXT("MaxLogTextureSize"), CPP_PROPERTY_LOCAL(MaxLogTextureSize), 8);
-	SC_AddBoolConfigParam(10, TEXT("UseZTrick"), CPP_PROPERTY_LOCAL(UseZTrick), 0);
-	SC_AddBoolConfigParam(9,  TEXT("UseBGRATextures"), CPP_PROPERTY_LOCAL(UseBGRATextures), 1);
-	SC_AddBoolConfigParam(8,  TEXT("UseMultiTexture"), CPP_PROPERTY_LOCAL(UseMultiTexture), 1);
-	SC_AddBoolConfigParam(7,  TEXT("UsePalette"), CPP_PROPERTY_LOCAL(UsePalette), 0);
-	SC_AddBoolConfigParam(6,  TEXT("ShareLists"), CPP_PROPERTY_LOCAL(ShareLists), 0);
-	SC_AddBoolConfigParam(5,  TEXT("UsePrecache"), CPP_PROPERTY_LOCAL(UsePrecache), 0);
-	SC_AddBoolConfigParam(4,  TEXT("UseTrilinear"), CPP_PROPERTY_LOCAL(UseTrilinear), 0);
-	SC_AddBoolConfigParam(3,  TEXT("UseAlphaPalette"), CPP_PROPERTY_LOCAL(UseAlphaPalette), 0);
-	SC_AddBoolConfigParam(2,  TEXT("UseS3TC"), CPP_PROPERTY_LOCAL(UseS3TC), UTGLR_DEFAULT_UseS3TC);
-	SC_AddBoolConfigParam(1,  TEXT("Use16BitTextures"), CPP_PROPERTY_LOCAL(Use16BitTextures), 0);
-	SC_AddBoolConfigParam(0,  TEXT("UseTNT"), CPP_PROPERTY_LOCAL(UseTNT), 0);
+	SC_AddIntConfigParam(TEXT("MaxLogTextureSize"), CPP_PROPERTY_LOCAL(MaxLogTextureSize), 12);
+	SC_AddBoolConfigParam(9,  TEXT("UseZTrick"), CPP_PROPERTY_LOCAL(UseZTrick), 0);
+	SC_AddBoolConfigParam(8,  TEXT("UseBGRATextures"), CPP_PROPERTY_LOCAL(UseBGRATextures), 1);
+	SC_AddBoolConfigParam(7,  TEXT("UseMultiTexture"), CPP_PROPERTY_LOCAL(UseMultiTexture), 1);
+	SC_AddBoolConfigParam(6,  TEXT("UsePalette"), CPP_PROPERTY_LOCAL(UsePalette), 0);
+	SC_AddBoolConfigParam(5,  TEXT("ShareLists"), CPP_PROPERTY_LOCAL(ShareLists), 0);
+	SC_AddBoolConfigParam(4,  TEXT("UsePrecache"), CPP_PROPERTY_LOCAL(UsePrecache), 0);
+	SC_AddBoolConfigParam(3,  TEXT("UseTrilinear"), CPP_PROPERTY_LOCAL(UseTrilinear), 0);
+	SC_AddBoolConfigParam(2,  TEXT("UseAlphaPalette"), CPP_PROPERTY_LOCAL(UseAlphaPalette), 0);
+	SC_AddBoolConfigParam(1,  TEXT("UseS3TC"), CPP_PROPERTY_LOCAL(UseS3TC), UTGLR_DEFAULT_UseS3TC);
+	SC_AddBoolConfigParam(0,  TEXT("Use16BitTextures"), CPP_PROPERTY_LOCAL(Use16BitTextures), 0);
 	SC_AddIntConfigParam(TEXT("MaxAnisotropy"), CPP_PROPERTY_LOCAL(MaxAnisotropy), 0);
 	SC_AddBoolConfigParam(0,  TEXT("NoFiltering"), CPP_PROPERTY_LOCAL(NoFiltering), 0);
 	SC_AddIntConfigParam(TEXT("MaxTMUnits"), CPP_PROPERTY_LOCAL(MaxTMUnits), 0);
@@ -895,14 +811,13 @@ void UOpenGLRenderDevice::StaticConstructor() {
 	SC_AddBoolConfigParam(3,  TEXT("UseSSE2"), CPP_PROPERTY_LOCAL(UseSSE2), 1);
 	SC_AddBoolConfigParam(2,  TEXT("UseTexIdPool"), CPP_PROPERTY_LOCAL(UseTexIdPool), 1);
 	SC_AddBoolConfigParam(1,  TEXT("UseTexPool"), CPP_PROPERTY_LOCAL(UseTexPool), 1);
-	SC_AddBoolConfigParam(0,  TEXT("CacheStaticMaps"), CPP_PROPERTY_LOCAL(CacheStaticMaps), 0);
+	SC_AddBoolConfigParam(0,  TEXT("CacheStaticMaps"), CPP_PROPERTY_LOCAL(CacheStaticMaps), 1);
 	SC_AddIntConfigParam(TEXT("DynamicTexIdRecycleLevel"), CPP_PROPERTY_LOCAL(DynamicTexIdRecycleLevel), 100);
-	SC_AddBoolConfigParam(4,  TEXT("TexDXT1ToDXT3"), CPP_PROPERTY_LOCAL(TexDXT1ToDXT3), 0);
-	SC_AddBoolConfigParam(3,  TEXT("UseMultiDrawArrays"), CPP_PROPERTY_LOCAL(UseMultiDrawArrays), 0);
-	SC_AddBoolConfigParam(2,  TEXT("UseCVA"), CPP_PROPERTY_LOCAL(UseCVA), 0);
-	SC_AddBoolConfigParam(1,  TEXT("UseVertexProgram"), CPP_PROPERTY_LOCAL_DCV(UseVertexProgram), 0);
+	SC_AddBoolConfigParam(2,  TEXT("TexDXT1ToDXT3"), CPP_PROPERTY_LOCAL(TexDXT1ToDXT3), 0);
+	SC_AddBoolConfigParam(1,  TEXT("UseMultiDrawArrays"), CPP_PROPERTY_LOCAL(UseMultiDrawArrays), 0);
 	SC_AddBoolConfigParam(0,  TEXT("UseFragmentProgram"), CPP_PROPERTY_LOCAL_DCV(UseFragmentProgram), 0);
 	SC_AddIntConfigParam(TEXT("SwapInterval"), CPP_PROPERTY_LOCAL(SwapInterval), -1);
+	SC_AddIntConfigParam(TEXT("FrameRateLimit"), CPP_PROPERTY_LOCAL(FrameRateLimit), 0);
 	SC_AddBoolConfigParam(3,  TEXT("SceneNodeHack"), CPP_PROPERTY_LOCAL(SceneNodeHack), 1);
 	SC_AddBoolConfigParam(2,  TEXT("SmoothMaskedTextures"), CPP_PROPERTY_LOCAL(SmoothMaskedTextures), 0);
 	SC_AddBoolConfigParam(1,  TEXT("MaskedTextureHack"), CPP_PROPERTY_LOCAL(MaskedTextureHack), 1);
@@ -931,11 +846,11 @@ void UOpenGLRenderDevice::StaticConstructor() {
 	m_noTextureId = 0;
 	m_alphaTextureId = 0;
 
-	//Mark vertex program names as not allocated
-	m_allocatedVertexProgramNames = false;
+	//Mark shader names as not allocated
+	m_allocatedShaderNames = false;
 
-	//Mark fragment program names as not allocated
-	m_allocatedFragmentProgramNames = false;
+	//Frame rate limit timer not yet initialized
+	m_frameRateLimitTimerInitialized = false;
 
 	unguard;
 }
@@ -957,17 +872,15 @@ void UOpenGLRenderDevice::SC_AddFloatConfigParam(const TCHAR *pName, FLOAT &para
 }
 
 
-#ifndef UTGLR_DONT_DEBUG_AT_ALL
-void UOpenGLRenderDevice::DbgPrintInitParam(const TCHAR *pName, INT value) {
-	dout << TEXT("utglr: ") << pName << TEXT(" = ") << value << std::endl;
+void UOpenGLRenderDevice::DbgPrintInitParam(const char *pName, INT value) {
+	dbgPrintf("utglr: %s = %d\n", pName, value);
 	return;
 }
 
-void UOpenGLRenderDevice::DbgPrintInitParam(const TCHAR *pName, FLOAT value) {
-	dout << TEXT("utglr: ") << pName << TEXT(" = ") << value << std::endl;
+void UOpenGLRenderDevice::DbgPrintInitParam(const char *pName, FLOAT value) {
+	dbgPrintf("utglr: %s = %f\n", pName, value);
 	return;
 }
-#endif
 
 
 #ifdef UTGLR_INCLUDE_SSE_CODE
@@ -1077,6 +990,27 @@ l_no_sse2:
 	return bSupportsSSE2;
 }
 #endif //UTGLR_INCLUDE_SSE_CODE
+
+
+void UOpenGLRenderDevice::InitFrameRateLimitTimerSafe(void) {
+	//Only initialize once
+	if (m_frameRateLimitTimerInitialized) {
+		return;
+	}
+	m_frameRateLimitTimerInitialized = true;
+
+	return;
+}
+
+void UOpenGLRenderDevice::ShutdownFrameRateLimitTimer(void) {
+	//Only shutdown once
+	if (!m_frameRateLimitTimerInitialized) {
+		return;
+	}
+	m_frameRateLimitTimerInitialized = false;
+
+	return;
+}
 
 
 static void FASTCALL Buffer3Verts(UOpenGLRenderDevice *pRD, FTransTexture** Pts) {
@@ -1625,9 +1559,9 @@ void UOpenGLRenderDevice::BuildGammaRamp(float redGamma, float greenGamma, float
 	if (brightness < -50) brightness = -50;
 	if (brightness > 50) brightness = 50;
 
-	float oneOverRedGamma = 1.0f / (2.5f * redGamma);
-	float oneOverGreenGamma = 1.0f / (2.5f * greenGamma);
-	float oneOverBlueGamma = 1.0f / (2.5f * blueGamma);
+	float rcpRedGamma = 1.0f / (2.5f * redGamma);
+	float rcpGreenGamma = 1.0f / (2.5f * greenGamma);
+	float rcpBlueGamma = 1.0f / (2.5f * blueGamma);
 	for (u = 0; u < 256; u++) {
 		int iVal;
 		int iValRed, iValGreen, iValBlue;
@@ -1642,9 +1576,9 @@ void UOpenGLRenderDevice::BuildGammaRamp(float redGamma, float greenGamma, float
 		if (iVal > 255) iVal = 255;
 
 		//Gamma
-		iValRed = (int)appRound((float)appPow(iVal / 255.0f, oneOverRedGamma) * 65535.0f);
-		iValGreen = (int)appRound((float)appPow(iVal / 255.0f, oneOverGreenGamma) * 65535.0f);
-		iValBlue = (int)appRound((float)appPow(iVal / 255.0f, oneOverBlueGamma) * 65535.0f);
+		iValRed = (int)appRound((float)appPow(iVal / 255.0f, rcpRedGamma) * 65535.0f);
+		iValGreen = (int)appRound((float)appPow(iVal / 255.0f, rcpGreenGamma) * 65535.0f);
+		iValBlue = (int)appRound((float)appPow(iVal / 255.0f, rcpBlueGamma) * 65535.0f);
 
 		//Save results
 		ramp.red[u] = (_WORD)iValRed;
@@ -1662,9 +1596,9 @@ void UOpenGLRenderDevice::BuildGammaRamp(float redGamma, float greenGamma, float
 	if (brightness < -50) brightness = -50;
 	if (brightness > 50) brightness = 50;
 
-	float oneOverRedGamma = 1.0f / (2.5f * redGamma);
-	float oneOverGreenGamma = 1.0f / (2.5f * greenGamma);
-	float oneOverBlueGamma = 1.0f / (2.5f * blueGamma);
+	float rcpRedGamma = 1.0f / (2.5f * redGamma);
+	float rcpGreenGamma = 1.0f / (2.5f * greenGamma);
+	float rcpBlueGamma = 1.0f / (2.5f * blueGamma);
 	for (u = 0; u < 256; u++) {
 		int iVal;
 		int iValRed, iValGreen, iValBlue;
@@ -1679,9 +1613,9 @@ void UOpenGLRenderDevice::BuildGammaRamp(float redGamma, float greenGamma, float
 		if (iVal > 255) iVal = 255;
 
 		//Gamma
-		iValRed = (int)appRound((float)appPow(iVal / 255.0f, oneOverRedGamma) * 255.0f);
-		iValGreen = (int)appRound((float)appPow(iVal / 255.0f, oneOverGreenGamma) * 255.0f);
-		iValBlue = (int)appRound((float)appPow(iVal / 255.0f, oneOverBlueGamma) * 255.0f);
+		iValRed = (int)appRound((float)appPow(iVal / 255.0f, rcpRedGamma) * 255.0f);
+		iValGreen = (int)appRound((float)appPow(iVal / 255.0f, rcpGreenGamma) * 255.0f);
+		iValBlue = (int)appRound((float)appPow(iVal / 255.0f, rcpBlueGamma) * 255.0f);
 
 		//Save results
 		ramp.red[u] = (BYTE)iValRed;
@@ -1693,14 +1627,19 @@ void UOpenGLRenderDevice::BuildGammaRamp(float redGamma, float greenGamma, float
 }
 
 void UOpenGLRenderDevice::SetGamma(FLOAT GammaCorrection) {
-	GammaCorrection += GammaOffset;
-	//Do not attempt to set gamma if <= zero
-	if (GammaCorrection <= 0.0f)
-		return;
+	FGammaRamp gammaRamp;
 
-	FGammaRamp Ramp;
-	BuildGammaRamp(GammaCorrection + GammaOffsetRed, GammaCorrection + GammaOffsetGreen, GammaCorrection + GammaOffsetBlue, Brightness, Ramp);
-	SDL_SetGammaRamp( Ramp.red, Ramp.green, Ramp.blue );
+	GammaCorrection += GammaOffset;
+
+	//Do not attempt to set gamma if <= zero
+	if (GammaCorrection <= 0.0f) {
+		return;
+	}
+
+	BuildGammaRamp(GammaCorrection + GammaOffsetRed, GammaCorrection + GammaOffsetGreen, GammaCorrection + GammaOffsetBlue, Brightness, gammaRamp);
+
+	SDL_SetGammaRamp( gammaRamp.red, gammaRamp.green, gammaRamp.blue );
+
 	return;
 }
 
@@ -1727,54 +1666,75 @@ bool UOpenGLRenderDevice::IsGLExtensionSupported(const char *pExtensionsString, 
 	return false;
 }
 
-bool UOpenGLRenderDevice::FindExt(const char *pName) {
-	guard(UOpenGLRenderDevice::FindExt);
+bool UOpenGLRenderDevice::GetGL1Proc(void*& ProcAddress, const char *pName) {
+	guard(UOpenGLRenderDevice::GetGL1Proc);
 
-	if (strcmp(pName, "GL") == 0) {
-		return true;
+	ProcAddress = (void *)SDL_GL_GetProcAddress(pName);
+	if (!ProcAddress) {
+		debugf(TEXT("   Missing function '%s' for '%s' support"), appFromAnsi(pName), TEXT("OpenGL 1.x"));
+		dbgPrintf("Missing function '%s' for '%s' support\n", pName, "OpenGL 1.x");
+		return false;
 	}
+
+	return true;
+
+	unguard;
+}
+
+bool UOpenGLRenderDevice::GetGL1Procs(void) {
+	guard(UOpenGLRenderDevice::GetGL1Procs);
+
+	bool loadOk = true;
+
+	#define GL1_PROC(ret, func, params) loadOk &= GetGL1Proc(*(void**)&func, #func);
+	#include "OpenGL1Funcs.h"
+	#undef GL1_PROC
+
+	return loadOk;
+
+	unguard;
+}
+
+bool UOpenGLRenderDevice::FindGLExt(const char *pName) {
+	guard(UOpenGLRenderDevice::FindGLExt);
 
 	bool bRet = IsGLExtensionSupported((const char *)glGetString(GL_EXTENSIONS), pName);
 	if (bRet) {
 		debugf(NAME_Init, TEXT("Device supports: %s"), appFromAnsi(pName));
 	}
-#ifndef UTGLR_DONT_DEBUG_AT_ALL
 	if (DebugBit(DEBUG_BIT_BASIC)) {
-		dout << TEXT("utglr: GL_EXT: ") << appFromAnsi(pName) << TEXT(" = ") << bRet << std::endl;
+		dbgPrintf("utglr: GL_EXT: %s = %d\n", pName, bRet);
 	}
-#endif
 
 	return bRet;
 	unguard;
 }
 
-void UOpenGLRenderDevice::FindProc(void*& ProcAddress, const char *pName, const char *pSupportName, bool& Supports, bool AllowExt) {
-	guard(UOpenGLRenderDevice::FindProc);
-	if (!ProcAddress) {
-		ProcAddress = (void*)SDL_GL_GetProcAddress(pName);
+void UOpenGLRenderDevice::GetGLExtProc(void*& ProcAddress, const char *pName, const char *pSupportName, bool& Supports) {
+	guard(UOpenGLRenderDevice::GetGLExtProc);
+
+	if (!Supports) {
+		return;
 	}
+
+	ProcAddress = (void *)SDL_GL_GetProcAddress(pName);
 	if (!ProcAddress) {
-		if (Supports) {
-			debugf(TEXT("   Missing function '%s' for '%s' support"), appFromAnsi(pName), appFromAnsi(pSupportName));
-		}
 		Supports = false;
+
+		debugf(TEXT("   Missing function '%s' for '%s' support"), appFromAnsi(pName), appFromAnsi(pSupportName));
+		dbgPrintf("Missing function '%s' for '%s' support\n", pName, pSupportName);
 	}
+
 	unguard;
 }
 
-void UOpenGLRenderDevice::FindProcs(bool AllowExt) {
-	guard(UOpenGLRenderDevice::FindProcs);
-	#define GL_EXT(name) if (AllowExt) SUPPORTS##name = FindExt(#name+1);
-	#define GL_PROC(ext,ret,func,parms) FindProc(*(void**)&func, #func, #ext, SUPPORTS##ext, AllowExt);
-#ifdef UTGLR_ALL_GL_PROCS
-	#define GL_PROX(ext,ret,func,parms) FindProc(*(void**)&func, #func, #ext, SUPPORTS##ext, AllowExt);
-#else
-	#define GL_PROX(ext,ret,func,parms)
-#endif
-	#include "OpenGLFuncs.h"
-	#undef GL_EXT
-	#undef GL_PROC
-	#undef GL_PROX
+void UOpenGLRenderDevice::GetGLExtProcs(void) {
+	guard(UOpenGLRenderDevice::GetGLExtProcs);
+	#define GL_EXT_NAME(name) SUPPORTS##name = FindGLExt(#name + 1);
+	#define GL_EXT_PROC(ext, ret, func, params) GetGLExtProc(*(void**)&func, #func, #ext + 1, SUPPORTS##ext);
+	#include "OpenGLExtFuncs.h"
+	#undef GL_EXT_NAME
+	#undef GL_EXT_PROC
 	unguard;
 }
 
@@ -1817,11 +1777,9 @@ void UOpenGLRenderDevice::ShutdownAfterError() {
 
 	debugf(NAME_Exit, TEXT("UOpenGLRenderDevice::ShutdownAfterError"));
 
-#ifndef UTGLR_DONT_DEBUG_AT_ALL
 	if (DebugBit(DEBUG_BIT_BASIC)) {
-		dout << TEXT("utglr: ShutdownAfterError") << std::endl;
+		dbgPrintf("utglr: ShutdownAfterError\n");
 	}
-#endif
 
 	//ChangeDisplaySettings(NULL, 0);
 
@@ -1832,9 +1790,8 @@ void UOpenGLRenderDevice::ShutdownAfterError() {
 UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL Fullscreen) {
 	unsigned int u;
 
-	guard(UOpenGlRenderDevice::SetRes);
+	guard(UOpenGLRenderDevice::SetRes);
 
-#ifndef UTGLR_DONT_DEBUG_AT_ALL
 	//Get debug bits
 	{
 		INT i = 0;
@@ -1842,13 +1799,12 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 		m_debugBits = i;
 	}
 	//Display debug bits
-	if (DebugBit(DEBUG_BIT_ANY)) dout << TEXT("utglr: DebugBits = ") << m_debugBits << std::endl;
-#endif
+	if (DebugBit(DEBUG_BIT_ANY)) dbgPrintf("utglr: DebugBits = %u\n", m_debugBits);
 
 	UnsetRes();
 
 	INT MinDepthBits;
-	
+
 	m_usingAA = false;
 	m_curAAEnable = true;
 	m_defAAEnable = true;
@@ -1857,7 +1813,7 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 	if (!GConfig->GetInt(g_pSection, TEXT("MinDepthBits"), MinDepthBits)) MinDepthBits = 16;
 	//debugf( TEXT("MinDepthBits = %i"), MinDepthBits );
 	// 16 is the bare minimum.
-	if (MinDepthBits < 16) MinDepthBits = 16; 
+	if (MinDepthBits < 16) MinDepthBits = 16;
 
 	INT RequestDoubleBuffer;
 	if (!GConfig->GetInt(g_pSection, TEXT("RequestDoubleBuffer"), RequestDoubleBuffer)) RequestDoubleBuffer = 1;
@@ -1889,9 +1845,24 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 	debugf(NAME_Init, TEXT("GL_RENDERER   : %s"), appFromAnsi((const ANSICHAR *)glGetString(GL_RENDERER)));
 	debugf(NAME_Init, TEXT("GL_VERSION    : %s"), appFromAnsi((const ANSICHAR *)glGetString(GL_VERSION)));
 
-	FindProcs(true);
+	// vogel: logging of more than 1024 characters is dangerous at the moment.
+	const char *pGLExtensions = (const char *)glGetString(GL_EXTENSIONS);
+	if (strlen(pGLExtensions) < 1024) {
+		debugf(NAME_Init, TEXT("GL_EXTENSIONS : %s"), appFromAnsi(pGLExtensions));
+	}
+	else {
+		printf("GL_EXTENSIONS : %s\n", pGLExtensions);
+	}
+
+	//Get OpenGL extension function pointers
+	GetGLExtProcs();
 
 	debugf(NAME_Init, TEXT("Depth bits: %u"), m_numDepthBits);
+	if (DebugBit(DEBUG_BIT_BASIC)) dbgPrintf("utglr: Depth bits: %u\n", m_numDepthBits);
+	if (m_usingAA) {
+		debugf(NAME_Init, TEXT("AA samples: %u"), m_initNumAASamples);
+		if (DebugBit(DEBUG_BIT_BASIC)) dbgPrintf("utglr: AA samples: %u\n", m_initNumAASamples);
+	}
 
 	// Set modelview.
 	glMatrixMode(GL_MODELVIEW);
@@ -1901,11 +1872,10 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 	//Get other defaults
 	if (!GConfig->GetInt(g_pSection, TEXT("Brightness"), Brightness)) Brightness = 0;
 
-#ifndef UTGLR_DONT_DEBUG_AT_ALL
 	//Debug parameter listing
 	if (DebugBit(DEBUG_BIT_BASIC)) {
-		#define UTGLR_DEBUG_SHOW_PARAM_REG(_name) DbgPrintInitParam(TEXT(#_name), _name)
-		#define UTGLR_DEBUG_SHOW_PARAM_DCV(_name) DbgPrintInitParam(TEXT(#_name), DCV._name)
+		#define UTGLR_DEBUG_SHOW_PARAM_REG(name) DbgPrintInitParam(#name, name)
+		#define UTGLR_DEBUG_SHOW_PARAM_DCV(name) DbgPrintInitParam(#name, DCV.name)
 
 		UTGLR_DEBUG_SHOW_PARAM_REG(LODBias);
 		UTGLR_DEBUG_SHOW_PARAM_REG(GammaOffset);
@@ -1929,13 +1899,10 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 //		UTGLR_DEBUG_SHOW_PARAM_REG(AlwaysMipmap);
 		UTGLR_DEBUG_SHOW_PARAM_REG(UsePrecache);
 		UTGLR_DEBUG_SHOW_PARAM_REG(UseTrilinear);
-//		UTGLR_DEBUG_SHOW_PARAM_REG(AutoGenerateMipmaps);
 //		UTGLR_DEBUG_SHOW_PARAM_REG(UseVertexSpecular);
 		UTGLR_DEBUG_SHOW_PARAM_REG(UseAlphaPalette);
 		UTGLR_DEBUG_SHOW_PARAM_REG(UseS3TC);
 		UTGLR_DEBUG_SHOW_PARAM_REG(Use16BitTextures);
-		UTGLR_DEBUG_SHOW_PARAM_REG(UseTNT);
-		UTGLR_DEBUG_SHOW_PARAM_REG(UseCVA);
 		UTGLR_DEBUG_SHOW_PARAM_REG(NoFiltering);
 		UTGLR_DEBUG_SHOW_PARAM_REG(DetailMax);
 //		UTGLR_DEBUG_SHOW_PARAM_REG(UseDetailAlpha);
@@ -1954,9 +1921,9 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 		UTGLR_DEBUG_SHOW_PARAM_REG(DynamicTexIdRecycleLevel);
 		UTGLR_DEBUG_SHOW_PARAM_REG(TexDXT1ToDXT3);
 		UTGLR_DEBUG_SHOW_PARAM_REG(UseMultiDrawArrays);
-		UTGLR_DEBUG_SHOW_PARAM_DCV(UseVertexProgram);
 		UTGLR_DEBUG_SHOW_PARAM_DCV(UseFragmentProgram);
 		UTGLR_DEBUG_SHOW_PARAM_REG(SwapInterval);
+		UTGLR_DEBUG_SHOW_PARAM_REG(FrameRateLimit);
 		UTGLR_DEBUG_SHOW_PARAM_REG(SceneNodeHack);
 		UTGLR_DEBUG_SHOW_PARAM_REG(SmoothMaskedTextures);
 		UTGLR_DEBUG_SHOW_PARAM_REG(MaskedTextureHack);
@@ -1968,7 +1935,6 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 		#undef UTGLR_DEBUG_SHOW_PARAM_REG
 		#undef UTGLR_DEBUG_SHOW_PARAM_DCV
 	}
-#endif
 
 
 #ifdef UTGLR_INCLUDE_SSE_CODE
@@ -1986,10 +1952,8 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 	UseSSE = 0;
 	UseSSE2 = 0;
 #endif
-#ifndef UTGLR_DONT_DEBUG_AT_ALL
-	if (DebugBit(DEBUG_BIT_BASIC)) dout << TEXT("utglr: UseSSE = ") << UseSSE << std::endl;
-	if (DebugBit(DEBUG_BIT_BASIC)) dout << TEXT("utglr: UseSSE2 = ") << UseSSE2 << std::endl;
-#endif
+	if (DebugBit(DEBUG_BIT_BASIC)) dbgPrintf("utglr: UseSSE = %u\n", UseSSE);
+	if (DebugBit(DEBUG_BIT_BASIC)) dbgPrintf("utglr: UseSSE2 = %u\n", UseSSE2);
 
 	SetGamma(Viewport->GetOuterUClient()->Brightness);
 
@@ -1997,7 +1961,6 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 	if (DynamicTexIdRecycleLevel < 10) DynamicTexIdRecycleLevel = 10;
 
 	AlwaysMipmap = 0;
-	AutoGenerateMipmaps = 0;
 	UseVertexSpecular = 1;
 
 	SupportsTC = UseS3TC;
@@ -2050,31 +2013,16 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 	ConfigValidate_Main();
 
 
-	//Reset vertex program state tracking variables
-	m_vpModeEnabled = false;
+	//Reset vertex program and fragment program state tracking variables
 	m_vpCurrent = 0;
-
-	//Mark vertex program names as not allocated
-	m_allocatedVertexProgramNames = false;
-	//Setup vertex programs
-	if (UseVertexProgram) {
-		//Attempt to initialize vertex program mode
-		TryInitializeVertexProgramMode();
-	}
-
-	//Fragment program mode requires vertex program mode
-	if (!UseVertexProgram) UseFragmentProgram = 0;
-
-
-	//Reset fragment program state tracking variables
-	m_fpModeEnabled = false;
 	m_fpCurrent = 0;
 
-	//Mark fragment program names as not allocated
-	m_allocatedFragmentProgramNames = false;
-	//Setup fragment programs
+	//Mark shader names as not allocated
+	m_allocatedShaderNames = false;
+
+	//Setup vertex programs and fragment programs
 	if (UseFragmentProgram) {
-		//Attempt to initialize fragment program mode
+		//Attempt to initialize vertex program and fragment program mode
 		TryInitializeFragmentProgramMode();
 	}
 
@@ -2085,7 +2033,7 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 	if (MaxAnisotropy) {
 		GLint iMaxAnisotropyLimit = 1;
 		glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &iMaxAnisotropyLimit);
-		debugf(TEXT("MaxAnisotropy = %i"), iMaxAnisotropyLimit); 
+		debugf(TEXT("MaxAnisotropy: %i"), iMaxAnisotropyLimit);
 		if (MaxAnisotropy > iMaxAnisotropyLimit) {
 			MaxAnisotropy = iMaxAnisotropyLimit;
 		}
@@ -2114,12 +2062,12 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 	MaxLogUOverV = MaxLogTextureSize;
 	MaxLogVOverU = MaxLogTextureSize;
 
-	debugf(TEXT("MinLogTextureSize = %i"), MinLogTextureSize);
-	debugf(TEXT("MaxLogTextureSize = %i"), MaxLogTextureSize);
+	debugf(TEXT("MinLogTextureSize: %i"), MinLogTextureSize);
+	debugf(TEXT("MaxLogTextureSize: %i"), MaxLogTextureSize);
 
-	debugf(TEXT("BufferActorTris = %i"), BufferActorTris);
+	debugf(TEXT("BufferActorTris: %i"), BufferActorTris);
 
-	debugf(TEXT("UseDetailAlpha = %i"), UseDetailAlpha);
+	debugf(TEXT("UseDetailAlpha: %i"), UseDetailAlpha);
 
 
 	//Set pointers to aligned memory
@@ -2152,18 +2100,19 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 	glEnable(GL_DEPTH_TEST);
 	glShadeModel(GL_SMOOTH);
 	glEnable(GL_TEXTURE_2D);
-	glAlphaFunc(GL_GREATER, 0.5);
+	glAlphaFunc(GL_GREATER, 0.5f);
 	glDepthMask(GL_TRUE);
 	glDepthFunc(GL_LEQUAL);
 	glPolygonOffset(-1.0f, -1.0f);
 	glBlendFunc(GL_ONE, GL_ZERO);
 	glDisable(GL_BLEND);
 	glEnable(GL_DITHER);
+
 #ifdef UTGLR_RUNE_BUILD
 	glFogi(GL_FOG_MODE, GL_LINEAR);
 	glFogf(GL_FOG_START, 0.0f);
-	m_gpFogEnabled = false;
 #endif
+	m_gpFogEnabled = false;
 
 	if (LODBias) {
 		SetTexLODBiasState(TMUnits);
@@ -2218,6 +2167,8 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 
 	m_curBlendFlags = PF_Occlude;
 	m_smoothMaskedTexturesBit = 0;
+	m_useAlphaToCoverageForMasked = false;
+	m_alphaToCoverageEnabled = false;
 	m_curPolyFlags = 0;
 	m_curPolyFlags2 = 0;
 
@@ -2247,9 +2198,7 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 	PL_UseTrilinear = UseTrilinear;
 	PL_Use16BitTextures = Use16BitTextures;
 	PL_TexDXT1ToDXT3 = TexDXT1ToDXT3;
-	PL_AutoGenerateMipmaps = AutoGenerateMipmaps;
 	PL_MaxAnisotropy = MaxAnisotropy;
-	PL_UseTNT = UseTNT;
 	PL_SmoothMaskedTextures = SmoothMaskedTextures;
 	PL_MaskedTextureHack = MaskedTextureHack;
 	PL_LODBias = LODBias;
@@ -2257,7 +2206,6 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 	PL_UseAlphaPalette = UseAlphaPalette;
 	PL_UseDetailAlpha = UseDetailAlpha;
 	PL_SinglePassDetail = SinglePassDetail;
-	PL_UseVertexProgram = UseVertexProgram;
 	PL_UseFragmentProgram = UseFragmentProgram;
 	PL_UseSSE = UseSSE;
 	PL_UseSSE2 = UseSSE2;
@@ -2290,17 +2238,13 @@ void UOpenGLRenderDevice::UnsetRes() {
 		m_alphaTextureId = 0;
 	}
 
-	//Free vertex programs if they were allocated and leave vertex program mode if necessary
-	ShutdownVertexProgramMode();
-
-	//Free fragment programs if they were allocated and leave fragment program mode if necessary
+	//Free vertex and fragment programs if they were allocated and leave vertex and fragment program modes if necessary
 	ShutdownFragmentProgramMode();
 
 	unguard;
 }
 
 void UOpenGLRenderDevice::CheckGLErrorFlag(const TCHAR *pTag) {
-#ifndef UTGLR_DONT_DEBUG_AT_ALL
 	GLenum Error = glGetError();
 	if ((Error != GL_NO_ERROR) && DebugBit(DEBUG_BIT_GL_ERROR)) {
 		const TCHAR *pMsg;
@@ -2329,7 +2273,6 @@ void UOpenGLRenderDevice::CheckGLErrorFlag(const TCHAR *pTag) {
 		//appErrorf(TEXT("OpenGL Error: %s (%s)"), pMsg, pTag);
 		debugf(TEXT("OpenGL Error: %s (%s)"), pMsg, pTag);
 	}
-#endif
 }
 
 
@@ -2338,7 +2281,6 @@ void UOpenGLRenderDevice::ConfigValidate_RefreshDCV(void) {
 
 	UTGLR_REFRESH_DCV(SinglePassFog);
 	UTGLR_REFRESH_DCV(SinglePassDetail);
-	UTGLR_REFRESH_DCV(UseVertexProgram);
 	UTGLR_REFRESH_DCV(UseFragmentProgram);
 
 	#undef UTGLR_REFRESH_DCV
@@ -2347,17 +2289,15 @@ void UOpenGLRenderDevice::ConfigValidate_RefreshDCV(void) {
 }
 
 void UOpenGLRenderDevice::ConfigValidate_RequiredExtensions(void) {
+	if (!SUPPORTS_GL_ARB_vertex_program) UseFragmentProgram = 0;
 	if (!SUPPORTS_GL_ARB_fragment_program) UseFragmentProgram = 0;
-	if (!SUPPORTS_GL_ARB_vertex_program) UseVertexProgram = 0;
 	if (!SUPPORTS_GL_EXT_bgra) UseBGRATextures = 0;
-	if (!SUPPORTS_GL_EXT_compiled_vertex_array) UseCVA = 0;
 	if (!SUPPORTS_GL_EXT_multi_draw_arrays) UseMultiDrawArrays = 0;
 	if (!SUPPORTS_GL_EXT_paletted_texture) UsePalette = 0;
 	if (!SUPPORTS_GL_EXT_texture_env_combine) DetailTextures = 0;
 	if (!SUPPORTS_GL_EXT_texture_env_combine) UseDetailAlpha = 0;
 	if (!SUPPORTS_GL_EXT_texture_filter_anisotropic) MaxAnisotropy  = 0;
 	if (!SUPPORTS_GL_EXT_texture_lod_bias) LODBias = 0;
-	if (!SUPPORTS_GL_SGIS_generate_mipmap) AutoGenerateMipmaps = 0;
 
 	if (!SUPPORTS_GL_ATI_texture_env_combine3 && !SUPPORTS_GL_NV_texture_env_combine4) SinglePassFog = 0;
 
@@ -2379,23 +2319,10 @@ void UOpenGLRenderDevice::ConfigValidate_Main(void) {
 	//Limit maximum DetailMax
 	if (DetailMax > 3) DetailMax = 3;
 
-	//Must use detail alpha for vertex program detail textures
-	if (DetailTextures) {
-		if (!UseDetailAlpha) {
-			UseVertexProgram = 0;
-		}
-	}
-
-	//Fragment program mode requires vertex program mode
-	if (!UseVertexProgram) UseFragmentProgram = 0;
-
-	//UseTNT cannot be used with texture compression
-	if (SupportsTC) {
-		UseTNT = 0;
-	}
-
 	return;
 }
+
+
 
 
 UBOOL UOpenGLRenderDevice::Init(UViewport* InViewport, INT NewX, INT NewY, INT NewColorBytes, UBOOL Fullscreen) {
@@ -2410,6 +2337,8 @@ UBOOL UOpenGLRenderDevice::Init(UViewport* InViewport, INT NewX, INT NewY, INT N
 
 	// Init global GL.
 	if (NumDevices == 0) {
+		bool loadRet;
+
 		// Bind the library.
 		FString OpenGLLibName;
 		// Default to libGL.so.1 if not defined
@@ -2420,15 +2349,15 @@ UBOOL UOpenGLRenderDevice::Init(UViewport* InViewport, INT NewX, INT NewY, INT N
 		if (!GLLoaded) {
 			// Only call it once as succeeding calls will 'fail'.
 			debugf(TEXT("binding %s"), *OpenGLLibName);
-			if (SDL_GL_LoadLibrary(appToAnsi(*OpenGLLibName)) == -1) {
-				appErrorf(appFromAnsi(SDL_GetError()));
+			if (SDL_GL_LoadLibrary(*OpenGLLibName) == -1) {
+				appErrorf(TEXT(SDL_GetError()));
 			}
 			GLLoaded = true;
 		}
 
-		SUPPORTS_GL = 1;
-		FindProcs(false);
-		if (!SUPPORTS_GL) {
+		//Get OpenGL 1.x function pointers
+		loadRet = GetGL1Procs();
+		if (!loadRet) {
 			return 0;
 		}
 	}
@@ -2466,16 +2395,18 @@ UBOOL UOpenGLRenderDevice::Init(UViewport* InViewport, INT NewX, INT NewY, INT N
 UBOOL UOpenGLRenderDevice::Exec(const TCHAR* Cmd, FOutputDevice& Ar) {
 	guard(UOpenGLRenderDevice::Exec);
 
-#ifndef UTGLR_UNREAL_BUILD
 	if (URenderDevice::Exec(Cmd, Ar)) {
 		return 1;
 	}
-#endif
 	if (ParseCommand(&Cmd, TEXT("DGL"))) {
 		if (ParseCommand(&Cmd, TEXT("BUFFERTRIS"))) {
 			BufferActorTris = !BufferActorTris;
 			if (!UseVertexSpecular) BufferActorTris = 0;
 			debugf(TEXT("BUFFERTRIS [%i]"), BufferActorTris);
+			return 1;
+		}
+		else if (ParseCommand(&Cmd, TEXT("BUILD"))) {
+			debugf(TEXT("OpenGL renderer built: %s %s"), __DATE__, __TIME__);
 			return 1;
 		}
 		else if (ParseCommand(&Cmd, TEXT("AA"))) {
@@ -2491,12 +2422,12 @@ UBOOL UOpenGLRenderDevice::Exec(const TCHAR* Cmd, FOutputDevice& Ar) {
 	else if (ParseCommand(&Cmd, TEXT("GetRes"))) {
 		// Changing Resolutions:
 		// Entries in the resolution box in the console is
-		// apparently controled building a string of relevant 
+		// apparently controled building a string of relevant
 		// resolutions and sending it to the engine via Ar.Log()
 
 		// Here I am querying SDL_ListModes for available resolutions,
 		// and populating the dropbox with its output.
-		FString Str = TEXT("");
+		FString Str = "";
 		SDL_Rect **modes;
 		INT i, j;
 
@@ -2515,7 +2446,7 @@ UBOOL UOpenGLRenderDevice::Exec(const TCHAR* Cmd, FOutputDevice& Ar) {
 				++j;
 			}
 
-			// Load the string with resolutions from smallest to 
+			// Load the string with resolutions from smallest to
 			// largest. SDL_ListModes() provides them from lg
 			// to sm...
 			for (i = (j - 1); i >= 0; --i) {
@@ -2529,16 +2460,12 @@ UBOOL UOpenGLRenderDevice::Exec(const TCHAR* Cmd, FOutputDevice& Ar) {
 	}
 
 	return 0;
+
 	unguard;
 }
 
 void UOpenGLRenderDevice::Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane ScreenClear, DWORD RenderLockFlags, BYTE* InHitData, INT* InHitSize) {
-#ifdef UTGLR_DEBUG_SHOW_CALL_COUNTS
-{
-	static int si;
-	dout << L"utglr: Lock = " << si++ << std::endl;
-}
-#endif
+	UTGLR_DEBUG_CALL_COUNT(Lock);
 	guard(UOpenGLRenderDevice::Lock);
 	check(LockCount == 0);
 	++LockCount;
@@ -2552,6 +2479,8 @@ void UOpenGLRenderDevice::Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane Sc
 	m_fpEnableCount = 0;
 	m_fpSwitchCount = 0;
 	m_AASwitchCount = 0;
+	m_sceneNodeCount = 0;
+	m_sceneNodeHackCount = 0;
 	m_stat0Count = 0;
 	m_stat1Count = 0;
 
@@ -2583,9 +2512,12 @@ void UOpenGLRenderDevice::Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane Sc
 	glDepthFunc((GLenum)ZTrickFunc);
 
 
+	//Scan for textures that may have been deleted by another context
+	ScanForDeletedTextures();
+
+
 	bool flushTextures = false;
-	bool needVertexProgramReload = false;
-	bool needFragmentProgramReload = false;
+	bool needShaderReload = false;
 
 
 	//DCV refresh
@@ -2632,10 +2564,6 @@ void UOpenGLRenderDevice::Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane Sc
 		PL_TexDXT1ToDXT3 = TexDXT1ToDXT3;
 		flushTextures = true;
 	}
-	if (AutoGenerateMipmaps != PL_AutoGenerateMipmaps) {
-		PL_AutoGenerateMipmaps = AutoGenerateMipmaps;
-		flushTextures = true;
-	}
 	//MaxAnisotropy cannot be negative
 	if (MaxAnisotropy < 0) {
 		MaxAnisotropy = 0;
@@ -2653,18 +2581,31 @@ void UOpenGLRenderDevice::Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane Sc
 		flushTextures = true;
 	}
 
-	if (UseTNT != PL_UseTNT) {
-		PL_UseTNT = UseTNT;
-		flushTextures = true;
-	}
-
 	if (SmoothMaskedTextures != PL_SmoothMaskedTextures) {
 		PL_SmoothMaskedTextures = SmoothMaskedTextures;
+
 		//Clear masked blending state if set before adjusting smooth masked textures bit
 		SetBlend(PF_Occlude);
+
+		//Disable alpha to coverage if currently enabled
+		if (m_alphaToCoverageEnabled) {
+			m_alphaToCoverageEnabled = false;
+			glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+		}
 	}
-	//Set smooth masked textures bit
-	m_smoothMaskedTexturesBit = (SmoothMaskedTextures != 0) ? PF_Masked : 0;
+
+	//Smooth masked textures bit controls alpha blend for masked textures
+	m_smoothMaskedTexturesBit = 0;
+	m_useAlphaToCoverageForMasked = false;
+	if (SmoothMaskedTextures) {
+		//Use alpha to coverage if using AA and enough samples
+		if (m_usingAA && (m_initNumAASamples >= 4)) {
+			m_useAlphaToCoverageForMasked = true;
+		}
+		else {
+			m_smoothMaskedTexturesBit = PF_Masked;
+		}
+	}
 
 	if (MaskedTextureHack != PL_MaskedTextureHack) {
 		PL_MaskedTextureHack = MaskedTextureHack;
@@ -2688,57 +2629,18 @@ void UOpenGLRenderDevice::Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane Sc
 	if (DetailTextures != PL_DetailTextures) {
 		PL_DetailTextures = DetailTextures;
 		flushTextures = true;
-		if (DetailTextures) {
-			needFragmentProgramReload = true;
-		}
 	}
 
 	if (UseDetailAlpha != PL_UseDetailAlpha) {
 		PL_UseDetailAlpha = UseDetailAlpha;
 		if (UseDetailAlpha) {
 			InitAlphaTextureSafe();
-			needVertexProgramReload = true;
 		}
 	}
 
 	if (SinglePassDetail != PL_SinglePassDetail) {
 		PL_SinglePassDetail = SinglePassDetail;
-		if (SinglePassDetail) {
-			needVertexProgramReload = true;
-		}
 	}
-
-	//Extra vertex programs needed in fragment program mode
-	if (UseFragmentProgram != PL_UseFragmentProgram) {
-		if (UseFragmentProgram) {
-			needVertexProgramReload = true;
-		}
-	}
-
-
-	if (UseVertexProgram != PL_UseVertexProgram) {
-		PL_UseVertexProgram = UseVertexProgram;
-		if (UseVertexProgram) {
-			//Attempt to initialize vertex program mode
-			TryInitializeVertexProgramMode();
-			needVertexProgramReload = false;
-		}
-		else {
-			//Free vertex programs if they were allocated and leave vertex program mode if necessary
-			ShutdownVertexProgramMode();
-		}
-	}
-
-	//Check if vertex program reload is necessary
-	if (UseVertexProgram) {
-		if (needVertexProgramReload) {
-			//Attempt to initialize vertex program mode
-			TryInitializeVertexProgramMode();
-		}
-	}
-
-	//Fragment program mode requires vertex program mode
-	if (!UseVertexProgram) UseFragmentProgram = 0;
 
 
 	if (UseFragmentProgram != PL_UseFragmentProgram) {
@@ -2746,7 +2648,7 @@ void UOpenGLRenderDevice::Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane Sc
 		if (UseFragmentProgram) {
 			//Attempt to initialize fragment program mode
 			TryInitializeFragmentProgramMode();
-			needFragmentProgramReload = false;
+			needShaderReload = false;
 		}
 		else {
 			//Free fragment programs if they were allocated and leave fragment program mode if necessary
@@ -2756,7 +2658,7 @@ void UOpenGLRenderDevice::Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane Sc
 
 	//Check if fragment program reload is necessary
 	if (UseFragmentProgram) {
-		if (needFragmentProgramReload) {
+		if (needShaderReload) {
 			//Attempt to initialize fragment program mode
 			TryInitializeFragmentProgramMode();
 		}
@@ -2789,9 +2691,17 @@ void UOpenGLRenderDevice::Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane Sc
 	}
 
 
-#ifdef UTGLR_UNREAL_BUILD
-	ZRangeHack = 0;
-#endif
+	//Shared fragment program parameters
+	if (UseFragmentProgram) {
+		//Lightmap blend scale factor
+	}
+
+	//Precalculate complex surface color
+	m_complexSurfaceColor3f_1f[0] = 1.0f;
+	m_complexSurfaceColor3f_1f[1] = 1.0f;
+	m_complexSurfaceColor3f_1f[2] = 1.0f;
+	//Alpha used for fragment program lightmap blend scaling
+	m_complexSurfaceColor3f_1f[3] = (OneXBlending) ? 0.0f : 1.0f;
 
 
 	//Initialize buffer verts proc pointers
@@ -2815,12 +2725,9 @@ void UOpenGLRenderDevice::Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane Sc
 
 
 	//Initialize render passes no check proc pointers
-	if (UseVertexProgram) {
-		m_pRenderPassesNoCheckSetupProc = &UOpenGLRenderDevice::RenderPassesNoCheckSetup_VP;
-		m_pRenderPassesNoCheckSetup_SingleOrDualTextureAndDetailTextureProc = &UOpenGLRenderDevice::RenderPassesNoCheckSetup_SingleOrDualTextureAndDetailTexture_VP;
-		if (UseFragmentProgram) {
-			m_pRenderPassesNoCheckSetup_SingleOrDualTextureAndDetailTextureProc = &UOpenGLRenderDevice::RenderPassesNoCheckSetup_SingleOrDualTextureAndDetailTexture_FP;
-		}
+	if (UseFragmentProgram) {
+		m_pRenderPassesNoCheckSetupProc = &UOpenGLRenderDevice::RenderPassesNoCheckSetup_FP;
+		m_pRenderPassesNoCheckSetup_SingleOrDualTextureAndDetailTextureProc = &UOpenGLRenderDevice::RenderPassesNoCheckSetup_SingleOrDualTextureAndDetailTexture_FP;
 	}
 	else {
 		m_pRenderPassesNoCheckSetupProc = &UOpenGLRenderDevice::RenderPassesNoCheckSetup;
@@ -2860,6 +2767,8 @@ void UOpenGLRenderDevice::Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane Sc
 		m_detailTextureColor3f_1f[2] = 0.5f;
 		m_detailTextureColor4ub = 0x00808080;
 	}
+	//Alpha used for fragment program lightmap blend scaling
+	m_detailTextureColor3f_1f[3] = (OneXBlending) ? 0.0f : 1.0f;
 
 	//Precalculate mask for MaskedTextureHack based on if it's enabled
 	m_maskedTextureHackMask = (MaskedTextureHack) ? TEX_CACHE_ID_FLAG_MASKED : 0;
@@ -2867,16 +2776,17 @@ void UOpenGLRenderDevice::Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane Sc
 	// Remember stuff.
 	FlashScale = InFlashScale;
 	FlashFog   = InFlashFog;
-	HitData    = InHitData;
-	HitSize    = InHitSize;
-	if (HitData) {
-		*HitSize = 0;
-		if (!GLHitData.Num()) {
-			GLHitData.Add(16384);
-		}
-		glSelectBuffer(GLHitData.Num(), (GLuint*)&GLHitData(0));
-		glRenderMode(GL_SELECT);
-		glInitNames();
+
+	//Selection setup
+	m_HitData = InHitData;
+	m_HitSize = InHitSize;
+	m_HitCount = 0;
+	if (m_HitData) {
+		m_HitBufSize = *m_HitSize;
+		*m_HitSize = 0;
+
+		//Start selection
+		m_gclip.SelectModeStart();
 	}
 
 	//Flush textures if necessary due to config change
@@ -2888,12 +2798,7 @@ void UOpenGLRenderDevice::Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane Sc
 }
 
 void UOpenGLRenderDevice::SetSceneNode(FSceneNode* Frame) {
-#ifdef UTGLR_DEBUG_SHOW_CALL_COUNTS
-{
-	static int si;
-	dout << L"utglr: SetSceneNode = " << si++ << std::endl;
-}
-#endif
+	UTGLR_DEBUG_CALL_COUNT(SetSceneNode);
 	guard(UOpenGLRenderDevice::SetSceneNode);
 
 	EndBuffering();		// Flush vertex array before changing the projection matrix!
@@ -2903,16 +2808,15 @@ void UOpenGLRenderDevice::SetSceneNode(FSceneNode* Frame) {
 	//No need to set default AA state here
 	//No need to set default projection state as this function always sets/initializes it
 	SetDefaultColorState();
-	SetDefaultVertexProgramState();
-	SetDefaultFragmentProgramState();
+	SetDefaultShaderState();
 	SetDefaultTextureState();
 
 	// Precompute stuff.
-	FLOAT One_Over_FX = 1.0f / Frame->FX;
-	m_Aspect = Frame->FY * One_Over_FX;
+	FLOAT rcpFrameFX = 1.0f / Frame->FX;
+	m_Aspect = Frame->FY * rcpFrameFX;
 	m_RProjZ = appTan(Viewport->Actor->FovAngle * PI / 360.0);
-	m_RFX2 = 2.0f * m_RProjZ * One_Over_FX;
-	m_RFY2 = 2.0f * m_RProjZ * One_Over_FX;
+	m_RFX2 = 2.0f * m_RProjZ * rcpFrameFX;
+	m_RFY2 = 2.0f * m_RProjZ * rcpFrameFX;
 
 	//Remember Frame->X and Frame->Y for scene node hack
 	m_sceneNodeX = Frame->X;
@@ -2923,7 +2827,7 @@ void UOpenGLRenderDevice::SetSceneNode(FSceneNode* Frame) {
 
 	//Decide whether or not to use Z range hack
 	m_useZRangeHack = false;
-	if (ZRangeHack) {
+	if (ZRangeHack && !GIsEditor) {
 		m_useZRangeHack = true;
 	}
 
@@ -2938,10 +2842,10 @@ void UOpenGLRenderDevice::SetSceneNode(FSceneNode* Frame) {
 		SetProjectionStateNoCheck(false);
 	}
 
-	// Set clip planes.
-	if (HitData) {
+	//Set clip planes if doing selection
+	if (m_HitData) {
 		if (Frame->Viewport->IsOrtho()) {
-			double cp[4];
+			float cp[4];
 			FLOAT nX = Viewport->HitX - Frame->FX2;
 			FLOAT pX = nX + Viewport->HitXL;
 			FLOAT nY = Viewport->HitY - Frame->FY2;
@@ -2952,33 +2856,55 @@ void UOpenGLRenderDevice::SetSceneNode(FSceneNode* Frame) {
 			nY *= m_RFY2 * 0.5f;
 			pY *= m_RFY2 * 0.5f;
 
-			cp[0] = 1.0; cp[1] = 0.0; cp[2] = 0.0; cp[3] = -nX;
-			glClipPlane(GL_CLIP_PLANE0, cp);
-			glEnable(GL_CLIP_PLANE0);
+			cp[0] = +1.0; cp[1] = 0.0; cp[2] = 0.0; cp[3] = -nX;
+			m_gclip.SetCp(0, cp);
+			m_gclip.SetCpEnable(0, true);
 
-			cp[0] = 0.0; cp[1] = 1.0; cp[2] = 0.0; cp[3] = -nY;
-			glClipPlane(GL_CLIP_PLANE1, cp);
-			glEnable(GL_CLIP_PLANE1);
+			cp[0] = 0.0; cp[1] = +1.0; cp[2] = 0.0; cp[3] = -nY;
+			m_gclip.SetCp(1, cp);
+			m_gclip.SetCpEnable(1, true);
 
-			cp[0] = -1.0; cp[1] = 0.0; cp[2] = 0.0; cp[3] = pX;
-			glClipPlane(GL_CLIP_PLANE2, cp);
-			glEnable(GL_CLIP_PLANE2);
+			cp[0] = -1.0; cp[1] = 0.0; cp[2] = 0.0; cp[3] = +pX;
+			m_gclip.SetCp(2, cp);
+			m_gclip.SetCpEnable(2, true);
 
-			cp[0] = 0.0; cp[1] = -1.0; cp[2] = 0.0; cp[3] = pY;
-			glClipPlane(GL_CLIP_PLANE3, cp);
-			glEnable(GL_CLIP_PLANE3);
+			cp[0] = 0.0; cp[1] = -1.0; cp[2] = 0.0; cp[3] = +pY;
+			m_gclip.SetCp(3, cp);
+			m_gclip.SetCpEnable(3, true);
+
+			//Near clip plane
+			cp[0] = 0.0f; cp[1] = 0.0f; cp[2] = 1.0f; cp[3] = -0.5f;
+			m_gclip.SetCp(4, cp);
+			m_gclip.SetCpEnable(4, true);
 		}
 		else {
 			FVector N[4];
-			N[0] = (FVector((Viewport->HitX-Frame->FX2)*Frame->RProj.Z,0,1)^FVector(0,-1,0)).SafeNormal();
-			N[1] = (FVector((Viewport->HitX+Viewport->HitXL-Frame->FX2)*Frame->RProj.Z,0,1)^FVector(0,+1,0)).SafeNormal();
-			N[2] = (FVector(0,(Viewport->HitY-Frame->FY2)*Frame->RProj.Z,1)^FVector(+1,0,0)).SafeNormal();
-			N[3] = (FVector(0,(Viewport->HitY+Viewport->HitYL-Frame->FY2)*Frame->RProj.Z,1)^FVector(-1,0,0)).SafeNormal();
-			for (INT i = 0; i < 4; i++) {
-				double D0[4] = {N[i].X, N[i].Y, N[i].Z, 0};
-				glClipPlane((GLenum)(GL_CLIP_PLANE0 + i), D0);
-				glEnable((GLenum)(GL_CLIP_PLANE0 + i));
+			float cp[4];
+			INT i;
+
+			FLOAT nX = Viewport->HitX - Frame->FX2;
+			FLOAT pX = nX + Viewport->HitXL;
+			FLOAT nY = Viewport->HitY - Frame->FY2;
+			FLOAT pY = nY + Viewport->HitYL;
+
+			N[0] = (FVector(nX * Frame->RProj.Z, 0, 1) ^ FVector(0, -1, 0)).SafeNormal();
+			N[1] = (FVector(pX * Frame->RProj.Z, 0, 1) ^ FVector(0, +1, 0)).SafeNormal();
+			N[2] = (FVector(0, nY * Frame->RProj.Z, 1) ^ FVector(+1, 0, 0)).SafeNormal();
+			N[3] = (FVector(0, pY * Frame->RProj.Z, 1) ^ FVector(-1, 0, 0)).SafeNormal();
+
+			for (i = 0; i < 4; i++) {
+				cp[0] = N[i].X;
+				cp[1] = N[i].Y;
+				cp[2] = N[i].Z;
+				cp[3] = 0.0f;
+				m_gclip.SetCp(i, cp);
+				m_gclip.SetCpEnable(i, true);
 			}
+
+			//Near clip plane
+			cp[0] = 0.0f; cp[1] = 0.0f; cp[2] = 1.0f; cp[3] = -0.5f;
+			m_gclip.SetCp(4, cp);
+			m_gclip.SetCpEnable(4, true);
 		}
 	}
 
@@ -2986,12 +2912,7 @@ void UOpenGLRenderDevice::SetSceneNode(FSceneNode* Frame) {
 }
 
 void UOpenGLRenderDevice::Unlock(UBOOL Blit) {
-#ifdef UTGLR_DEBUG_SHOW_CALL_COUNTS
-{
-	static int si;
-	dout << L"utglr: Unlock = " << si++ << std::endl;
-}
-#endif
+	UTGLR_DEBUG_CALL_COUNT(Unlock);
 	guard(UOpenGLRenderDevice::Unlock);
 
 	EndBuffering();
@@ -2999,8 +2920,7 @@ void UOpenGLRenderDevice::Unlock(UBOOL Blit) {
 	SetDefaultAAState();
 	SetDefaultProjectionState();
 	SetDefaultColorState();
-	SetDefaultVertexProgramState();
-	SetDefaultFragmentProgramState();
+	SetDefaultShaderState();
 	SetDefaultTextureState();
 
 	// Unlock and render.
@@ -3010,39 +2930,25 @@ void UOpenGLRenderDevice::Unlock(UBOOL Blit) {
 
 	if (Blit) {
 		CheckGLErrorFlag(TEXT("please report this bug"));
+
+		//Swap buffers
 		SDL_GL_SwapBuffers();
 	}
 
 	--LockCount;
 
-	// Hits.
-	if (HitData) {
-		INT Records = glRenderMode(GL_RENDER);
-		INT* Ptr = &GLHitData(0);
-		DWORD BestDepth = MAXDWORD;
+	//If doing selection, end and return hits
+	if (m_HitData) {
 		INT i;
-		for (i = 0; i < Records; i++) {
-			INT   NameCount = *Ptr++;
-			DWORD MinDepth  = *Ptr++;
-			DWORD MaxDepth  = *Ptr++;
-			if (MinDepth <= BestDepth) {
-				BestDepth = MinDepth;
-				*HitSize = 0;
-				INT CurName;
-				for (CurName = 0; CurName < NameCount; ) {
-					INT Count = Ptr[CurName++];
-					for (INT j = 0; j < Count; j += 4) {
-						*(INT*)(HitData + *HitSize + j) = Ptr[CurName++];
-					}
-					*HitSize += Count;
-				}
-				check(CurName == NameCount);
-			}
-			Ptr += NameCount;
-			(void)MaxDepth;
-		}
-		for (i = 0; i < 4; i++) {
-			glDisable((GLenum)(GL_CLIP_PLANE0 + i));
+
+		//End selection
+		m_gclip.SelectModeEnd();
+
+		*m_HitSize = m_HitCount;
+
+		//Disable clip planes
+		for (i = 0; i < 5; i++) {
+			m_gclip.SetCpEnable(i, false);
 		}
 	}
 
@@ -3055,29 +2961,52 @@ void UOpenGLRenderDevice::Unlock(UBOOL Blit) {
 	//Increment current frame count
 	m_currentFrameCount++;
 
+	//Check for optional frame rate limit
+	if (FrameRateLimit >= 20) {
+#if defined UTGLR_DX_BUILD || defined UTGLR_RUNE_BUILD
+		FLOAT curFrameTimestamp;
+#else
+		FTime curFrameTimestamp;
+#endif
+		float timeDiff;
+		float rcpFrameRateLimit;
+
+		//First time timer init if necessary
+		InitFrameRateLimitTimerSafe();
+
+		curFrameTimestamp = appSeconds();
+		timeDiff = curFrameTimestamp - m_prevFrameTimestamp;
+		m_prevFrameTimestamp = curFrameTimestamp;
+
+		rcpFrameRateLimit = 1.0f / FrameRateLimit;
+		if (timeDiff < rcpFrameRateLimit) {
+			float sleepTime;
+
+			sleepTime = rcpFrameRateLimit - timeDiff;
+			appSleep(sleepTime);
+
+			m_prevFrameTimestamp = appSeconds();
+		}
+	}
+
 
 #if 0
-	dout << TEXT("VP enable count = ") << m_vpEnableCount << std::endl;
-	dout << TEXT("VP switch count = ") << m_vpSwitchCount << std::endl;
-	dout << TEXT("FP enable count = ") << m_fpEnableCount << std::endl;
-	dout << TEXT("FP switch count = ") << m_fpSwitchCount << std::endl;
-	dout << TEXT("AA switch count = ") << m_AASwitchCount << std::endl;
-	dout << TEXT("Scene node count = ") << m_sceneNodeCount << std::endl;
-	dout << TEXT("Scene node hack count = ") << m_sceneNodeHackCount << std::endl;
-	dout << TEXT("Stat 0 count = ") << m_stat0Count << std::endl;
-	dout << TEXT("Stat 1 count = ") << m_stat1Count << std::endl;
+	dbgPrintf("VP enable count = %u\n", m_vpEnableCount);
+	dbgPrintf("VP switch count = %u\n", m_vpSwitchCount);
+	dbgPrintf("FP enable count = %u\n", m_fpEnableCount);
+	dbgPrintf("FP switch count = %u\n", m_fpSwitchCount);
+	dbgPrintf("AA switch count = %u\n", m_AASwitchCount);
+	dbgPrintf("Scene node count = %u\n", m_sceneNodeCount);
+	dbgPrintf("Scene node hack count = %u\n", m_sceneNodeHackCount);
+	dbgPrintf("Stat 0 count = %u\n", m_stat0Count);
+	dbgPrintf("Stat 1 count = %u\n", m_stat1Count);
 #endif
 
 
 	unguard;
 }
 
-#ifdef UTGLR_UNREAL_BUILD
-void UOpenGLRenderDevice::Flush() {
-	const UBOOL AllowPrecache = 1;
-#else
 void UOpenGLRenderDevice::Flush(UBOOL AllowPrecache) {
-#endif
 	guard(UOpenGLRenderDevice::Flush);
 	unsigned int u;
 	TArray<GLuint> Binds;
@@ -3139,15 +3068,10 @@ void UOpenGLRenderDevice::Flush(UBOOL AllowPrecache) {
 
 
 void UOpenGLRenderDevice::DrawComplexSurface(FSceneNode* Frame, FSurfaceInfo& Surface, FSurfaceFacet& Facet) {
-#ifdef UTGLR_DEBUG_SHOW_CALL_COUNTS
-{
-	static int si;
-	dout << L"utglr: DrawComplexSurface = " << si++ << std::endl;
-}
-#endif
+	UTGLR_DEBUG_CALL_COUNT(DrawComplexSurface);
 	guard(UOpenGLRenderDevice::DrawComplexSurface);
 
-	EndBuffering();		// vogel: might have still been locked (can happen!)
+	EndBuffering();
 
 	if (SceneNodeHack) {
 		if ((Frame->X != m_sceneNodeX) || (Frame->Y != m_sceneNodeY)) {
@@ -3159,11 +3083,41 @@ void UOpenGLRenderDevice::DrawComplexSurface(FSceneNode* Frame, FSurfaceInfo& Su
 	SetDefaultAAState();
 	SetDefaultProjectionState();
 	SetDefaultColorState();
-	//This function uses cached vertex program state information
-	//This function uses cached fragment program state information
+	//This function uses cached shader state information
 	//This function uses cached texture state information
 
 	check(Surface.Texture);
+
+	//Hit select path
+	if (m_HitData) {
+		for (FSavedPoly* Poly = Facet.Polys; Poly; Poly = Poly->Next) {
+			INT NumPts = Poly->NumPts;
+			CGClip::vec3_t triPts[3];
+			INT i;
+			const FTransform* Pt;
+
+			Pt = Poly->Pts[0];
+			triPts[0].x = Pt->Point.X;
+			triPts[0].y = Pt->Point.Y;
+			triPts[0].z = Pt->Point.Z;
+
+			for (i = 2; i < NumPts; i++) {
+				Pt = Poly->Pts[i - 1];
+				triPts[1].x = Pt->Point.X;
+				triPts[1].y = Pt->Point.Y;
+				triPts[1].z = Pt->Point.Z;
+
+				Pt = Poly->Pts[i];
+				triPts[2].x = Pt->Point.X;
+				triPts[2].y = Pt->Point.Y;
+				triPts[2].z = Pt->Point.Z;
+
+				m_gclip.SelectDrawTri(triPts);
+			}
+		}
+
+		return;
+	}
 
 	clock(ComplexCycles);
 
@@ -3171,22 +3125,25 @@ void UOpenGLRenderDevice::DrawComplexSurface(FSceneNode* Frame, FSurfaceInfo& Su
 	m_csUDot = Facet.MapCoords.XAxis | Facet.MapCoords.Origin;
 	m_csVDot = Facet.MapCoords.YAxis | Facet.MapCoords.Origin;
 
-	// Buffer "static" geometry.
-	INT Index;
-	if (UseVertexProgram) {
-		Index = BufferStaticComplexSurfaceGeometry_VP(Facet);
+	//Buffer static geometry
+	//Sets m_csPolyCount
+	//m_csPtCount set later from return value
+	//Sets MultiDrawFirstArray and MultiDrawCountArray
+	INT numVerts;
+	if (UseFragmentProgram) {
+		numVerts = BufferStaticComplexSurfaceGeometry_VP(Facet);
 	}
 	else {
-		Index = BufferStaticComplexSurfaceGeometry(Facet);
+		numVerts = BufferStaticComplexSurfaceGeometry(Facet);
 	}
 
 	//Reject invalid surfaces early
-	if (Index == 0) {
+	if (numVerts == 0) {
 		return;
 	}
 
 	//Save number of points
-	m_csPtCount = Index;
+	m_csPtCount = numVerts;
 
 	//See if detail texture should be drawn
 	//FogMap and DetailTexture are mutually exclusive effects
@@ -3209,40 +3166,6 @@ void UOpenGLRenderDevice::DrawComplexSurface(FSceneNode* Frame, FSurfaceInfo& Su
 	}
 
 
-	if (UseCVA) {
-		DWORD texUnit;
-		DWORD texBit;
-		DWORD clientTexEnableBitsCopy = m_clientTexEnableBits;
-
-		//Disable client texture arrays
-		for (texUnit = 0, texBit = 1U; texBit <= clientTexEnableBitsCopy; texUnit++, texBit <<= 1) {
-			//See if the client texture is enabled
-			if (texBit & clientTexEnableBitsCopy) {
-				//Disable the client texture
-				if (SUPPORTS_GL_ARB_multitexture) {
-					glClientActiveTextureARB(GL_TEXTURE0_ARB + texUnit);
-				}
-				glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-			}
-		}
-
-		//Lock arrays
-		glLockArraysEXT(0, Index);
-
-		//Enable client texture arrays
-		for (texUnit = 0, texBit = 1U; texBit <= clientTexEnableBitsCopy; texUnit++, texBit <<= 1) {
-			//See if the client texture is enabled
-			if (texBit & clientTexEnableBitsCopy) {
-				//Enable the client texture
-				if (SUPPORTS_GL_ARB_multitexture) {
-					glClientActiveTextureARB(GL_TEXTURE0_ARB + texUnit);
-				}
-				glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-			}
-		}
-	}
-
-
 	DWORD PolyFlags = Surface.PolyFlags;
 
 	//Initialize render passes state information
@@ -3254,14 +3177,13 @@ void UOpenGLRenderDevice::DrawComplexSurface(FSceneNode* Frame, FSurfaceInfo& Su
 
 
 	//Do static render passes state setup
-	if (UseVertexProgram) {
+	if (UseFragmentProgram) {
 		const FVector &XAxis = Facet.MapCoords.XAxis;
 		const FVector &YAxis = Facet.MapCoords.YAxis;
 
 		glVertexAttrib4fARB(6, XAxis.X, XAxis.Y, XAxis.Z, -m_csUDot);
 		glVertexAttrib4fARB(7, YAxis.X, YAxis.Y, YAxis.Z, -m_csVDot);
 	}
-	glColor3f(1.0f, 1.0f, 1.0f);
 
 	AddRenderPass(Surface.Texture, PolyFlags & ~PF_FlatShaded, 0.0f);
 
@@ -3311,19 +3233,9 @@ void UOpenGLRenderDevice::DrawComplexSurface(FSceneNode* Frame, FSurfaceInfo& Su
 
 		if (singlePassDetail) {
 			RenderPasses_SingleOrDualTextureAndDetailTexture(*Surface.DetailTexture);
-
-			if (UseCVA) {
-				//Unlock arrays
-				glUnlockArraysEXT();
-			}
 		}
 		else {
 			RenderPasses();
-
-			if (UseCVA) {
-				//Unlock arrays
-				glUnlockArraysEXT();
-			}
 
 			bool clipDetailTexture = (DetailClipping != 0);
 
@@ -3342,21 +3254,13 @@ void UOpenGLRenderDevice::DrawComplexSurface(FSceneNode* Frame, FSurfaceInfo& Su
 			if (UseFragmentProgram) {
 				DrawDetailTexture_FP(*Surface.DetailTexture);
 			}
-			else if (UseVertexProgram) {
-				DrawDetailTexture_VP(*Surface.DetailTexture);
-			}
 			else {
-				DrawDetailTexture(*Surface.DetailTexture, Index, clipDetailTexture);
+				DrawDetailTexture(*Surface.DetailTexture, numVerts, clipDetailTexture);
 			}
 		}
 	}
 	else {
 		RenderPasses();
-
-		if (UseCVA) {
-			//Unlock arrays
-			glUnlockArraysEXT();
-		}
 	}
 
 	// UnrealEd selection.
@@ -3364,18 +3268,23 @@ void UOpenGLRenderDevice::DrawComplexSurface(FSceneNode* Frame, FSurfaceInfo& Su
 		//No need to set default AA state here as it is always set on entry to DrawComplexSurface
 		//No need to set default projection state here as it is always set on entry to DrawComplexSurface
 		//No need to set default color state here as it is always set on entry to DrawComplexSurface
-		SetDefaultVertexProgramState();
-		SetDefaultFragmentProgramState();
+		SetDefaultShaderState();
 		SetDefaultTextureState();
 
 		SetNoTexture(0);
 		SetBlend(PF_Highlighted);
 		if (PolyFlags & PF_FlatShaded) {
-			glColor4f(Surface.FlatColor.R / 255.0f, Surface.FlatColor.G / 255.0f, Surface.FlatColor.B / 255.0f, 1.0f);
+			if (PolyFlags & PF_Selected) {
+				glColor4f((Surface.FlatColor.R * 1.5f) / 255.0f, (Surface.FlatColor.G * 1.5f) / 255.0f, (Surface.FlatColor.B * 1.5f) / 255.0f, 1.0f);
+			}
+			else {
+				glColor4f(Surface.FlatColor.R / 255.0f, Surface.FlatColor.G / 255.0f, Surface.FlatColor.B / 255.0f, 0.85f);
+			}
 		}
 		else {
 			glColor4f(0.0f, 0.0f, 0.5f, 0.5f);
 		}
+
 		for (FSavedPoly* Poly = Facet.Polys; Poly; Poly = Poly->Next) {
 			glBegin(GL_TRIANGLE_FAN);
 			for (INT i = 0; i < Poly->NumPts; i++) {
@@ -3395,12 +3304,7 @@ void UOpenGLRenderDevice::DrawComplexSurface(FSceneNode* Frame, FSurfaceInfo& Su
 
 #ifdef UTGLR_RUNE_BUILD
 void UOpenGLRenderDevice::PreDrawFogSurface() {
-#ifdef UTGLR_DEBUG_SHOW_CALL_COUNTS
-{
-	static int si;
-	dout << L"utglr: PreDrawFogSurface = " << si++ << std::endl;
-}
-#endif
+	UTGLR_DEBUG_CALL_COUNT(PreDrawFogSurface);
 	guard(UOpenGLRenderDevice::PreDrawFogSurface);
 
 	EndBuffering();
@@ -3408,39 +3312,26 @@ void UOpenGLRenderDevice::PreDrawFogSurface() {
 	SetDefaultAAState();
 	SetDefaultProjectionState();
 	SetDefaultColorState();
-	SetDefaultVertexProgramState();
-	SetDefaultFragmentProgramState();
+	SetDefaultShaderState();
 	SetDefaultTextureState();
 
 	SetBlend(PF_AlphaBlend);
-//	glDisable(GL_TEXTURE_2D);
 	SetNoTexture(0);
 
 	unguard;
 }
 
 void UOpenGLRenderDevice::PostDrawFogSurface() {
-#ifdef UTGLR_DEBUG_SHOW_CALL_COUNTS
-{
-	static int si;
-	dout << L"utglr: PostDrawFogSurface = " << si++ << std::endl;
-}
-#endif
+	UTGLR_DEBUG_CALL_COUNT(PostDrawFogSurface);
 	guard(UOpenGLRenderDevice::PostDrawFogSurface);
 
-//	glEnable(GL_TEXTURE_2D);
 	SetBlend(0);
 
 	unguard;
 }
 
 void UOpenGLRenderDevice::DrawFogSurface(FSceneNode* Frame, FFogSurf &FogSurf) {
-#ifdef UTGLR_DEBUG_SHOW_CALL_COUNTS
-{
-	static int si;
-	dout << L"utglr: DrawFogSurface = " << si++ << std::endl;
-}
-#endif
+	UTGLR_DEBUG_CALL_COUNT(DrawFogSurface);
 	guard(UOpenGLRenderDevice::DrawFogSurface);
 
 	FPlane Modulate(FogSurf.FogColor.X, FogSurf.FogColor.Y, FogSurf.FogColor.Z, 0.0f);
@@ -3475,12 +3366,7 @@ void UOpenGLRenderDevice::DrawFogSurface(FSceneNode* Frame, FFogSurf &FogSurf) {
 }
 
 void UOpenGLRenderDevice::PreDrawGouraud(FSceneNode* Frame, FLOAT FogDistance, FPlane FogColor) {
-#ifdef UTGLR_DEBUG_SHOW_CALL_COUNTS
-{
-	static int si;
-	dout << L"utglr: PreDrawGouraud = " << si++ << std::endl;
-}
-#endif
+	UTGLR_DEBUG_CALL_COUNT(PreDrawGouraud);
 	guard(UOpenGLRenderDevice::PreDrawGouraud);
 
 	if (FogDistance > 0.0f) {
@@ -3500,12 +3386,7 @@ void UOpenGLRenderDevice::PreDrawGouraud(FSceneNode* Frame, FLOAT FogDistance, F
 }
 
 void UOpenGLRenderDevice::PostDrawGouraud(FLOAT FogDistance) {
-#ifdef UTGLR_DEBUG_SHOW_CALL_COUNTS
-{
-	static int si;
-	dout << L"utglr: PostDrawGouraud = " << si++ << std::endl;
-}
-#endif
+	UTGLR_DEBUG_CALL_COUNT(PostDrawGouraud);
 	guard(UOpenGLRenderDevice::PostDrawGouraud);
 
 	if (FogDistance > 0.0f) {
@@ -3521,12 +3402,7 @@ void UOpenGLRenderDevice::PostDrawGouraud(FLOAT FogDistance) {
 #endif
 
 void UOpenGLRenderDevice::DrawGouraudPolygonOld(FSceneNode* Frame, FTextureInfo& Info, FTransTexture** Pts, INT NumPts, DWORD PolyFlags, FSpanBuffer* Span) {
-#ifdef UTGLR_DEBUG_SHOW_CALL_COUNTS
-{
-	static int si;
-	dout << L"utglr: DrawGouraudPolygonOld = " << si++ << std::endl;
-}
-#endif
+	UTGLR_DEBUG_CALL_COUNT(DrawGouraudPolygonOld);
 	guard(UOpenGLRenderDevice::DrawGouraudPolygonOld);
 	clock(GouraudCycles);
 
@@ -3586,6 +3462,8 @@ void UOpenGLRenderDevice::DrawGouraudPolygonOld(FSceneNode* Frame, FTextureInfo&
 
 #ifdef UTGLR_RUNE_BUILD
 	if ((PolyFlags & (PF_RenderFog | PF_Translucent | PF_Modulated | PF_AlphaBlend)) == PF_RenderFog) {
+#elif UTGLR_UNREAL_227_BUILD
+	if ((PolyFlags & (PF_RenderFog | PF_Translucent | PF_Modulated | PF_AlphaBlend)) == PF_RenderFog) {
 #else
 	if ((PolyFlags & (PF_RenderFog | PF_Translucent | PF_Modulated)) == PF_RenderFog) {
 #endif
@@ -3616,12 +3494,7 @@ void UOpenGLRenderDevice::DrawGouraudPolygonOld(FSceneNode* Frame, FTextureInfo&
 }
 
 void UOpenGLRenderDevice::DrawGouraudPolygon(FSceneNode* Frame, FTextureInfo& Info, FTransTexture** Pts, INT NumPts, DWORD PolyFlags, FSpanBuffer* Span) {
-#ifdef UTGLR_DEBUG_SHOW_CALL_COUNTS
-{
-	static int si;
-	dout << L"utglr: DrawGouraudPolygon = " << si++ << std::endl;
-}
-#endif
+	UTGLR_DEBUG_CALL_COUNT(DrawGouraudPolygon);
 	guard(UOpenGLRenderDevice::DrawGouraudPolygon);
 
 	//DrawGouraudPolygon only uses PolyFlags2 locally
@@ -3641,6 +3514,34 @@ void UOpenGLRenderDevice::DrawGouraudPolygon(FSceneNode* Frame, FTextureInfo& In
 		return;
 	}
 
+	//Hit select path
+	if (m_HitData) {
+		CGClip::vec3_t triPts[3];
+		const FTransTexture* Pt;
+		INT i;
+
+		Pt = Pts[0];
+		triPts[0].x = Pt->Point.X;
+		triPts[0].y = Pt->Point.Y;
+		triPts[0].z = Pt->Point.Z;
+
+		for (i = 2; i < NumPts; i++) {
+			Pt = Pts[i - 1];
+			triPts[1].x = Pt->Point.X;
+			triPts[1].y = Pt->Point.Y;
+			triPts[1].z = Pt->Point.Z;
+
+			Pt = Pts[i];
+			triPts[2].x = Pt->Point.X;
+			triPts[2].y = Pt->Point.Y;
+			triPts[2].z = Pt->Point.Z;
+
+			m_gclip.SelectDrawTri(triPts);
+		}
+
+		return;
+	}
+
 	if (NumPts > m_bufferActorTrisCutoff) {
 		EndBuffering();
 
@@ -3648,21 +3549,14 @@ void UOpenGLRenderDevice::DrawGouraudPolygon(FSceneNode* Frame, FTextureInfo& In
 		//No need to set default projection state here as DrawGouraudPolygonOld will set its own projection state
 		//No need to set default color state here as DrawGouraudPolygonOld will set its own color state
 #ifdef UTGLR_RUNE_BUILD
-		if (UseVertexProgram && m_gpFogEnabled) {
-			SetVertexProgram(m_vpDefaultRenderingStateWithLinearFog);
-		}
-		else {
-			SetDefaultVertexProgramState();
-		}
 		if (UseFragmentProgram && m_gpFogEnabled) {
-			SetFragmentProgram(m_fpDefaultRenderingStateWithLinearFog);
+			SetShaderState(m_vpDefaultRenderingStateWithLinearFog, m_fpDefaultRenderingStateWithLinearFog);
 		}
 		else {
-			SetDefaultFragmentProgramState();
+			SetDefaultShaderState();
 		}
 #else
-		SetDefaultVertexProgramState();
-		SetDefaultFragmentProgramState();
+		SetDefaultShaderState();
 #endif
 		SetDefaultTextureState();
 
@@ -3697,9 +3591,9 @@ void UOpenGLRenderDevice::DrawGouraudPolygon(FSceneNode* Frame, FTextureInfo& In
 		(TexInfo[0].CurrentCacheID != CacheID) ||
 		((BufferedVerts + NumPts) >= (VERTEX_ARRAY_SIZE - 14)) ||
 		(BufferedVerts == 0))
-	// flush drawing and set the state!
 	{
-		EndGouraudPolygonBuffering(); //Flush the vertex array
+		//Flush any previously buffered gouraud polys
+		EndGouraudPolygonBuffering();
 
 		//Update current poly flags
 		m_curPolyFlags = PolyFlags;
@@ -3723,6 +3617,8 @@ void UOpenGLRenderDevice::DrawGouraudPolygon(FSceneNode* Frame, FTextureInfo& In
 
 #ifdef UTGLR_RUNE_BUILD
 			if (((PolyFlags & (PF_RenderFog | PF_Translucent | PF_Modulated | PF_AlphaBlend)) == PF_RenderFog) && UseVertexSpecular) {
+#elif UTGLR_UNREAL_227_BUILD
+			if (((PolyFlags & (PF_RenderFog | PF_Translucent | PF_Modulated | PF_AlphaBlend)) == PF_RenderFog) && UseVertexSpecular) {
 #else
 			if (((PolyFlags & (PF_RenderFog | PF_Translucent | PF_Modulated)) == PF_RenderFog) && UseVertexSpecular) {
 #endif
@@ -3731,34 +3627,21 @@ void UOpenGLRenderDevice::DrawGouraudPolygon(FSceneNode* Frame, FTextureInfo& In
 		}
 
 #ifdef UTGLR_RUNE_BUILD
-		if (UseVertexProgram && m_gpFogEnabled) {
-			SetVertexProgram(m_vpDefaultRenderingStateWithLinearFog);
-		}
-		else {
-			SetDefaultVertexProgramState();
-		}
 		if (UseFragmentProgram && m_gpFogEnabled) {
-			SetFragmentProgram(m_fpDefaultRenderingStateWithLinearFog);
+			SetShaderState(m_vpDefaultRenderingStateWithLinearFog, m_fpDefaultRenderingStateWithLinearFog);
 		}
 		else {
-			SetDefaultFragmentProgramState();
+			SetDefaultShaderState();
 		}
 #else
-		//May need to set a fog vertex program if vertex program mode is enabled
-		if (UseVertexProgram && (m_requestedColorFlags & CF_DUAL_COLOR_ARRAY)) {
-			SetVertexProgram(m_vpDefaultRenderingStateWithFog);
-		}
-		else {
-			SetDefaultVertexProgramState();
-		}
-		//May need to set a fog fragment program if fragment program mode is enabled
+		//May need to set a fog vertex program and fragment program if fragment program mode is enabled
 		if (UseFragmentProgram && (m_requestedColorFlags & CF_DUAL_COLOR_ARRAY)) {
 			//Leave color sum off if using fragment program
 			m_requestedColorFlags &= ~CF_COLOR_SUM;
-			SetFragmentProgram(m_fpDefaultRenderingStateWithFog);
+			SetShaderState(m_vpDefaultRenderingStateWithFog, m_fpDefaultRenderingStateWithFog);
 		}
 		else {
-			SetDefaultFragmentProgramState();
+			SetDefaultShaderState();
 		}
 #endif
 
@@ -3793,12 +3676,7 @@ void UOpenGLRenderDevice::DrawGouraudPolygon(FSceneNode* Frame, FTextureInfo& In
 }
 
 void UOpenGLRenderDevice::DrawTile(FSceneNode* Frame, FTextureInfo& Info, FLOAT X, FLOAT Y, FLOAT XL, FLOAT YL, FLOAT U, FLOAT V, FLOAT UL, FLOAT VL, class FSpanBuffer* Span, FLOAT Z, FPlane Color, FPlane Fog, DWORD PolyFlags) {
-#ifdef UTGLR_DEBUG_SHOW_CALL_COUNTS
-{
-	static int si;
-	dout << L"utglr: DrawTile = " << si++ << std::endl;
-}
-#endif
+	UTGLR_DEBUG_CALL_COUNT(DrawTile);
 	guard(UOpenGLRenderDevice::DrawTile);
 
 	//DrawTile does not use PolyFlags2
@@ -3836,6 +3714,41 @@ void UOpenGLRenderDevice::DrawTile(FSceneNode* Frame, FTextureInfo& Info, FLOAT 
 		RPY2 *= Z;
 	}
 
+	//Hit select path
+	if (m_HitData) {
+		CGClip::vec3_t triPts[3];
+
+		triPts[0].x = RPX1;
+		triPts[0].y = RPY1;
+		triPts[0].z = Z;
+
+		triPts[1].x = RPX2;
+		triPts[1].y = RPY1;
+		triPts[1].z = Z;
+
+		triPts[2].x = RPX2;
+		triPts[2].y = RPY2;
+		triPts[2].z = Z;
+
+		m_gclip.SelectDrawTri(triPts);
+
+		triPts[0].x = RPX1;
+		triPts[0].y = RPY1;
+		triPts[0].z = Z;
+
+		triPts[1].x = RPX2;
+		triPts[1].y = RPY2;
+		triPts[1].z = Z;
+
+		triPts[2].x = RPX1;
+		triPts[2].y = RPY2;
+		triPts[2].z = Z;
+
+		m_gclip.SelectDrawTri(triPts);
+
+		return;
+	}
+
 	if (BufferTileQuads) {
 		//Load texture cache id
 		QWORD CacheID = Info.CacheID;
@@ -3863,14 +3776,15 @@ void UOpenGLRenderDevice::DrawTile(FSceneNode* Frame, FTextureInfo& Info, FLOAT 
 			//Flush any previously buffered tiles
 			EndTileBuffering();
 
-			SetDefaultVertexProgramState();
-			SetDefaultFragmentProgramState();
+			SetDefaultShaderState();
 
 			//Update current poly flags (before possible local modification)
 			m_curPolyFlags = PolyFlags;
 			m_curPolyFlags2 = PolyFlags2;
 
 #ifdef UTGLR_RUNE_BUILD
+			if (Info.Palette && Info.Palette[128].A != 255 && !(PolyFlags & (PF_Translucent | PF_AlphaBlend))) {
+#elif UTGLR_UNREAL_227_BUILD
 			if (Info.Palette && Info.Palette[128].A != 255 && !(PolyFlags & (PF_Translucent | PF_AlphaBlend))) {
 #else
 			if (Info.Palette && Info.Palette[128].A != 255 && !(PolyFlags & PF_Translucent)) {
@@ -3954,6 +3868,10 @@ void UOpenGLRenderDevice::DrawTile(FSceneNode* Frame, FTextureInfo& Info, FLOAT 
 				if (PolyFlags & PF_AlphaBlend) {
 					fAlpha = _mm_mul_ss(fAlpha, _mm_load_ss(&Info.Texture->Alpha));
 				}
+#elif UTGLR_UNREAL_227_BUILD
+				if (PolyFlags & PF_AlphaBlend) {
+					fAlpha = _mm_mul_ss(fAlpha, _mm_load_ss(&Color.W));
+				}
 #endif
 				fAlpha = _mm_shuffle_ps(fAlpha, fAlpha,  _MM_SHUFFLE(0, 1, 1, 1));
 
@@ -3974,6 +3892,13 @@ void UOpenGLRenderDevice::DrawTile(FSceneNode* Frame, FTextureInfo& Info, FLOAT 
 #ifdef UTGLR_RUNE_BUILD
 				if (PolyFlags & PF_AlphaBlend) {
 					Color.W = Info.Texture->Alpha;
+					dwColor = FPlaneTo_RGBAClamped(&Color);
+				}
+				else {
+					dwColor = FPlaneTo_RGBClamped_A255(&Color);
+				}
+#elif UTGLR_UNREAL_227_BUILD
+				if (PolyFlags & PF_AlphaBlend) {
 					dwColor = FPlaneTo_RGBAClamped(&Color);
 				}
 				else {
@@ -4005,11 +3930,12 @@ void UOpenGLRenderDevice::DrawTile(FSceneNode* Frame, FTextureInfo& Info, FLOAT 
 		}
 		SetDefaultProjectionState();
 		SetDefaultColorState();
-		SetDefaultVertexProgramState();
-		SetDefaultFragmentProgramState();
+		SetDefaultShaderState();
 		SetDefaultTextureState();
 
 #ifdef UTGLR_RUNE_BUILD
+		if (Info.Palette && Info.Palette[128].A != 255 && !(PolyFlags & (PF_Translucent | PF_AlphaBlend))) {
+#elif UTGLR_UNREAL_227_BUILD
 		if (Info.Palette && Info.Palette[128].A != 255 && !(PolyFlags & (PF_Translucent | PF_AlphaBlend))) {
 #else
 		if (Info.Palette && Info.Palette[128].A != 255 && !(PolyFlags & PF_Translucent)) {
@@ -4030,6 +3956,13 @@ void UOpenGLRenderDevice::DrawTile(FSceneNode* Frame, FTextureInfo& Info, FLOAT 
 				Color.W = Info.Texture->Alpha;
 			}
 			glColor4fv(&Color.X);
+#elif UTGLR_UNREAL_227_BUILD
+			if (PolyFlags & PF_AlphaBlend) {
+				glColor4fv(&Color.X);
+			}
+			else {
+				glColor3fv(&Color.X);
+			}
 #else
 			glColor3fv(&Color.X);
 #endif
@@ -4065,53 +3998,8 @@ void UOpenGLRenderDevice::DrawTile(FSceneNode* Frame, FTextureInfo& Info, FLOAT 
 	unguard;
 }
 
-void UOpenGLRenderDevice::Draw2DLine(FSceneNode* Frame, FPlane Color, DWORD LineFlags, FVector P1, FVector P2) {
-#ifdef UTGLR_DEBUG_SHOW_CALL_COUNTS
-{
-	static int si;
-	dout << L"utglr: Draw2DLine = " << si++ << std::endl;
-}
-#endif
-	guard(UOpenGLRenderDevice::Draw2DLine);
-
-	EndBuffering();
-
-	SetDefaultAAState();
-	SetDefaultProjectionState();
-	SetDefaultColorState();
-	SetDefaultVertexProgramState();
-	SetDefaultFragmentProgramState();
-	SetDefaultTextureState();
-
-	SetNoTexture(0);
-	SetBlend(PF_Highlighted | PF_Occlude);
-	glColor3fv(&Color.X);
-
-	FLOAT X1Pos = m_RFX2 * (P1.X - Frame->FX2);
-	FLOAT Y1Pos = m_RFY2 * (P1.Y - Frame->FY2);
-	FLOAT X2Pos = m_RFX2 * (P2.X - Frame->FX2);
-	FLOAT Y2Pos = m_RFY2 * (P2.Y - Frame->FY2);
-	if (!Frame->Viewport->IsOrtho()) {
-		X1Pos *= P1.Z;
-		Y1Pos *= P1.Z;
-		X2Pos *= P2.Z;
-		Y2Pos *= P2.Z;
-	}
-	glBegin(GL_LINES);
-	glVertex3f(X1Pos, Y1Pos, P1.Z);
-	glVertex3f(X2Pos, Y2Pos, P2.Z);
-	glEnd();
-
-	unguard;
-}
-
 void UOpenGLRenderDevice::Draw3DLine(FSceneNode* Frame, FPlane Color, DWORD LineFlags, FVector P1, FVector P2) {
-#ifdef UTGLR_DEBUG_SHOW_CALL_COUNTS
-{
-	static int si;
-	dout << L"utglr: Draw3DLine = " << si++ << std::endl;
-}
-#endif
+	UTGLR_DEBUG_CALL_COUNT(Draw3DLine);
 	guard(UOpenGLRenderDevice::Draw3DLine);
 
 	EndBuffering();
@@ -4119,29 +4007,46 @@ void UOpenGLRenderDevice::Draw3DLine(FSceneNode* Frame, FPlane Color, DWORD Line
 	SetDefaultAAState();
 	SetDefaultProjectionState();
 	SetDefaultColorState();
-	SetDefaultVertexProgramState();
-	SetDefaultFragmentProgramState();
+	SetDefaultShaderState();
 	SetDefaultTextureState();
 
 	P1 = P1.TransformPointBy(Frame->Coords);
 	P2 = P2.TransformPointBy(Frame->Coords);
 	if (Frame->Viewport->IsOrtho()) {
 		// Zoom.
-		P1.X = (P1.X) / Frame->Zoom + Frame->FX2;
-		P1.Y = (P1.Y) / Frame->Zoom + Frame->FY2;
-		P2.X = (P2.X) / Frame->Zoom + Frame->FX2;
-		P2.Y = (P2.Y) / Frame->Zoom + Frame->FY2;
+		FLOAT rcpZoom = 1.0f / Frame->Zoom;
+		P1.X = (P1.X * rcpZoom) + Frame->FX2;
+		P1.Y = (P1.Y * rcpZoom) + Frame->FY2;
+		P2.X = (P2.X * rcpZoom) + Frame->FX2;
+		P2.Y = (P2.Y * rcpZoom) + Frame->FY2;
 		P1.Z = P2.Z = 1;
 
 		// See if points form a line parallel to our line of sight (i.e. line appears as a dot).
-		if (Abs(P2.X - P1.X) + Abs(P2.Y - P1.Y) >= 0.2) {
+		if (Abs(P2.X - P1.X) + Abs(P2.Y - P1.Y) >= 0.2f) {
 			Draw2DLine(Frame, Color, LineFlags, P1, P2);
 		}
 		else if (Frame->Viewport->Actor->OrthoZoom < ORTHO_LOW_DETAIL) {
-			Draw2DPoint(Frame, Color, LINE_None, P1.X - 1, P1.Y - 1, P1.X + 1, P1.Y + 1, P1.Z);
+			Draw2DPoint(Frame, Color, LINE_None, P1.X - 1.0f, P1.Y - 1.0f, P1.X + 1.0f, P1.Y + 1.0f, P1.Z);
 		}
 	}
 	else {
+		//Hit select path
+		if (m_HitData) {
+			CGClip::vec3_t lnPts[2];
+
+			lnPts[0].x = P1.X;
+			lnPts[0].y = P1.Y;
+			lnPts[0].z = P1.Z;
+
+			lnPts[1].x = P2.X;
+			lnPts[1].y = P2.Y;
+			lnPts[1].z = P2.Z;
+
+			m_gclip.SelectDrawLine(lnPts);
+
+			return;
+		}
+
 		SetNoTexture(0);
 		SetBlend(PF_Highlighted | PF_Occlude);
 		glColor3fv(&Color.X);
@@ -4154,13 +4059,61 @@ void UOpenGLRenderDevice::Draw3DLine(FSceneNode* Frame, FPlane Color, DWORD Line
 	unguard;
 }
 
-void UOpenGLRenderDevice::Draw2DPoint(FSceneNode* Frame, FPlane Color, DWORD LineFlags, FLOAT X1, FLOAT Y1, FLOAT X2, FLOAT Y2, FLOAT Z) {
-#ifdef UTGLR_DEBUG_SHOW_CALL_COUNTS
-{
-	static int si;
-	dout << L"utglr: Draw2DPoint = " << si++ << std::endl;
+void UOpenGLRenderDevice::Draw2DLine(FSceneNode* Frame, FPlane Color, DWORD LineFlags, FVector P1, FVector P2) {
+	UTGLR_DEBUG_CALL_COUNT(Draw2DLine);
+	guard(UOpenGLRenderDevice::Draw2DLine);
+
+	EndBuffering();
+
+	SetDefaultAAState();
+	SetDefaultProjectionState();
+	SetDefaultColorState();
+	SetDefaultShaderState();
+	SetDefaultTextureState();
+
+	SetNoTexture(0);
+	SetBlend(PF_Highlighted | PF_Occlude);
+	glColor3fv(&Color.X);
+
+	//Get line coordinates back in 3D
+	FLOAT X1Pos = m_RFX2 * (P1.X - Frame->FX2);
+	FLOAT Y1Pos = m_RFY2 * (P1.Y - Frame->FY2);
+	FLOAT X2Pos = m_RFX2 * (P2.X - Frame->FX2);
+	FLOAT Y2Pos = m_RFY2 * (P2.Y - Frame->FY2);
+	if (!Frame->Viewport->IsOrtho()) {
+		X1Pos *= P1.Z;
+		Y1Pos *= P1.Z;
+		X2Pos *= P2.Z;
+		Y2Pos *= P2.Z;
+	}
+
+	//Hit select path
+	if (m_HitData) {
+		CGClip::vec3_t lnPts[2];
+
+		lnPts[0].x = X1Pos;
+		lnPts[0].y = Y1Pos;
+		lnPts[0].z = P1.Z;
+
+		lnPts[1].x = X2Pos;
+		lnPts[1].y = Y2Pos;
+		lnPts[1].z = P2.Z;
+
+		m_gclip.SelectDrawLine(lnPts);
+
+		return;
+	}
+
+	glBegin(GL_LINES);
+	glVertex3f(X1Pos, Y1Pos, P1.Z);
+	glVertex3f(X2Pos, Y2Pos, P2.Z);
+	glEnd();
+
+	unguard;
 }
-#endif
+
+void UOpenGLRenderDevice::Draw2DPoint(FSceneNode* Frame, FPlane Color, DWORD LineFlags, FLOAT X1, FLOAT Y1, FLOAT X2, FLOAT Y2, FLOAT Z) {
+	UTGLR_DEBUG_CALL_COUNT(Draw2DPoint);
 	guard(UOpenGLRenderDevice::Draw2DPoint);
 
 	EndBuffering();
@@ -4168,14 +4121,19 @@ void UOpenGLRenderDevice::Draw2DPoint(FSceneNode* Frame, FPlane Color, DWORD Lin
 	SetDefaultAAState();
 	SetDefaultProjectionState();
 	SetDefaultColorState();
-	SetDefaultVertexProgramState();
-	SetDefaultFragmentProgramState();
+	SetDefaultShaderState();
 	SetDefaultTextureState();
 
 	SetBlend(PF_Highlighted | PF_Occlude);
 	SetNoTexture(0);
 	glColor3fv(&Color.X); // vogel: was 4 - ONLY FOR UT!
 
+	// Hack to fix UED selection problem with selection brush
+	if (GIsEditor) {
+		Z = 1.0f;
+	}
+
+	//Get point coordinates back in 3D
 	FLOAT X1Pos = m_RFX2 * (X1 - Frame->FX2);
 	FLOAT Y1Pos = m_RFY2 * (Y1 - Frame->FY2);
 	FLOAT X2Pos = m_RFX2 * (X2 - Frame->FX2);
@@ -4186,6 +4144,42 @@ void UOpenGLRenderDevice::Draw2DPoint(FSceneNode* Frame, FPlane Color, DWORD Lin
 		X2Pos *= Z;
 		Y2Pos *= Z;
 	}
+
+	//Hit select path
+	if (m_HitData) {
+		CGClip::vec3_t triPts[3];
+
+		triPts[0].x = X1Pos;
+		triPts[0].y = Y1Pos;
+		triPts[0].z = Z;
+
+		triPts[1].x = X2Pos;
+		triPts[1].y = Y1Pos;
+		triPts[1].z = Z;
+
+		triPts[2].x = X2Pos;
+		triPts[2].y = Y2Pos;
+		triPts[2].z = Z;
+
+		m_gclip.SelectDrawTri(triPts);
+
+		triPts[0].x = X1Pos;
+		triPts[0].y = Y1Pos;
+		triPts[0].z = Z;
+
+		triPts[1].x = X2Pos;
+		triPts[1].y = Y2Pos;
+		triPts[1].z = Z;
+
+		triPts[2].x = X1Pos;
+		triPts[2].y = Y2Pos;
+		triPts[2].z = Z;
+
+		m_gclip.SelectDrawTri(triPts);
+
+		return;
+	}
+
 	glBegin(GL_TRIANGLE_FAN);
 	glVertex3f(X1Pos, Y1Pos, Z);
 	glVertex3f(X2Pos, Y1Pos, Z);
@@ -4198,12 +4192,7 @@ void UOpenGLRenderDevice::Draw2DPoint(FSceneNode* Frame, FPlane Color, DWORD Lin
 
 
 void UOpenGLRenderDevice::ClearZ(FSceneNode* Frame) {
-#ifdef UTGLR_DEBUG_SHOW_CALL_COUNTS
-{
-	static int si;
-	dout << L"utglr: ClearZ = " << si++ << std::endl;
-}
-#endif
+	UTGLR_DEBUG_CALL_COUNT(ClearZ);
 	guard(UOpenGLRenderDevice::ClearZ);
 
 	EndBuffering();
@@ -4211,8 +4200,7 @@ void UOpenGLRenderDevice::ClearZ(FSceneNode* Frame) {
 	//Default AA state not required for glClear
 	//Default projection state not required for glClear
 	//Default color state not required for glClear
-	//Default vertex program state not required for glClear
-	//Default fragment program state not required for glClear
+	//Default shader state not required for glClear
 	//Default texture state not required for glClear
 
 	SetBlend(PF_Occlude);
@@ -4224,11 +4212,14 @@ void UOpenGLRenderDevice::ClearZ(FSceneNode* Frame) {
 void UOpenGLRenderDevice::PushHit(const BYTE* Data, INT Count) {
 	guard(UOpenGLRenderDevice::PushHit);
 
+	INT i;
+
 	EndBuffering();
 
-	glPushName(Count);
-	for (INT i = 0; i < Count; i += 4) {
-		glPushName(*(INT*)(Data + i));
+	//Add to stack
+	for (i = 0; i < Count; i += 4) {
+		DWORD hitName = *(DWORD *)(Data + i);
+		m_gclip.PushHitName(hitName);
 	}
 
 	unguard;
@@ -4239,11 +4230,28 @@ void UOpenGLRenderDevice::PopHit(INT Count, UBOOL bForce) {
 
 	EndBuffering();
 
-	glPopName();
-	for (INT i = 0; i < Count; i += 4) {
-		glPopName();
+	INT i;
+	bool selHit;
+
+	//Handle hit
+	selHit = m_gclip.CheckNewSelectHit();
+	if (selHit || bForce) {
+		DWORD nHitNameBytes;
+
+		nHitNameBytes = m_gclip.GetHitNameStackSize() * 4;
+		if (nHitNameBytes <= m_HitBufSize) {
+			m_gclip.GetHitNameStackValues((unsigned int *)m_HitData, nHitNameBytes / 4);
+			m_HitCount = nHitNameBytes;
+		}
+		else {
+			m_HitCount = 0;
+		}
 	}
-	//!!implement bforce
+
+	//Remove from stack
+	for (i = 0; i < Count; i += 4) {
+		m_gclip.PopHitName();
+	}
 
 	unguard;
 }
@@ -4300,27 +4308,21 @@ void UOpenGLRenderDevice::ReadPixels(FColor* Pixels) {
 }
 
 void UOpenGLRenderDevice::EndFlash() {
-#ifdef UTGLR_DEBUG_SHOW_CALL_COUNTS
-{
-	static int si;
-	dout << L"utglr: EndFlash = " << si++ << std::endl;
-}
-#endif
+	UTGLR_DEBUG_CALL_COUNT(EndFlash);
 	guard(UOpenGLRenderDevice::EndFlash);
-	if (FlashScale != FPlane(.5,.5,.5,0) || FlashFog != FPlane(0,0,0,0)) {
+	if ((FlashScale != FPlane(0.5f, 0.5f, 0.5f, 0.0f)) || (FlashFog != FPlane(0.0f, 0.0f, 0.0f, 0.0f))) {
 		EndBuffering();
 
 		SetDefaultAAState();
 		SetDefaultProjectionState();
 		SetDefaultColorState();
-		SetDefaultVertexProgramState();
-		SetDefaultFragmentProgramState();
+		SetDefaultShaderState();
 		SetDefaultTextureState();
 
 		SetBlend(PF_Highlighted);
 		SetNoTexture(0);
 
-		glColor4f(FlashFog.X, FlashFog.Y, FlashFog.Z, 1.0 - Min(FlashScale.X * 2.0f, 1.0f));
+		glColor4f(FlashFog.X, FlashFog.Y, FlashFog.Z, 1.0f - Min(FlashScale.X * 2.0f, 1.0f));
 
 		FLOAT RFX2 = m_RProjZ;
 		FLOAT RFY2 = m_RProjZ * m_Aspect;
@@ -4405,6 +4407,28 @@ void UOpenGLRenderDevice::InitAlphaTextureSafe(void) {
 	unguard;
 }
 
+void UOpenGLRenderDevice::ScanForDeletedTextures(void) {
+	guard(UOpenGLRenderDevice::ScanForDeletedTextures);
+
+	unsigned int u;
+
+	//Check if currently bound texture may have been removed by another context
+	for (u = 0; u < MAX_TMUNITS; u++) {
+		FCachedTexture *pBind = TexInfo[u].pBind;
+		if (pBind != NULL) {
+			//Check if the texture may have been removed by another context
+			if (NULL == FindCachedTexture(TexInfo[u].CurrentCacheID)) {
+				//Cause texture to be updated next time
+				//Some parts of texture resource may not be released while still bound
+				TexInfo[u].CurrentCacheID = TEX_CACHE_ID_UNUSED;
+				TexInfo[u].pBind = NULL;
+			}
+		}
+	}
+
+	unguard;
+}
+
 void UOpenGLRenderDevice::ScanForOldTextures(void) {
 	guard(UOpenGLRenderDevice::ScanForOldTextures);
 
@@ -4430,8 +4454,8 @@ void UOpenGLRenderDevice::ScanForOldTextures(void) {
 	while (pCT != m_nonZeroPrefixBindChain->end()) {
 		DWORD numFramesSinceUsed = m_currentFrameCount - pCT->LastUsedFrameCount;
 		if (numFramesSinceUsed > DynamicTexIdRecycleLevel) {
-			//See if the tex pool is not enabled or the internal format is not RGBA8
-			if (!UseTexPool || (pCT->texInternalFormat != GL_RGBA8)) {
+			//See if the tex pool is not enabled, or the tex format is not RGBA8, or the texture has mipmaps
+			if (!UseTexPool || (pCT->texInternalFormat != GL_RGBA8) || (pCT->texParams.hasMipmaps)) {
 				//Remove node from linked list
 				m_nonZeroPrefixBindChain->unlink(pCT);
 
@@ -4455,9 +4479,9 @@ void UOpenGLRenderDevice::ScanForOldTextures(void) {
 
 #if 0
 {
-	static int si;
-	dout << L"utglr: TexPool free = " << si++ << L", Id = " << pCT->Id
-		<< L", u = " << pCT->UBits << L", v = " << pCT->VBits << std::endl;
+	static unsigned int s_c;
+	dbgPrintf("utglr: TexPool free = %u, Id = %u, u = %u, v = %u\n",
+		s_c++, pCT->Id, pCT->UBits, pCT->VBits);
 }
 #endif
 
@@ -4510,6 +4534,7 @@ void UOpenGLRenderDevice::SetNoTextureNoCheck(INT Multi) {
 	// Set small white texture.
 	clock(BindCycles);
 
+	//Set texture
 	glBindTexture(GL_TEXTURE_2D, m_noTextureId);
 
 	TexInfo[Multi].CurrentCacheID = TEX_CACHE_ID_NO_TEX;
@@ -4526,6 +4551,7 @@ void UOpenGLRenderDevice::SetAlphaTextureNoCheck(INT Multi) {
 	// Set alpha gradient texture.
 	clock(BindCycles);
 
+	//Set texture
 	glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
 
 	TexInfo[Multi].CurrentCacheID = TEX_CACHE_ID_ALPHA_TEX;
@@ -4536,6 +4562,134 @@ void UOpenGLRenderDevice::SetAlphaTextureNoCheck(INT Multi) {
 	unguard;
 }
 
+FCachedTexture *UOpenGLRenderDevice::FindCachedTexture(QWORD CacheID) {
+	bool isZeroPrefixCacheID = ((CacheID & 0xFFFFFFFF00000000ULL) == 0) ? true : false;
+	FCachedTexture *pBind = NULL;
+
+	if (isZeroPrefixCacheID) {
+		DWORD CacheIDSuffix = (CacheID & 0x00000000FFFFFFFFULL);
+
+		DWORD_CTTree_t *zeroPrefixBindTree = &m_zeroPrefixBindTrees[CTZeroPrefixCacheIDSuffixToTreeIndex(CacheIDSuffix)];
+		DWORD_CTTree_t::node_t *bindTreePtr = zeroPrefixBindTree->find(CacheIDSuffix);
+		if (bindTreePtr != 0) {
+			pBind = &bindTreePtr->data;
+		}
+	}
+	else {
+		DWORD CacheIDSuffix = (CacheID & 0x00000000FFFFFFFF);
+		DWORD treeIndex = CTNonZeroPrefixCacheIDSuffixToTreeIndex(CacheIDSuffix);
+
+		QWORD_CTTree_t *nonZeroPrefixBindTree = &m_nonZeroPrefixBindTrees[treeIndex];
+		QWORD_CTTree_t::node_t *bindTreePtr = nonZeroPrefixBindTree->find(CacheID);
+		if (bindTreePtr != 0) {
+			pBind = &bindTreePtr->data;
+		}
+	}
+
+	return pBind;
+}
+
+UOpenGLRenderDevice::QWORD_CTTree_NodePool_t::node_t *UOpenGLRenderDevice::TryAllocFromTexPool(TexPoolMapKey_t texPoolKey) {
+	TexPoolMap_t::node_t *texPoolPtr;
+
+	//Search for the key in the map
+	texPoolPtr = m_RGBA8TexPool->find(texPoolKey);
+	if (texPoolPtr != 0) {
+		QWORD_CTTree_NodePool_t::node_t *texPoolNodePtr;
+
+		//Get a reference to the pool of nodes with tex ids of the right dimension
+		QWORD_CTTree_NodePool_t &texPool = texPoolPtr->data;
+
+		//Attempt to get a texture id from the tex pool
+		if ((texPoolNodePtr = texPool.try_remove()) != 0) {
+#if 0
+{
+	static unsigned int s_c;
+	dbgPrintf("utglr: TexPool retrieve = %u, Id = %u, u = %u, v = %u\n",
+		s_c++, texPoolNodePtr->data.Id, texPoolNodePtr->data.UBits, texPoolNodePtr->data.VBits);
+}
+#endif
+
+			return texPoolNodePtr;
+		}
+	}
+
+	return NULL;
+}
+
+BYTE UOpenGLRenderDevice::GenerateTexFilterParams(DWORD PolyFlags, FCachedTexture *pBind) {
+	BYTE texFilter;
+
+	//Generate tex filter params
+	texFilter = 0;
+	if (NoFiltering) {
+		texFilter |= CT_MIN_FILTER_NEAREST;
+	}
+	else if (PolyFlags & PF_NoSmooth) {
+		texFilter |= (!pBind->texParams.hasMipmaps) ? CT_MIN_FILTER_NEAREST : CT_MIN_FILTER_NEAREST_MIPMAP_NEAREST;
+	}
+	else {
+		texFilter |= (!pBind->texParams.hasMipmaps) ? CT_MIN_FILTER_LINEAR : (UseTrilinear ? CT_MIN_FILTER_LINEAR_MIPMAP_LINEAR : CT_MIN_FILTER_LINEAR_MIPMAP_NEAREST);
+		texFilter |= CT_MAG_FILTER_NEAREST_OR_LINEAR_BIT;
+		if (MaxAnisotropy) {
+			texFilter |= CT_ANISOTROPIC_FILTER_BIT;
+		}
+	}
+	texFilter |= (pBind->texParams.texObjFilter & (CT_ADDRESS_U_CLAMP | CT_ADDRESS_V_CLAMP));
+
+	return texFilter;
+}
+
+void UOpenGLRenderDevice::SetTexFilterNoCheck(FCachedTexture *pBind, BYTE texFilter) {
+	BYTE texFilterXor;
+
+	//Get changed tex filter params
+	texFilterXor = pBind->texParams.filter ^ texFilter;
+
+	//Update main copy of tex filter params early
+	pBind->texParams.filter = texFilter;
+
+	//Update changed params
+	if (texFilterXor & CT_MIN_FILTER_MASK) {
+		GLint intParam = GL_NEAREST;
+
+		switch (texFilter & CT_MIN_FILTER_MASK) {
+		case CT_MIN_FILTER_NEAREST: intParam = GL_NEAREST; break;
+		case CT_MIN_FILTER_LINEAR: intParam = GL_LINEAR; break;
+		case CT_MIN_FILTER_NEAREST_MIPMAP_NEAREST: intParam = GL_NEAREST_MIPMAP_NEAREST; break;
+		case CT_MIN_FILTER_LINEAR_MIPMAP_NEAREST: intParam = GL_LINEAR_MIPMAP_NEAREST; break;
+		case CT_MIN_FILTER_NEAREST_MIPMAP_LINEAR: intParam = GL_NEAREST_MIPMAP_LINEAR; break;
+		case CT_MIN_FILTER_LINEAR_MIPMAP_LINEAR: intParam = GL_LINEAR_MIPMAP_LINEAR; break;
+		default:
+			;
+		}
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, intParam);
+	}
+	if (texFilterXor & CT_MAG_FILTER_NEAREST_OR_LINEAR_BIT) {
+		GLint intParam;
+
+		intParam = (texFilter & CT_MAG_FILTER_NEAREST_OR_LINEAR_BIT) ? GL_LINEAR : GL_NEAREST;
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, intParam);
+	}
+	if (texFilterXor & CT_ANISOTROPIC_FILTER_BIT) {
+		GLfloat floatParam;
+
+		floatParam = (texFilter & CT_ANISOTROPIC_FILTER_BIT) ? (GLfloat)MaxAnisotropy : 1.0f;
+
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, floatParam);
+	}
+	if (texFilterXor & CT_ADDRESS_U_CLAMP) {
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (texFilter & CT_ADDRESS_U_CLAMP) ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+	}
+	if (texFilterXor & CT_ADDRESS_V_CLAMP) {
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (texFilter & CT_ADDRESS_V_CLAMP) ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+	}
+
+	return;
+}
+
 //This function must use Tex.CurrentCacheID and NEVER use Info.CacheID to reference the texture cache id
 //This makes it work with the masked texture hack code
 void UOpenGLRenderDevice::SetTextureNoCheck(FTexInfo& Tex, FTextureInfo& Info, DWORD PolyFlags) {
@@ -4544,23 +4698,31 @@ void UOpenGLRenderDevice::SetTextureNoCheck(FTexInfo& Tex, FTextureInfo& Info, D
 	// Make current.
 	clock(BindCycles);
 
-	bool isZeroPrefixCacheID = ((Tex.CurrentCacheID & 0xFFFFFFFF00000000LL) == 0) ? true : false;
-
-	FCachedTexture *pBind = NULL;
+	//Search for texture in cache
+	FCachedTexture *pBind;
 	bool existingBind = false;
 	bool needTexAllocate = true;
+	pBind = FindCachedTexture(Tex.CurrentCacheID);
 
-	if (isZeroPrefixCacheID) {
-		DWORD CacheIDSuffix = (Tex.CurrentCacheID & 0x00000000FFFFFFFFLL);
+	if (pBind) {
+		//Update when texture last referenced
+		pBind->LastUsedFrameCount = m_currentFrameCount;
 
-		DWORD_CTTree_t *zeroPrefixBindTree = &m_zeroPrefixBindTrees[CTZeroPrefixCacheIDSuffixToTreeIndex(CacheIDSuffix)];
-		DWORD_CTTree_t::node_t *bindTreePtr = zeroPrefixBindTree->find(CacheIDSuffix);
-		if (bindTreePtr != 0) {
-			pBind = &bindTreePtr->data;
-			existingBind = true;
-			needTexAllocate = false;
+		//Check if texture is in LRU list
+		if (pBind->bindType == BIND_TYPE_NON_ZERO_PREFIX_LRU_LIST) {
+			//Move node to tail of linked list
+			m_nonZeroPrefixBindChain->unlink(pBind);
+			m_nonZeroPrefixBindChain->link_to_tail(pBind);
 		}
-		else {
+
+		existingBind = true;
+		needTexAllocate = false;
+	}
+	else {
+		bool isZeroPrefixCacheID = ((Tex.CurrentCacheID & 0xFFFFFFFF00000000ULL) == 0) ? true : false;
+		if (isZeroPrefixCacheID) {
+			DWORD CacheIDSuffix = (Tex.CurrentCacheID & 0x00000000FFFFFFFFULL);
+			DWORD_CTTree_t *zeroPrefixBindTree = &m_zeroPrefixBindTrees[CTZeroPrefixCacheIDSuffixToTreeIndex(CacheIDSuffix)];
 			DWORD_CTTree_t::node_t *pNewNode;
 
 			//Insert new texture info
@@ -4568,6 +4730,7 @@ void UOpenGLRenderDevice::SetTextureNoCheck(FTexInfo& Tex, FTextureInfo& Info, D
 			pNewNode->key = CacheIDSuffix;
 			zeroPrefixBindTree->insert(pNewNode);
 			pBind = &pNewNode->data;
+			pBind->LastUsedFrameCount = m_currentFrameCount;
 
 			//Set bind type
 			pBind->bindType = BIND_TYPE_ZERO_PREFIX;
@@ -4583,28 +4746,10 @@ void UOpenGLRenderDevice::SetTextureNoCheck(FTexInfo& Tex, FTextureInfo& Info, D
 			glGenTextures(1, &pBind->Id);
 			AllocatedTextures++;
 		}
-	}
-	else {
-		DWORD CacheIDSuffix = (Tex.CurrentCacheID & 0x00000000FFFFFFFFLL);
-		DWORD treeIndex = CTNonZeroPrefixCacheIDSuffixToTreeIndex(CacheIDSuffix);
-
-		QWORD_CTTree_t *nonZeroPrefixBindTree = &m_nonZeroPrefixBindTrees[treeIndex];
-		QWORD_CTTree_t::node_t *bindTreePtr = nonZeroPrefixBindTree->find(Tex.CurrentCacheID);
-		if (bindTreePtr != 0) {
-			pBind = &bindTreePtr->data;
-			pBind->LastUsedFrameCount = m_currentFrameCount;
-
-			//Check if texture is in LRU list
-			if (pBind->bindType == BIND_TYPE_NON_ZERO_PREFIX_LRU_LIST) {
-				//Move node to tail of linked list
-				m_nonZeroPrefixBindChain->unlink(pBind);
-				m_nonZeroPrefixBindChain->link_to_tail(pBind);
-			}
-
-			existingBind = true;
-			needTexAllocate = false;
-		}
 		else {
+			DWORD CacheIDSuffix = (Tex.CurrentCacheID & 0x00000000FFFFFFFF);
+			DWORD treeIndex = CTNonZeroPrefixCacheIDSuffixToTreeIndex(CacheIDSuffix);
+			QWORD_CTTree_t *nonZeroPrefixBindTree = &m_nonZeroPrefixBindTrees[treeIndex];
 			QWORD_CTTree_t::node_t *pNewNode;
 
 			//Allocate a new node
@@ -4646,46 +4791,29 @@ void UOpenGLRenderDevice::SetTextureNoCheck(FTexInfo& Tex, FTextureInfo& Info, D
 			bool needTexIdAllocate = true;
 			if (UseTexPool) {
 				//See if the format will be RGBA8
-				if (pBind->texType == TEX_TYPE_NORMAL) {
-					TexPoolMap_t::node_t *texPoolPtr;
+				//Only textures without mipmaps are stored in the tex pool
+				if ((pBind->texType == TEX_TYPE_NORMAL) && (Info.NumMips == 1)) {
+					QWORD_CTTree_NodePool_t::node_t *texPoolNodePtr;
 
 					//Create a key from the lg2 width and height of the texture object
 					TexPoolMapKey_t texPoolKey = MakeTexPoolMapKey(pBind->UBits, pBind->VBits);
 
-					//Search for the key in the map
-					texPoolPtr = m_RGBA8TexPool->find(texPoolKey);
-					if (texPoolPtr != 0) {
-						QWORD_CTTree_NodePool_t::node_t *texPoolNodePtr;
+					//Attempt to allocate from the tex pool
+					texPoolNodePtr = TryAllocFromTexPool(texPoolKey);
+					if (texPoolNodePtr) {
+						//Use texture id from node in tex pool
+						pBind->Id = texPoolNodePtr->data.Id;
 
-						//Get a reference to the pool of nodes with tex ids of the right dimension
-						QWORD_CTTree_NodePool_t &texPool = texPoolPtr->data;
+						//Use tex params from node in tex pool
+						pBind->texParams = texPoolNodePtr->data.texParams;
+						pBind->dynamicTexBits = texPoolNodePtr->data.dynamicTexBits;
 
-						//Attempt to get a texture id for the tex pool
-						if ((texPoolNodePtr = texPool.try_remove()) != 0) {
-							//Use texture id from node in tex pool
-							pBind->Id = texPoolNodePtr->data.Id;
+						//Then add node to free list
+						m_nonZeroPrefixNodePool.add(texPoolNodePtr);
 
-							//Use tex params from node in tex pool
-							pBind->texParams = texPoolNodePtr->data.texParams;
-							pBind->dynamicTexBits = texPoolNodePtr->data.dynamicTexBits;
-
-							//Then add node to free list
-							m_nonZeroPrefixNodePool.add(texPoolNodePtr);
-
-#if 0
-{
-	static int si;
-	dout << L"utglr: TexPool retrieve = " << si++ << L", Id = " << pBind->Id
-		<< L", u = " << pBind->UBits << L", v = " << pBind->VBits << std::endl;
-}
-#endif
-
-							//Clear the need tex id allocate flag
-							needTexIdAllocate = false;
-
-							//Clear the need tex allocate flag
-							needTexAllocate = false;
-						}
+						//Clear the need tex id and tex allocate flags
+						needTexIdAllocate = false;
+						needTexAllocate = false;
 					}
 				}
 			}
@@ -4715,6 +4843,7 @@ void UOpenGLRenderDevice::SetTextureNoCheck(FTexInfo& Tex, FTextureInfo& Info, D
 	//Save pointer to current texture bind for current texture unit
 	Tex.pBind = pBind;
 
+	//Set texture
 	glBindTexture(GL_TEXTURE_2D, pBind->Id);
 
 	unclock(BindCycles);
@@ -4737,409 +4866,351 @@ void UOpenGLRenderDevice::SetTextureNoCheck(FTexInfo& Tex, FTextureInfo& Info, D
 			pBind->dynamicTexBits = desiredDynamicTexBits;
 
 			if (dynamicTexBitsXor & DT_NO_SMOOTH_BIT) {
-				BYTE desiredTexParamsFirst;
-				BYTE texParamsFirstXor;
+				BYTE texFilter;
 
-				//Set partial desired first tex params
-				desiredTexParamsFirst = 0;
-				if (NoFiltering) {
-					desiredTexParamsFirst |= CT_MIN_FILTER_NEAREST;
-				}
-				else if (PolyFlags & PF_NoSmooth) {
-					desiredTexParamsFirst |= ((pBind->texParams.first & CT_HAS_MIPMAPS_BIT) == 0) ? CT_MIN_FILTER_NEAREST : CT_MIN_FILTER_NEAREST_MIPMAP_NEAREST;
-				}
-				else {
-					desiredTexParamsFirst |= ((pBind->texParams.first & CT_HAS_MIPMAPS_BIT) == 0) ? CT_MIN_FILTER_LINEAR : (UseTrilinear ? CT_MIN_FILTER_LINEAR_MIPMAP_LINEAR : CT_MIN_FILTER_LINEAR_MIPMAP_NEAREST);
-					desiredTexParamsFirst |= CT_MAG_FILTER_NEAREST_OR_LINEAR_BIT;
-					if (MaxAnisotropy) {
-						desiredTexParamsFirst |= CT_ANISOTROPIC_FILTER_BIT;
-					}
-				}
+				//Generate tex filter params
+				texFilter = GenerateTexFilterParams(PolyFlags, pBind);
 
-				//Update partial texture state
-				texParamsFirstXor = desiredTexParamsFirst ^ pBind->texParams.first;
-				if (texParamsFirstXor & CT_MIN_FILTER_MASK) {
-					GLint intParam = GL_NEAREST;
-
-					switch (desiredTexParamsFirst & CT_MIN_FILTER_MASK) {
-					case CT_MIN_FILTER_NEAREST: intParam = GL_NEAREST; break;
-					case CT_MIN_FILTER_LINEAR: intParam = GL_LINEAR; break;
-					case CT_MIN_FILTER_NEAREST_MIPMAP_NEAREST: intParam = GL_NEAREST_MIPMAP_NEAREST; break;
-					case CT_MIN_FILTER_LINEAR_MIPMAP_NEAREST: intParam = GL_LINEAR_MIPMAP_NEAREST; break;
-					case CT_MIN_FILTER_NEAREST_MIPMAP_LINEAR: intParam = GL_NEAREST_MIPMAP_LINEAR; break;
-					case CT_MIN_FILTER_LINEAR_MIPMAP_LINEAR: intParam = GL_LINEAR_MIPMAP_LINEAR; break;
-					default:
-						;
-					}
-
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, intParam);
-				}
-				if (texParamsFirstXor & CT_MAG_FILTER_NEAREST_OR_LINEAR_BIT) {
-					GLint intParam;
-
-					intParam = (desiredTexParamsFirst & CT_MAG_FILTER_NEAREST_OR_LINEAR_BIT) ? GL_LINEAR : GL_NEAREST;
-
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, intParam);
-				}
-				if (texParamsFirstXor & CT_ANISOTROPIC_FILTER_BIT) {
-					GLfloat floatParam;
-
-					floatParam = (desiredTexParamsFirst & CT_ANISOTROPIC_FILTER_BIT) ? (GLfloat)MaxAnisotropy : 1.0f;
-
-					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, floatParam);
-				}
-
-				//Store partial updated texture parameter state in cached texture object
-				const BYTE MODIFIED_TEX_PARAMS_FIRST_BITS = CT_MIN_FILTER_MASK | CT_MAG_FILTER_NEAREST_OR_LINEAR_BIT | CT_ANISOTROPIC_FILTER_BIT;
-				pBind->texParams.first = (pBind->texParams.first & ~MODIFIED_TEX_PARAMS_FIRST_BITS) | desiredTexParamsFirst;
+				//Set tex filter state
+				SetTexFilter(pBind, texFilter);
 			}
 		}
 	}
 
 	// Upload if needed.
 	if (!existingBind || Info.bRealtimeChanged) {
-		FColor paletteIndex0;
-
-		// Cleanup texture flags.
-		if (SupportsLazyTextures) {
-			Info.Load();
-		}
-		Info.bRealtimeChanged = 0;
-
-		//Set palette index 0 to black for masked paletted textures
-		if (Info.Palette && (PolyFlags & PF_Masked)) {
-			paletteIndex0 = Info.Palette[0];
-			Info.Palette[0] = FColor(0,0,0,0);
-		}
-
-		// Download the texture.
-		clock(ImageCycles);
-
-		if (pBind->texType == TEX_TYPE_PALETTED) {
-			glColorTableEXT(GL_TEXTURE_2D, GL_RGBA, 256, GL_RGBA, GL_UNSIGNED_BYTE, Info.Palette);
-		}
-
-		// width * height * 4 bytes per pixel
-		DWORD memAllocSize = 1 << (pBind->UBits + pBind->VBits + 2);
-		if (memAllocSize > LOCAL_TEX_COMPOSE_BUFFER_SIZE) {
-			m_texComposeMemMark = FMemMark(GMem);
-			m_texConvertCtx.pCompose = New<BYTE>(GMem, memAllocSize);
-		}
-		else {
-			m_texConvertCtx.pCompose = m_localTexComposeBuffer;
-		}
-
-		m_texConvertCtx.pBind = pBind;
-
-		UBOOL SkipMipmaps = (Info.NumMips == 1) && !AlwaysMipmap;
-		INT MaxLevel = pBind->MaxLevel;
-
-		//Only update texture state for new textures
-		if (!existingBind) {
-			tex_params_t desiredTexParams;
-			BYTE texParamsFirstXor;
-
-			//Set desired first tex params
-			desiredTexParams.first = 0;
-			if (NoFiltering) {
-				desiredTexParams.first |= CT_MIN_FILTER_NEAREST;
-			}
-			else if (PolyFlags & PF_NoSmooth) {
-				desiredTexParams.first |= SkipMipmaps ? CT_MIN_FILTER_NEAREST : CT_MIN_FILTER_NEAREST_MIPMAP_NEAREST;
-			}
-			else {
-				desiredTexParams.first |= SkipMipmaps ? CT_MIN_FILTER_LINEAR : (UseTrilinear ? CT_MIN_FILTER_LINEAR_MIPMAP_LINEAR : CT_MIN_FILTER_LINEAR_MIPMAP_NEAREST);
-				desiredTexParams.first |= CT_MAG_FILTER_NEAREST_OR_LINEAR_BIT;
-				if (MaxAnisotropy) {
-					desiredTexParams.first |= CT_ANISOTROPIC_FILTER_BIT;
-				}
-			}
-
-			if (!SkipMipmaps) {
-				if (AutoGenerateMipmaps && (pBind->texType == TEX_TYPE_NORMAL)) {
-					desiredTexParams.first |= CT_GENERATE_MIPMAPS_BIT;
-				}
-
-				desiredTexParams.first |= CT_HAS_MIPMAPS_BIT;
-			}
-
-			//Set desired max level tex param
-			desiredTexParams.maxLevel = CT_DEFAULT_TEXTURE_MAX_LEVEL;
-			if (!UseTNT && !SkipMipmaps) {
-				desiredTexParams.maxLevel = MaxLevel;
-			}
-
-
-			//Set texture state
-			texParamsFirstXor = desiredTexParams.first ^ pBind->texParams.first;
-			if (texParamsFirstXor & CT_MIN_FILTER_MASK) {
-				GLint intParam = GL_NEAREST;
-
-				switch (desiredTexParams.first & CT_MIN_FILTER_MASK) {
-				case CT_MIN_FILTER_NEAREST: intParam = GL_NEAREST; break;
-				case CT_MIN_FILTER_LINEAR: intParam = GL_LINEAR; break;
-				case CT_MIN_FILTER_NEAREST_MIPMAP_NEAREST: intParam = GL_NEAREST_MIPMAP_NEAREST; break;
-				case CT_MIN_FILTER_LINEAR_MIPMAP_NEAREST: intParam = GL_LINEAR_MIPMAP_NEAREST; break;
-				case CT_MIN_FILTER_NEAREST_MIPMAP_LINEAR: intParam = GL_NEAREST_MIPMAP_LINEAR; break;
-				case CT_MIN_FILTER_LINEAR_MIPMAP_LINEAR: intParam = GL_LINEAR_MIPMAP_LINEAR; break;
-				default:
-					;
-				}
-
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, intParam);
-			}
-			if (texParamsFirstXor & CT_MAG_FILTER_NEAREST_OR_LINEAR_BIT) {
-				GLint intParam;
-
-				intParam = (desiredTexParams.first & CT_MAG_FILTER_NEAREST_OR_LINEAR_BIT) ? GL_LINEAR : GL_NEAREST;
-
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, intParam);
-			}
-			if (texParamsFirstXor & CT_ANISOTROPIC_FILTER_BIT) {
-				GLfloat floatParam;
-
-				floatParam = (desiredTexParams.first & CT_ANISOTROPIC_FILTER_BIT) ? (GLfloat)MaxAnisotropy : 1.0f;
-
-				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, floatParam);
-			}
-			if (texParamsFirstXor & CT_GENERATE_MIPMAPS_BIT) {
-				GLint intParam;
-
-				intParam = (desiredTexParams.first & CT_GENERATE_MIPMAPS_BIT) ? GL_TRUE : GL_FALSE;
-
-				glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP_SGIS, intParam);
-			}
-
-			if (desiredTexParams.maxLevel != pBind->texParams.maxLevel) {
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, desiredTexParams.maxLevel);
-			}
-
-			//Store updated texture parameter state in cached texture object
-			pBind->texParams = desiredTexParams;
-		}
-
-
-		//Some textures only upload the base texture
-		INT MaxUploadLevel = MaxLevel;
-		if (SkipMipmaps) {
-			MaxUploadLevel = 0;
-		}
-		if (AutoGenerateMipmaps && (pBind->texType == TEX_TYPE_NORMAL)) {
-			MaxUploadLevel = 0;
-		}
-
-
-		//Set initial texture width and height in the context structure
-		//Setup code must ensure that both UBits and VBits are greater than or equal to 0
-		m_texConvertCtx.texWidthPow2 = 1 << pBind->UBits;
-		m_texConvertCtx.texHeightPow2 = 1 << pBind->VBits;
-
-		INT Level;
-		for (Level = 0; Level <= MaxUploadLevel; Level++) {
-			// Convert the mipmap.
-			INT MipIndex = pBind->BaseMip + Level;
-			INT stepBits = 0;
-			if (MipIndex >= Info.NumMips) {
-				stepBits = MipIndex - (Info.NumMips - 1);
-				MipIndex = Info.NumMips - 1;
-			}
-			m_texConvertCtx.stepBits = stepBits;
-
-			FMipmapBase* Mip = Info.Mips[MipIndex];
-			if (!Mip->DataPtr) {
-				//Skip looking at any subsequent mipmap pointers
-				break;
-			}
-			else {
-				switch (pBind->texType) {
-				case TEX_TYPE_COMPRESSED_DXT1:
-					//No conversion required for compressed DXT1 textures
-					break;
-
-				case TEX_TYPE_COMPRESSED_DXT1_TO_DXT3:
-					guard(ConvertDXT1_DXT3);
-					ConvertDXT1_DXT3(Mip, Level);
-					unguard;
-					break;
-
-				case TEX_TYPE_PALETTED:
-					guard(ConvertP8_P8);
-					if (stepBits == 0) {
-						ConvertP8_P8_NoStep(Mip, Level);
-					}
-					else {
-						ConvertP8_P8(Mip, Level);
-					}
-					unguard;
-					break;
-
-				case TEX_TYPE_HAS_PALETTE:
-					guard(ConvertP8_RGBA8888);
-					if (stepBits == 0) {
-						ConvertP8_RGBA8888_NoStep(Mip, Info.Palette, Level);
-					}
-					else {
-						ConvertP8_RGBA8888(Mip, Info.Palette, Level);
-					}
-					unguard;
-					break;
-
-				default:
-					guard(ConvertBGRA7777);
-					(this->*pBind->pConvertBGRA7777)(Mip, Level);
-					unguard;
-				}
-
-				BYTE *Src = (BYTE*)m_texConvertCtx.pCompose;
-				DWORD texWidth, texHeight;
-
-				//Get current texture width and height
-				texWidth = m_texConvertCtx.texWidthPow2;
-				texHeight = m_texConvertCtx.texHeightPow2;
-
-				//Calculate and save next texture width and height
-				//Both are divided by two down to a floor of 1
-				//Texture width and height must be even powers of 2 for the following code to work
-				m_texConvertCtx.texWidthPow2 = (texWidth & 0x1) | (texWidth >> 1);
-				m_texConvertCtx.texHeightPow2 = (texHeight & 0x1) | (texHeight >> 1);
-
-				if (!needTexAllocate) {
-					if ((pBind->texType == TEX_TYPE_COMPRESSED_DXT1) || (pBind->texType == TEX_TYPE_COMPRESSED_DXT1_TO_DXT3)) {
-						guard(glCompressedTexSubImage2D);
-#if 0
-{
-	static int si;
-	dout << L"utglr: glCompressedTexSubImage2DARB = " << si++ << std::endl;
-}
-#endif
-						glCompressedTexSubImage2DARB(
-							GL_TEXTURE_2D,
-							Level,
-							0,
-							0,
-							texWidth,
-							texHeight,
-							pBind->texInternalFormat,
-							(pBind->texType == TEX_TYPE_COMPRESSED_DXT1_TO_DXT3) ? (texWidth * texHeight) : (texWidth * texHeight / 2),
-							(pBind->texType == TEX_TYPE_COMPRESSED_DXT1_TO_DXT3) ? Src : Mip->DataPtr);
-						unguard;
-					}
-					else {
-						guard(glTexSubImage2D);
-#if 0
-{
-	static int si;
-	dout << L"utglr: glTexSubImage2D = " << si++ << std::endl;
-}
-#endif
-						glTexSubImage2D(
-							GL_TEXTURE_2D,
-							Level,
-							0,
-							0,
-							texWidth,
-							texHeight,
-							pBind->texSourceFormat,
-							GL_UNSIGNED_BYTE,
-							Src);
-						unguard;
-					}
-				}
-				else {
-					if ((pBind->texType == TEX_TYPE_COMPRESSED_DXT1) || (pBind->texType == TEX_TYPE_COMPRESSED_DXT1_TO_DXT3)) {
-						guard(glCompressedTexImage2D);
-#if 0
-{
-	static int si;
-	dout << L"utglr: glCompressedTexImage2DARB = " << si++ << std::endl;
-}
-#endif
-						glCompressedTexImage2DARB(
-							GL_TEXTURE_2D,
-							Level,
-							pBind->texInternalFormat,
-							texWidth,
-							texHeight,
-							0,
-							(pBind->texType == TEX_TYPE_COMPRESSED_DXT1_TO_DXT3) ? (texWidth * texHeight) : (texWidth * texHeight / 2),
-							(pBind->texType == TEX_TYPE_COMPRESSED_DXT1_TO_DXT3) ? Src : Mip->DataPtr);
-						unguard;
-					}
-					else {
-						guard(glTexImage2D);
-#if 0
-{
-	static int si;
-	dout << L"utglr: glTexImage2D = " << si++ << std::endl;
-}
-#endif
-						glTexImage2D(
-							GL_TEXTURE_2D,
-							Level,
-							pBind->texInternalFormat,
-							texWidth,
-							texHeight,
-							0,
-							pBind->texSourceFormat,
-							GL_UNSIGNED_BYTE,
-							Src);
-						unguard;
-					}
-				}
-			}
-		}
-
-		if (memAllocSize > LOCAL_TEX_COMPOSE_BUFFER_SIZE) {
-			m_texComposeMemMark.Pop();
-		}
-
-		unclock(ImageCycles);
-
-		//Restore palette index 0 for masked paletted textures
-		if (Info.Palette && (PolyFlags & PF_Masked)) {
-			Info.Palette[0] = paletteIndex0;
-		}
-
-		// Cleanup.
-		if (SupportsLazyTextures) {
-			Info.Unload();
-		}
+		UploadTextureExec(Info, PolyFlags, pBind, existingBind, needTexAllocate);
 	}
 
 	unguard;
 }
 
+void UOpenGLRenderDevice::UploadTextureExec(FTextureInfo& Info, DWORD PolyFlags, FCachedTexture *pBind, bool existingBind, bool needTexAllocate) {
+	FColor paletteIndex0;
+
+	// Cleanup texture flags.
+	if (SupportsLazyTextures) {
+		Info.Load();
+	}
+	Info.bRealtimeChanged = 0;
+
+	//Set palette index 0 to black for masked paletted textures
+	if (Info.Palette && (PolyFlags & PF_Masked)) {
+		paletteIndex0 = Info.Palette[0];
+		Info.Palette[0] = FColor(0,0,0,0);
+	}
+
+	// Download the texture.
+	clock(ImageCycles);
+
+	if (pBind->texType == TEX_TYPE_PALETTED) {
+		glColorTableEXT(GL_TEXTURE_2D, GL_RGBA, 256, GL_RGBA, GL_UNSIGNED_BYTE, Info.Palette);
+	}
+
+	// width * height * 4 bytes per pixel
+	DWORD memAllocSize = 1 << (pBind->UBits + pBind->VBits + 2);
+	if (memAllocSize > LOCAL_TEX_COMPOSE_BUFFER_SIZE) {
+		m_texComposeMemMark = FMemMark(GMem);
+		m_texConvertCtx.pCompose = New<BYTE>(GMem, memAllocSize);
+	}
+	else {
+		m_texConvertCtx.pCompose = m_localTexComposeBuffer;
+	}
+
+	m_texConvertCtx.pBind = pBind;
+
+	UBOOL SkipMipmaps = (Info.NumMips == 1) && !AlwaysMipmap;
+	INT MaxLevel = pBind->MaxLevel;
+
+	//Only update texture state for new textures
+	if (!existingBind) {
+		DWORD texMaxLevel;
+		BYTE texFilter;
+
+		//Set tex max level param
+		//This is set once for new textures and never changed afterwards
+		texMaxLevel = 1000;
+		if (!SkipMipmaps) {
+			texMaxLevel = MaxLevel;
+		}
+		else {
+			texMaxLevel = 0;
+		}
+		//Update if different than default for new textures
+		if (texMaxLevel != 1000) {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, texMaxLevel);
+		}
+
+		//Flag indicating if texture has mipmaps
+		//This is set once for new textures and never changed afterwards
+		pBind->texParams.hasMipmaps = (!SkipMipmaps) ? true : false;
+
+		//Texture filter params set once for each texture
+		pBind->texParams.texObjFilter = 0;
+#ifdef UTGLR_UNREAL_227_BUILD
+		// Check if clamped or wrapped (f.e. for Skyboxes). Smirftsch
+		if (Info.UClampMode) {
+			pBind->texParams.texObjFilter |= CT_ADDRESS_U_CLAMP;
+		}
+		if (Info.VClampMode) {
+			pBind->texParams.texObjFilter |= CT_ADDRESS_V_CLAMP;
+		}
+#endif
+
+
+		//Generate tex filter params
+		texFilter = GenerateTexFilterParams(PolyFlags, pBind);
+
+		//Set tex filter state
+		SetTexFilter(pBind, texFilter);
+	}
+
+
+	//Some textures only upload the base texture
+	INT MaxUploadLevel = MaxLevel;
+	if (SkipMipmaps) {
+		MaxUploadLevel = 0;
+	}
+
+
+	//Set initial texture width and height in the context structure
+	//Setup code must ensure that both UBits and VBits are greater than or equal to 0
+	m_texConvertCtx.texWidthPow2 = 1 << pBind->UBits;
+	m_texConvertCtx.texHeightPow2 = 1 << pBind->VBits;
+
+	INT Level;
+	for (Level = 0; Level <= MaxUploadLevel; Level++) {
+		// Convert the mipmap.
+		INT MipIndex = pBind->BaseMip + Level;
+		INT stepBits = 0;
+		if (MipIndex >= Info.NumMips) {
+			stepBits = MipIndex - (Info.NumMips - 1);
+			MipIndex = Info.NumMips - 1;
+		}
+		m_texConvertCtx.stepBits = stepBits;
+
+		FMipmapBase* Mip = Info.Mips[MipIndex];
+		if (!Mip || !Mip->DataPtr) {
+			//Skip looking at any subsequent mipmap pointers
+			break;
+		}
+		else {
+			//Texture data conversion if necessary
+			switch (pBind->texType) {
+			case TEX_TYPE_COMPRESSED_DXT1:
+				//No conversion required for compressed DXT1 textures
+				break;
+
+			case TEX_TYPE_COMPRESSED_DXT3:
+				//No conversion required for compressed DXT3 textures
+				break;
+
+			case TEX_TYPE_COMPRESSED_DXT5:
+				//No conversion required for compressed DXT5 textures
+				break;
+
+			case TEX_TYPE_COMPRESSED_DXT1_TO_DXT3:
+				guard(ConvertDXT1_DXT3);
+				ConvertDXT1_DXT3(Mip, Level);
+				unguard;
+				break;
+
+			case TEX_TYPE_PALETTED:
+				guard(ConvertP8_P8);
+				if (stepBits == 0) {
+					ConvertP8_P8_NoStep(Mip, Level);
+				}
+				else {
+					ConvertP8_P8(Mip, Level);
+				}
+				unguard;
+				break;
+
+			case TEX_TYPE_HAS_PALETTE:
+				guard(ConvertP8_RGBA8888);
+				if (stepBits == 0) {
+					ConvertP8_RGBA8888_NoStep(Mip, Info.Palette, Level);
+				}
+				else {
+					ConvertP8_RGBA8888(Mip, Info.Palette, Level);
+				}
+				unguard;
+				break;
+
+			default:
+				guard(ConvertBGRA7777);
+				(this->*pBind->pConvertBGRA7777)(Mip, Level);
+				unguard;
+			}
+
+			BYTE *Src = (BYTE*)m_texConvertCtx.pCompose;
+			DWORD texWidth, texHeight;
+
+			//Get current texture width and height
+			texWidth = m_texConvertCtx.texWidthPow2;
+			texHeight = m_texConvertCtx.texHeightPow2;
+
+			//Calculate and save next texture width and height
+			//Both are divided by two down to a floor of 1
+			//Texture width and height must be even powers of 2 for the following code to work
+			m_texConvertCtx.texWidthPow2 = (texWidth & 0x1) | (texWidth >> 1);
+			m_texConvertCtx.texHeightPow2 = (texHeight & 0x1) | (texHeight >> 1);
+
+			if (!needTexAllocate) {
+				//Update existing texture
+				switch (pBind->texType) {
+				case TEX_TYPE_COMPRESSED_DXT1:
+				case TEX_TYPE_COMPRESSED_DXT1_TO_DXT3:
+				case TEX_TYPE_COMPRESSED_DXT3:
+				case TEX_TYPE_COMPRESSED_DXT5:
+					guard(glCompressedTexSubImage2D);
+#if 0
+{
+	static unsigned int s_c;
+	dbgPrintf("utglr: glCompressedTexSubImage2DARB = %u\n", s_c++);
+}
+#endif
+					glCompressedTexSubImage2DARB(
+						GL_TEXTURE_2D,
+						Level,
+						0,
+						0,
+						texWidth,
+						texHeight,
+						pBind->texInternalFormat,
+						(pBind->texType == TEX_TYPE_COMPRESSED_DXT1) ? (texWidth * texHeight / 2) : (texWidth * texHeight),
+						(pBind->texType == TEX_TYPE_COMPRESSED_DXT1_TO_DXT3) ? Src : Mip->DataPtr);
+					unguard;
+
+					break;
+
+				default:
+					guard(glTexSubImage2D);
+#if 0
+{
+	static unsigned int s_c;
+	dbgPrintf("utglr: glTexSubImage2D = %u\n", s_c++);
+}
+#endif
+					glTexSubImage2D(
+						GL_TEXTURE_2D,
+						Level,
+						0,
+						0,
+						texWidth,
+						texHeight,
+						pBind->texSourceFormat,
+						GL_UNSIGNED_BYTE,
+						Src);
+					unguard;
+				}
+			}
+			else {
+				//Create new texture and update
+				switch (pBind->texType) {
+				case TEX_TYPE_COMPRESSED_DXT1:
+				case TEX_TYPE_COMPRESSED_DXT1_TO_DXT3:
+				case TEX_TYPE_COMPRESSED_DXT3:
+				case TEX_TYPE_COMPRESSED_DXT5:
+					guard(glCompressedTexImage2D);
+#if 0
+{
+	static unsigned int s_c;
+	dbgPrintf("utglr: glCompressedTexImage2DARB = %u\n", s_c++);
+}
+#endif
+					glCompressedTexImage2DARB(
+						GL_TEXTURE_2D,
+						Level,
+						pBind->texInternalFormat,
+						texWidth,
+						texHeight,
+						0,
+						(pBind->texType == TEX_TYPE_COMPRESSED_DXT1) ? (texWidth * texHeight / 2) : (texWidth * texHeight),
+						(pBind->texType == TEX_TYPE_COMPRESSED_DXT1_TO_DXT3) ? Src : Mip->DataPtr);
+					unguard;
+
+					break;
+
+				default:
+					guard(glTexImage2D);
+#if 0
+{
+	static unsigned int s_c;
+	dbgPrintf("utglr: glTexImage2D = %u\n", s_c++);
+}
+#endif
+					glTexImage2D(
+						GL_TEXTURE_2D,
+						Level,
+						pBind->texInternalFormat,
+						texWidth,
+						texHeight,
+						0,
+						pBind->texSourceFormat,
+						GL_UNSIGNED_BYTE,
+						Src);
+					unguard;
+				}
+			}
+		}
+	}
+
+	if (memAllocSize > LOCAL_TEX_COMPOSE_BUFFER_SIZE) {
+		m_texComposeMemMark.Pop();
+	}
+
+	unclock(ImageCycles);
+
+	//Restore palette index 0 for masked paletted textures
+	if (Info.Palette && (PolyFlags & PF_Masked)) {
+		Info.Palette[0] = paletteIndex0;
+	}
+
+	// Cleanup.
+	if (SupportsLazyTextures) {
+		Info.Unload();
+	}
+
+	return;
+}
+
 void UOpenGLRenderDevice::CacheTextureInfo(FCachedTexture *pBind, const FTextureInfo &Info, DWORD PolyFlags) {
 #if 0
 {
-	dout << L"utglr: CacheId = "
-		<< HexString((DWORD)((QWORD)Info.CacheID >> 32), 32) << L":"
-		<< HexString((DWORD)((QWORD)Info.CacheID & 0xFFFFFFFF), 32) << std::endl;
+	dbgPrintf("utglr: CacheId = %08X:%08X\n",
+		(DWORD)((QWORD)Info.CacheID >> 32), (DWORD)((QWORD)Info.CacheID & 0xFFFFFFFF));
 }
 {
 	const UTexture *pTexture = Info.Texture;
 	const TCHAR *pName = pTexture->GetFullName();
-	if (pName) dout << L"utglr: TexName = " << pName << std::endl;
+	if (pName) dbgPrintf("utglr: TexName = %s\n", appToAnsi(pName));
 }
 {
-	dout << L"utglr: NumMips = " << Info.NumMips << std::endl;
+	dbgPrintf("utglr: NumMips = %d\n", Info.NumMips);
 }
 {
 	unsigned int u;
+	TCHAR dbgStr[1024];
+	TCHAR numStr[32];
 
-	dout << L"utglr: ZPBindTree Size = ";
+	dbgStr[0] = _T('\0');
+	appStrcat(dbgStr, TEXT("utglr: ZPBindTree Size = "));
 	for (u = 0; u < NUM_CTTree_TREES; u++) {
-		dout << m_zeroPrefixBindTrees[u].calc_size();
-		if (u != (NUM_CTTree_TREES - 1)) dout << L", ";
+		appSprintf(numStr, TEXT("%u"), m_zeroPrefixBindTrees[u].calc_size());
+		appStrcat(dbgStr, numStr);
+		if (u != (NUM_CTTree_TREES - 1)) appStrcat(dbgStr, TEXT(", "));
 	}
-	dout << std::endl;
+	dbgPrintf("%s\n", appToAnsi(dbgStr));
 
-	dout << L"utglr: NZPBindTree Size = ";
+	dbgStr[0] = _T('\0');
+	appStrcat(dbgStr, TEXT("utglr: NZPBindTree Size = "));
 	for (u = 0; u < NUM_CTTree_TREES; u++) {
-		dout << m_nonZeroPrefixBindTrees[u].calc_size();
-		if (u != (NUM_CTTree_TREES - 1)) dout << L", ";
+		appSprintf(numStr, TEXT("%u"), m_nonZeroPrefixBindTrees[u].calc_size());
+		appStrcat(dbgStr, numStr);
+		if (u != (NUM_CTTree_TREES - 1)) appStrcat(dbgStr, TEXT(", "));
 	}
-	dout << std::endl;
+	dbgPrintf("%s\n", appToAnsi(dbgStr));
 }
 #endif
 
@@ -5187,14 +5258,9 @@ void UOpenGLRenderDevice::CacheTextureInfo(FCachedTexture *pBind, const FTexture
 	}
 
 	pBind->BaseMip = BaseMip;
-	if (UseTNT) {
-		MaxLevel = Max(UBits, VBits);
-	}
-	else {
-		MaxLevel = Min(UBits, VBits) - MinLogTextureSize;
-		if (MaxLevel < 0) {
-			MaxLevel = 0;
-		}
+	MaxLevel = Min(UBits, VBits) - MinLogTextureSize;
+	if (MaxLevel < 0) {
+		MaxLevel = 0;
 	}
 	pBind->MaxLevel = MaxLevel;
 	pBind->UBits = UBits;
@@ -5225,17 +5291,42 @@ void UOpenGLRenderDevice::CacheTextureInfo(FCachedTexture *pBind, const FTexture
 		}
 	}
 
-	if ((Info.Format == TEXF_DXT1) && SupportsTC) {
-		if (TexDXT1ToDXT3 && (!(PolyFlags & PF_Masked))) {
-			pBind->texType = TEX_TYPE_COMPRESSED_DXT1_TO_DXT3;
+	pBind->texType = TEX_TYPE_NONE;
+	if (SupportsTC) {
+		switch (Info.Format) {
+		case TEXF_DXT1:
+			if (TexDXT1ToDXT3 && (!(PolyFlags & PF_Masked))) {
+				pBind->texType = TEX_TYPE_COMPRESSED_DXT1_TO_DXT3;
+				//texSourceFormat not used for compressed textures
+				pBind->texInternalFormat = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+			}
+			else {
+				pBind->texType = TEX_TYPE_COMPRESSED_DXT1;
+				//texSourceFormat not used for compressed textures
+				pBind->texInternalFormat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+			}
+			break;
+
+#ifdef UTGLR_UNREAL_227_BUILD
+		case TEXF_DXT3:
+			pBind->texType = TEX_TYPE_COMPRESSED_DXT3;
 			//texSourceFormat not used for compressed textures
 			pBind->texInternalFormat = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
-		}
-		else {
-			pBind->texType = TEX_TYPE_COMPRESSED_DXT1;
+			break;
+
+		case TEXF_DXT5:
+			pBind->texType = TEX_TYPE_COMPRESSED_DXT5;
 			//texSourceFormat not used for compressed textures
-			pBind->texInternalFormat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+			pBind->texInternalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+			break;
+#endif
+
+		default:
+			;
 		}
+	}
+	if (pBind->texType != TEX_TYPE_NONE) {
+		//Using compressed texture
 	}
 	else if (paletted) {
 		pBind->texType = TEX_TYPE_PALETTED;
@@ -5286,12 +5377,7 @@ void UOpenGLRenderDevice::ConvertDXT1_DXT3(const FMipmapBase *Mip, INT Level) {
 		pDest += 4;
 	}
 
-#ifdef UTGLR_DEBUG_SHOW_TEX_CONVERT_COUNTS
-	{
-		static int si;
-		dout << L"utglr: ConvertDXT1_DXT3 = " << si++ << std::endl;
-	}
-#endif
+	UTGLR_DEBUG_TEX_CONVERT_COUNT(ConvertDXT1_DXT3);
 }
 
 void UOpenGLRenderDevice::ConvertP8_P8(const FMipmapBase *Mip, INT Level) {
@@ -5311,12 +5397,7 @@ void UOpenGLRenderDevice::ConvertP8_P8(const FMipmapBase *Mip, INT Level) {
 		} while ((j += ij_inc) < j_stop);
 	} while ((i += ij_inc) < i_stop);
 
-#ifdef UTGLR_DEBUG_SHOW_TEX_CONVERT_COUNTS
-	{
-		static int si;
-		dout << L"utglr: ConvertP8_P8 = " << si++ << std::endl;
-	}
-#endif
+	UTGLR_DEBUG_TEX_CONVERT_COUNT(ConvertP8_P8);
 }
 
 void UOpenGLRenderDevice::ConvertP8_P8_NoStep(const FMipmapBase *Mip, INT Level) {
@@ -5334,12 +5415,7 @@ void UOpenGLRenderDevice::ConvertP8_P8_NoStep(const FMipmapBase *Mip, INT Level)
 		} while ((j += 1) < j_stop);
 	} while ((i += 1) < i_stop);
 
-#ifdef UTGLR_DEBUG_SHOW_TEX_CONVERT_COUNTS
-	{
-		static int si;
-		dout << L"utglr: ConvertP8_P8_NoStep = " << si++ << std::endl;
-	}
-#endif
+	UTGLR_DEBUG_TEX_CONVERT_COUNT(ConvertP8_P8_NoStep);
 }
 
 void UOpenGLRenderDevice::ConvertP8_RGBA8888(const FMipmapBase *Mip, const FColor *Palette, INT Level) {
@@ -5359,12 +5435,7 @@ void UOpenGLRenderDevice::ConvertP8_RGBA8888(const FMipmapBase *Mip, const FColo
 		} while ((j += ij_inc) < j_stop);
 	} while ((i += ij_inc) < i_stop);
 
-#ifdef UTGLR_DEBUG_SHOW_TEX_CONVERT_COUNTS
-	{
-		static int si;
-		dout << L"utglr: ConvertP8_RGBA8888 = " << si++ << std::endl;
-	}
-#endif
+	UTGLR_DEBUG_TEX_CONVERT_COUNT(ConvertP8_RGBA8888);
 }
 
 void UOpenGLRenderDevice::ConvertP8_RGBA8888_NoStep(const FMipmapBase *Mip, const FColor *Palette, INT Level) {
@@ -5382,12 +5453,7 @@ void UOpenGLRenderDevice::ConvertP8_RGBA8888_NoStep(const FMipmapBase *Mip, cons
 		} while ((j += 1) < j_stop);
 	} while ((i += 1) < i_stop);
 
-#ifdef UTGLR_DEBUG_SHOW_TEX_CONVERT_COUNTS
-	{
-		static int si;
-		dout << L"utglr: ConvertP8_RGBA8888_NoStep = " << si++ << std::endl;
-	}
-#endif
+	UTGLR_DEBUG_TEX_CONVERT_COUNT(ConvertP8_RGBA8888_NoStep);
 }
 
 void UOpenGLRenderDevice::ConvertBGRA7777_BGRA8888(const FMipmapBase *Mip, INT Level) {
@@ -5411,12 +5477,7 @@ void UOpenGLRenderDevice::ConvertBGRA7777_BGRA8888(const FMipmapBase *Mip, INT L
 		} while ((j += ij_inc) < j_stop);
 	} while ((i += ij_inc) < i_stop);
 
-#ifdef UTGLR_DEBUG_SHOW_TEX_CONVERT_COUNTS
-	{
-		static int si;
-		dout << L"utglr: ConvertBGRA7777_BGRA8888 = " << si++ << std::endl;
-	}
-#endif
+	UTGLR_DEBUG_TEX_CONVERT_COUNT(ConvertBGRA7777_BGRA8888);
 }
 
 void UOpenGLRenderDevice::ConvertBGRA7777_BGRA8888_NoClamp(const FMipmapBase *Mip, INT Level) {
@@ -5438,12 +5499,7 @@ void UOpenGLRenderDevice::ConvertBGRA7777_BGRA8888_NoClamp(const FMipmapBase *Mi
 		} while ((j += ij_inc) < j_stop);
 	} while ((i += ij_inc) < i_stop);
 
-#ifdef UTGLR_DEBUG_SHOW_TEX_CONVERT_COUNTS
-	{
-		static int si;
-		dout << L"utglr: ConvertBGRA7777_BGRA8888_NoClamp = " << si++ << std::endl;
-	}
-#endif
+	UTGLR_DEBUG_TEX_CONVERT_COUNT(ConvertBGRA7777_BGRA8888_NoClamp);
 }
 
 void UOpenGLRenderDevice::ConvertBGRA7777_RGBA8888(const FMipmapBase *Mip, INT Level) {
@@ -5472,12 +5528,7 @@ void UOpenGLRenderDevice::ConvertBGRA7777_RGBA8888(const FMipmapBase *Mip, INT L
 		} while ((j += ij_inc) < j_stop);
 	} while ((i += ij_inc) < i_stop);
 
-#ifdef UTGLR_DEBUG_SHOW_TEX_CONVERT_COUNTS
-	{
-		static int si;
-		dout << L"utglr: ConvertBGRA7777_RGBA8888 = " << si++ << std::endl;
-	}
-#endif
+	UTGLR_DEBUG_TEX_CONVERT_COUNT(ConvertBGRA7777_RGBA8888);
 }
 
 void UOpenGLRenderDevice::SetBlendNoCheck(DWORD blendFlags) {
@@ -5493,6 +5544,8 @@ void UOpenGLRenderDevice::SetBlendNoCheck(DWORD blendFlags) {
 	m_curBlendFlags = blendFlags;
 
 #ifdef UTGLR_RUNE_BUILD
+	const DWORD GL_BLEND_FLAG_BITS = PF_Translucent | PF_Modulated | PF_Highlighted | PF_AlphaBlend;
+#elif UTGLR_UNREAL_227_BUILD
 	const DWORD GL_BLEND_FLAG_BITS = PF_Translucent | PF_Modulated | PF_Highlighted | PF_AlphaBlend;
 #else
 	const DWORD GL_BLEND_FLAG_BITS = PF_Translucent | PF_Modulated | PF_Highlighted;
@@ -5519,18 +5572,45 @@ void UOpenGLRenderDevice::SetBlendNoCheck(DWORD blendFlags) {
 			else if (blendFlags & PF_AlphaBlend) {
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			}
+#elif UTGLR_UNREAL_227_BUILD
+			else if (blendFlags & PF_AlphaBlend) {
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			}
 #endif
 			else if (blendFlags & PF_Masked) {
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			}
 		}
 	}
+#ifdef UTGLR_UNREAL_227_BUILD
+	if (Xor & (PF_Masked | PF_AlphaBlend)) {
+#else
 	if (Xor & PF_Masked) {
+#endif
 		if (blendFlags & PF_Masked) {
+#ifdef UTGLR_UNREAL_227_BUILD
+			glAlphaFunc(GL_GREATER, 0.5f);
 			glEnable(GL_ALPHA_TEST);
+			if (m_useAlphaToCoverageForMasked) {
+				m_alphaToCoverageEnabled = true;
+				glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			}
+		}
+		else if (blendFlags & PF_AlphaBlend) {
+			glAlphaFunc(GL_GREATER, 0.01f);
+#endif
+			glEnable(GL_ALPHA_TEST);
+			if (m_useAlphaToCoverageForMasked) {
+				m_alphaToCoverageEnabled = true;
+				glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			}
 		}
 		else {
 			glDisable(GL_ALPHA_TEST);
+			if (m_useAlphaToCoverageForMasked) {
+				m_alphaToCoverageEnabled = false;
+				glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			}
 		}
 	}
 	if (Xor & PF_Invisible) {
@@ -5701,6 +5781,77 @@ void UOpenGLRenderDevice::SetTexEnvNoCheck(DWORD texUnit, DWORD texEnvFlags) {
 }
 
 
+void UOpenGLRenderDevice::SetVertexProgramNoCheck(GLuint vpId) {
+	//Check if no vertex program and may need to disable vertex program mode
+	if (vpId == 0) {
+		if (m_vpCurrent != 0) {
+			//Id of 0 marks vertex program mode as disabled
+			m_vpCurrent = 0;
+
+			//Disable vertex program mode
+			glDisable(GL_VERTEX_PROGRAM_ARB);
+		}
+
+		return;
+	}
+
+	//Check if need to enable vertex program mode
+	if (m_vpCurrent == 0) {
+		//Id of not 0, to be set later, marks vertex program mode as enabled
+
+		//Enable vertex program mode
+		glEnable(GL_VERTEX_PROGRAM_ARB);
+
+		m_vpEnableCount++;
+	}
+
+	//Save the new current vertex program
+	m_vpCurrent = vpId;
+
+	//Bind the vertex program
+	glBindProgramARB(GL_VERTEX_PROGRAM_ARB, vpId);
+
+	m_vpSwitchCount++;
+
+	return;
+}
+
+void UOpenGLRenderDevice::SetFragmentProgramNoCheck(GLuint fpId) {
+	//Check if no fragment program and may need to disable fragment program mode
+	if (fpId == 0) {
+		if (m_fpCurrent != 0) {
+			//Id of 0 marks fragment program mode as disabled
+			m_fpCurrent = 0;
+
+			//Disable fragment program mode
+			glDisable(GL_FRAGMENT_PROGRAM_ARB);
+		}
+
+		return;
+	}
+
+	//Check if need to enable fragment program mode
+	if (m_fpCurrent == 0) {
+		//Id of not 0, to be set later, marks fragment program mode as enabled
+
+		//Enable fragment program mode
+		glEnable(GL_FRAGMENT_PROGRAM_ARB);
+
+		m_fpEnableCount++;
+	}
+
+	//Save the new current fragment program
+	m_fpCurrent = fpId;
+
+	//Bind the fragment program
+	glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, fpId);
+
+	m_fpSwitchCount++;
+
+	return;
+}
+
+
 void UOpenGLRenderDevice::SetDefaultColorStateNoCheck(void) {
 	//Check for normal array
 	if (m_currentColorFlags & CF_NORMAL_ARRAY) {
@@ -5805,161 +5956,24 @@ void UOpenGLRenderDevice::SetAAStateNoCheck(bool AAEnable) {
 }
 
 
-void UOpenGLRenderDevice::AllocateVertexProgramNamesSafe(void) {
-	//Do not allocate names if already allocated
-	if (m_allocatedVertexProgramNames) {
-		return;
-	}
-
-	//Allocate names
-	glGenProgramsARB(1, &m_vpDefaultRenderingState);
-	glGenProgramsARB(1, &m_vpDefaultRenderingStateWithFog);
-#ifdef UTGLR_RUNE_BUILD
-	glGenProgramsARB(1, &m_vpDefaultRenderingStateWithLinearFog);
-#endif
-	glGenProgramsARB(MAX_TMUNITS, m_vpComplexSurface);
-	glGenProgramsARB(1, &m_vpComplexSurfaceDetailAlpha);
-	glGenProgramsARB(1, &m_vpComplexSurfaceSingleTextureAndDetailTexture);
-	glGenProgramsARB(1, &m_vpComplexSurfaceDualTextureAndDetailTexture);
-	glGenProgramsARB(1, &m_vpComplexSurfaceSingleTextureWithPos);
-	glGenProgramsARB(1, &m_vpComplexSurfaceDualTextureWithPos);
-	glGenProgramsARB(1, &m_vpComplexSurfaceTripleTextureWithPos);
-
-	//Mark names as allocated
-	m_allocatedVertexProgramNames = true;
-
-	return;
-}
-
-void UOpenGLRenderDevice::FreeVertexProgramNamesSafe(void) {
-	//Do not free names if not allocated
-	if (!m_allocatedVertexProgramNames) {
-		return;
-	}
-
-	//Free names
-	glDeleteProgramsARB(1, &m_vpDefaultRenderingState);
-	glDeleteProgramsARB(1, &m_vpDefaultRenderingStateWithFog);
-#ifdef UTGLR_RUNE_BUILD
-	glDeleteProgramsARB(1, &m_vpDefaultRenderingStateWithLinearFog);
-#endif
-	glDeleteProgramsARB(MAX_TMUNITS, m_vpComplexSurface);
-	glDeleteProgramsARB(1, &m_vpComplexSurfaceDetailAlpha);
-	glDeleteProgramsARB(1, &m_vpComplexSurfaceSingleTextureAndDetailTexture);
-	glDeleteProgramsARB(1, &m_vpComplexSurfaceDualTextureAndDetailTexture);
-	glDeleteProgramsARB(1, &m_vpComplexSurfaceSingleTextureWithPos);
-	glDeleteProgramsARB(1, &m_vpComplexSurfaceDualTextureWithPos);
-	glDeleteProgramsARB(1, &m_vpComplexSurfaceTripleTextureWithPos);
-
-	//Mark names as not allocated
-	m_allocatedVertexProgramNames = false;
-
-	return;
-}
-
-bool UOpenGLRenderDevice::InitializeVertexPrograms(void) {
-	bool initOk = true;
-
-
-	//Default rendering state
-	initOk &= LoadVertexProgram(m_vpDefaultRenderingState, g_vpDefaultRenderingState,
-		TEXT("Default rendering state"));
-
-	//Default rendering state with fog
-	initOk &= LoadVertexProgram(m_vpDefaultRenderingStateWithFog, g_vpDefaultRenderingStateWithFog,
-		TEXT("Default rendering state with fog"));
-
-#ifdef UTGLR_RUNE_BUILD
-	//Default rendering state with linear fog
-	initOk &= LoadVertexProgram(m_vpDefaultRenderingStateWithLinearFog, g_vpDefaultRenderingStateWithLinearFog,
-		TEXT("Default rendering state with linear fog"));
-#endif
-
-
-	//Complex surface single texture
-	initOk &= LoadVertexProgram(m_vpComplexSurface[0], g_vpComplexSurfaceSingleTexture,
-		TEXT("Complex surface single texture"));
-
-	if (TMUnits >= 2) {
-		//Complex surface dual texture
-		initOk &= LoadVertexProgram(m_vpComplexSurface[1], g_vpComplexSurfaceDualTexture,
-			TEXT("Complex surface dual texture"));
-	}
-
-	if (TMUnits >= 3) {
-		//Complex surface triple texture
-		initOk &= LoadVertexProgram(m_vpComplexSurface[2], g_vpComplexSurfaceTripleTexture,
-			TEXT("Complex surface triple texture"));
-	}
-
-	if (TMUnits >= 4) {
-		//Complex surface quad texture
-		initOk &= LoadVertexProgram(m_vpComplexSurface[3], g_vpComplexSurfaceQuadTexture,
-			TEXT("Complex surface quad texture"));
-	}
-
-
-	if (UseDetailAlpha) {
-		//Complex surface detail alpha
-		initOk &= LoadVertexProgram(m_vpComplexSurfaceDetailAlpha, g_vpComplexSurfaceDetailAlpha,
-			TEXT("Complex surface detail alpha"));
-	}
-
-	if (SinglePassDetail) {
-		//Complex surface single texture and detail texture
-		initOk &= LoadVertexProgram(m_vpComplexSurfaceSingleTextureAndDetailTexture, g_vpComplexSurfaceSingleTextureAndDetailTexture,
-			TEXT("Complex surface single texture and detail texture"));
-
-		//Complex surface dual texture and detail texture
-		initOk &= LoadVertexProgram(m_vpComplexSurfaceDualTextureAndDetailTexture, g_vpComplexSurfaceDualTextureAndDetailTexture,
-			TEXT("Complex surface dual texture and detail texture"));
-	}
-
-
-	if (UseFragmentProgram) {
-		//Complex surface single texture with position
-		initOk &= LoadVertexProgram(m_vpComplexSurfaceSingleTextureWithPos, g_vpComplexSurfaceSingleTextureWithPos,
-			TEXT("Complex surface single texture with position"));
-
-		//Complex surface dual texture with position
-		initOk &= LoadVertexProgram(m_vpComplexSurfaceDualTextureWithPos, g_vpComplexSurfaceDualTextureWithPos,
-			TEXT("Complex surface dual texture with position"));
-
-		//Complex surface triple texture with position
-		initOk &= LoadVertexProgram(m_vpComplexSurfaceTripleTextureWithPos, g_vpComplexSurfaceTripleTextureWithPos,
-			TEXT("Complex surface triple texture with position"));
-	}
-
-
-	//Reset to default vertex program and update current vertex program variable
-	glBindProgramARB(GL_VERTEX_PROGRAM_ARB, 0);
-	m_vpCurrent = 0;
-
-	return initOk;
-}
-
-bool UOpenGLRenderDevice::LoadVertexProgram(GLuint vpId, const char *pProgram, const TCHAR *pName) {
+bool UOpenGLRenderDevice::LoadVertexProgram(GLuint vpId, const char *pProgram, const char *pName) {
 	GLint iErrorPos;
 
-#ifndef UTGLR_DONT_DEBUG_AT_ALL
 	if (DebugBit(DEBUG_BIT_BASIC)) {
-		dout << TEXT("utglr: Loading vertex program \"") << pName << TEXT("\"") << std::endl;
+		dbgPrintf("utglr: Loading vertex program \"%s\"\n", pName);
 	}
-#endif
 
 	glBindProgramARB(GL_VERTEX_PROGRAM_ARB, vpId);
 	glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, strlen(pProgram), pProgram);
 
 	glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &iErrorPos);
 
-#ifndef UTGLR_DONT_DEBUG_AT_ALL
 	if (DebugBit(DEBUG_BIT_BASIC)) {
 		if (iErrorPos != -1) {
-			dout << TEXT("utglr: Vertex program error at offset ") << iErrorPos << std::endl;
-			dout << TEXT("utglr: Vertex program text from error offset:\n") << appFromAnsi(pProgram + iErrorPos) << std::endl;
+			dbgPrintf("utglr: Vertex program error at offset %d\n", iErrorPos);
+			dbgPrintf("utglr: Vertex program text from error offset:\n%s\n", pProgram + iErrorPos);
 		}
 	}
-#endif
 
 	if (iErrorPos != -1) {
 		return false;
@@ -5968,72 +5982,58 @@ bool UOpenGLRenderDevice::LoadVertexProgram(GLuint vpId, const char *pProgram, c
 	return true;
 }
 
-//Attempts to initializes vertex program mode
-//Safe to call multiple times as all names are always allocated
-//Will reload any existing programs if called multiple times
-void UOpenGLRenderDevice::TryInitializeVertexProgramMode(void) {
-	//Allocate vertex program names
-	AllocateVertexProgramNamesSafe();
+bool UOpenGLRenderDevice::LoadFragmentProgram(GLuint fpId, const char *pProgram, const char *pName) {
+	GLint iErrorPos;
 
-	//Initialize vertex programs
-	if (InitializeVertexPrograms() == false) {
-		//Free vertex program names
-		FreeVertexProgramNamesSafe();
-
-		//Disable vertex program mode
-		DCV.UseVertexProgram = 0;
-		UseVertexProgram = 0;
-		PL_UseVertexProgram = 0;
-
-#ifndef UTGLR_DONT_DEBUG_AT_ALL
-		if (DebugBit(DEBUG_BIT_BASIC)) dout << TEXT("utglr: Vertex program initialization failed") << std::endl;
-#endif
+	if (DebugBit(DEBUG_BIT_BASIC)) {
+		dbgPrintf("utglr: Loading fragment program \"%s\"\n", pName);
 	}
 
-	return;
-}
+	glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, fpId);
+	glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, strlen(pProgram), pProgram);
 
-//Shuts down vertex program mode if it is active
-//Freeing the vertex program names takes care of releasing resources
-//Safe to call even if vertex program mode is not supported or was never initialized
-void UOpenGLRenderDevice::ShutdownVertexProgramMode(void) {
-	//Free vertex program names
-	FreeVertexProgramNamesSafe();
+	glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &iErrorPos);
 
-	//Disable vertex program mode if it was enabled
-	if (m_vpModeEnabled == true) {
-		//Mark vertex program mode as disabled
-		m_vpModeEnabled = false;
-
-		//Disable vertex program mode
-		glDisable(GL_VERTEX_PROGRAM_ARB);
+	if (DebugBit(DEBUG_BIT_BASIC)) {
+		if (iErrorPos != -1) {
+			dbgPrintf("utglr: Fragment program error at offset %d\n", iErrorPos);
+			dbgPrintf("utglr: Fragment program text from error offset:\n%s\n", pProgram + iErrorPos);
+		}
 	}
 
-	//The default vertex program is now current
-	m_vpCurrent = 0;
+	if (iErrorPos != -1) {
+		return false;
+	}
 
-	return;
+	return true;
 }
 
 
 void UOpenGLRenderDevice::AllocateFragmentProgramNamesSafe(void) {
 	//Do not allocate names if already allocated
-	if (m_allocatedFragmentProgramNames) {
+	if (m_allocatedShaderNames) {
 		return;
 	}
 
-	//Allocate names
+	//Allocate vertex program names
+	glGenProgramsARB(1, &m_vpDefaultRenderingState);
+	glGenProgramsARB(1, &m_vpDefaultRenderingStateWithFog);
+	glGenProgramsARB(1, &m_vpDefaultRenderingStateWithLinearFog);
+	glGenProgramsARB(MAX_TMUNITS, m_vpComplexSurface);
+	glGenProgramsARB(1, &m_vpComplexSurfaceSingleTextureWithPos);
+	glGenProgramsARB(1, &m_vpComplexSurfaceDualTextureWithPos);
+	glGenProgramsARB(1, &m_vpComplexSurfaceTripleTextureWithPos);
+
+	//Allocate fragment program names
 	glGenProgramsARB(1, &m_fpDefaultRenderingState);
 	glGenProgramsARB(1, &m_fpDefaultRenderingStateWithFog);
-#ifdef UTGLR_RUNE_BUILD
 	glGenProgramsARB(1, &m_fpDefaultRenderingStateWithLinearFog);
-#endif
 	glGenProgramsARB(1, &m_fpComplexSurfaceSingleTexture);
 	glGenProgramsARB(1, &m_fpComplexSurfaceDualTextureModulated);
-	glGenProgramsARB(1, &m_fpComplexSurfaceDualTextureModulated2X);
+	glGenProgramsARB(1, &m_fpComplexSurfaceTripleTextureModulated);
 	glGenProgramsARB(1, &m_fpComplexSurfaceSingleTextureWithFog);
 	glGenProgramsARB(1, &m_fpComplexSurfaceDualTextureModulatedWithFog);
-	glGenProgramsARB(1, &m_fpComplexSurfaceDualTextureModulated2XWithFog);
+	glGenProgramsARB(1, &m_fpComplexSurfaceTripleTextureModulatedWithFog);
 	glGenProgramsARB(1, &m_fpDetailTexture);
 	glGenProgramsARB(1, &m_fpDetailTextureTwoLayer);
 	glGenProgramsARB(1, &m_fpSingleTextureAndDetailTexture);
@@ -6042,29 +6042,36 @@ void UOpenGLRenderDevice::AllocateFragmentProgramNamesSafe(void) {
 	glGenProgramsARB(1, &m_fpDualTextureAndDetailTextureTwoLayer);
 
 	//Mark names as allocated
-	m_allocatedFragmentProgramNames = true;
+	m_allocatedShaderNames = true;
 
 	return;
 }
 
 void UOpenGLRenderDevice::FreeFragmentProgramNamesSafe(void) {
 	//Do not free names if not allocated
-	if (!m_allocatedFragmentProgramNames) {
+	if (!m_allocatedShaderNames) {
 		return;
 	}
 
-	//Free names
+	//Free vertex program names
+	glDeleteProgramsARB(1, &m_vpDefaultRenderingState);
+	glDeleteProgramsARB(1, &m_vpDefaultRenderingStateWithFog);
+	glDeleteProgramsARB(1, &m_vpDefaultRenderingStateWithLinearFog);
+	glDeleteProgramsARB(MAX_TMUNITS, m_vpComplexSurface);
+	glDeleteProgramsARB(1, &m_vpComplexSurfaceSingleTextureWithPos);
+	glDeleteProgramsARB(1, &m_vpComplexSurfaceDualTextureWithPos);
+	glDeleteProgramsARB(1, &m_vpComplexSurfaceTripleTextureWithPos);
+
+	//Free fragment program names
 	glDeleteProgramsARB(1, &m_fpDefaultRenderingState);
 	glDeleteProgramsARB(1, &m_fpDefaultRenderingStateWithFog);
-#ifdef UTGLR_RUNE_BUILD
 	glDeleteProgramsARB(1, &m_fpDefaultRenderingStateWithLinearFog);
-#endif
 	glDeleteProgramsARB(1, &m_fpComplexSurfaceSingleTexture);
 	glDeleteProgramsARB(1, &m_fpComplexSurfaceDualTextureModulated);
-	glDeleteProgramsARB(1, &m_fpComplexSurfaceDualTextureModulated2X);
+	glDeleteProgramsARB(1, &m_fpComplexSurfaceTripleTextureModulated);
 	glDeleteProgramsARB(1, &m_fpComplexSurfaceSingleTextureWithFog);
 	glDeleteProgramsARB(1, &m_fpComplexSurfaceDualTextureModulatedWithFog);
-	glDeleteProgramsARB(1, &m_fpComplexSurfaceDualTextureModulated2XWithFog);
+	glDeleteProgramsARB(1, &m_fpComplexSurfaceTripleTextureModulatedWithFog);
 	glDeleteProgramsARB(1, &m_fpDetailTexture);
 	glDeleteProgramsARB(1, &m_fpDetailTextureTwoLayer);
 	glDeleteProgramsARB(1, &m_fpSingleTextureAndDetailTexture);
@@ -6073,7 +6080,7 @@ void UOpenGLRenderDevice::FreeFragmentProgramNamesSafe(void) {
 	glDeleteProgramsARB(1, &m_fpDualTextureAndDetailTextureTwoLayer);
 
 	//Mark names as not allocated
-	m_allocatedFragmentProgramNames = false;
+	m_allocatedShaderNames = false;
 
 	return;
 }
@@ -6082,109 +6089,129 @@ bool UOpenGLRenderDevice::InitializeFragmentPrograms(void) {
 	bool initOk = true;
 
 
+	//Vertex programs
+
+	//Default rendering state
+	initOk &= LoadVertexProgram(m_vpDefaultRenderingState, g_vpDefaultRenderingState,
+		"Default rendering state");
+
+	//Default rendering state with fog
+	initOk &= LoadVertexProgram(m_vpDefaultRenderingStateWithFog, g_vpDefaultRenderingStateWithFog,
+		"Default rendering state with fog");
+
+	//Default rendering state with linear fog
+	initOk &= LoadVertexProgram(m_vpDefaultRenderingStateWithLinearFog, g_vpDefaultRenderingStateWithLinearFog,
+		"Default rendering state with linear fog");
+
+
+	//Complex surface single texture
+	initOk &= LoadVertexProgram(m_vpComplexSurface[0], g_vpComplexSurfaceSingleTexture,
+		"Complex surface single texture");
+
+	//Complex surface dual texture
+	initOk &= LoadVertexProgram(m_vpComplexSurface[1], g_vpComplexSurfaceDualTexture,
+		"Complex surface dual texture");
+
+	//Complex surface triple texture
+	initOk &= LoadVertexProgram(m_vpComplexSurface[2], g_vpComplexSurfaceTripleTexture,
+		"Complex surface triple texture");
+
+	//Complex surface quad texture
+	initOk &= LoadVertexProgram(m_vpComplexSurface[3], g_vpComplexSurfaceQuadTexture,
+		"Complex surface quad texture");
+
+
+	//Complex surface single texture with position
+	initOk &= LoadVertexProgram(m_vpComplexSurfaceSingleTextureWithPos, g_vpComplexSurfaceSingleTextureWithPos,
+		"Complex surface single texture with position");
+
+	//Complex surface dual texture with position
+	initOk &= LoadVertexProgram(m_vpComplexSurfaceDualTextureWithPos, g_vpComplexSurfaceDualTextureWithPos,
+		"Complex surface dual texture with position");
+
+	//Complex surface triple texture with position
+	initOk &= LoadVertexProgram(m_vpComplexSurfaceTripleTextureWithPos, g_vpComplexSurfaceTripleTextureWithPos,
+		"Complex surface triple texture with position");
+
+
+	//Reset to default vertex program and update current vertex program variable
+	glBindProgramARB(GL_VERTEX_PROGRAM_ARB, 0);
+	glDisable(GL_VERTEX_PROGRAM_ARB);
+	m_vpCurrent = 0;
+
+
+	//Fragment programs
+
 	//Default rendering state
 	initOk &= LoadFragmentProgram(m_fpDefaultRenderingState, g_fpDefaultRenderingState,
-		TEXT("Default rendering state"));
+		"Default rendering state");
 
 	//Default rendering state with fog
 	initOk &= LoadFragmentProgram(m_fpDefaultRenderingStateWithFog, g_fpDefaultRenderingStateWithFog,
-		TEXT("Default rendering state with fog"));
+		"Default rendering state with fog");
 
-#ifdef UTGLR_RUNE_BUILD
 	//Default rendering state with linear fog
 	initOk &= LoadFragmentProgram(m_fpDefaultRenderingStateWithLinearFog, g_fpDefaultRenderingStateWithLinearFog,
-		TEXT("Default rendering state with linear fog"));
-#endif
+		"Default rendering state with linear fog");
 
 
 	//Complex surface single texture
 	initOk &= LoadFragmentProgram(m_fpComplexSurfaceSingleTexture, g_fpComplexSurfaceSingleTexture,
-		TEXT("Complex surface single texture"));
+		"Complex surface single texture");
 
 	//Complex surface dual texture modulated
 	initOk &= LoadFragmentProgram(m_fpComplexSurfaceDualTextureModulated, g_fpComplexSurfaceDualTextureModulated,
-		TEXT("Complex surface dual texture modulated"));
+		"Complex surface dual texture modulated");
 
-	//Complex surface dual texture modulated 2X
-	initOk &= LoadFragmentProgram(m_fpComplexSurfaceDualTextureModulated2X, g_fpComplexSurfaceDualTextureModulated2X,
-		TEXT("Complex surface dual texture modulated 2X"));
+	//Complex surface triple texture modulated
+	initOk &= LoadFragmentProgram(m_fpComplexSurfaceTripleTextureModulated, g_fpComplexSurfaceTripleTextureModulated,
+		"Complex surface triple texture modulated");
 
 
 	//Complex surface single texture with fog
 	initOk &= LoadFragmentProgram(m_fpComplexSurfaceSingleTextureWithFog, g_fpComplexSurfaceSingleTextureWithFog,
-		TEXT("Complex surface single texture with fog"));
+		"Complex surface single texture with fog");
 
 	//Complex surface dual texture modulated with fog
 	initOk &= LoadFragmentProgram(m_fpComplexSurfaceDualTextureModulatedWithFog, g_fpComplexSurfaceDualTextureModulatedWithFog,
-		TEXT("Complex surface dual texture modulated with fog"));
+		"Complex surface dual texture modulated with fog");
 
-	//Complex surface dual texture modulated 2X with fog
-	initOk &= LoadFragmentProgram(m_fpComplexSurfaceDualTextureModulated2XWithFog, g_fpComplexSurfaceDualTextureModulated2XWithFog,
-		TEXT("Complex surface dual texture modulated 2X with fog"));
+	//Complex surface triple texture modulated with fog
+	initOk &= LoadFragmentProgram(m_fpComplexSurfaceTripleTextureModulatedWithFog, g_fpComplexSurfaceTripleTextureModulatedWithFog,
+		"Complex surface triple texture modulated with fog");
 
 
-	if (DetailTextures) {
-		//Detail texture
-		initOk &= LoadFragmentProgram(m_fpDetailTexture, g_fpDetailTexture,
-			TEXT("Detail texture"));
+	//Detail texture
+	initOk &= LoadFragmentProgram(m_fpDetailTexture, g_fpDetailTexture,
+		"Detail texture");
 
-		//Detail texture two layer
-		initOk &= LoadFragmentProgram(m_fpDetailTextureTwoLayer, g_fpDetailTextureTwoLayer,
-			TEXT("Detail texture two layer"));
+	//Detail texture two layer
+	initOk &= LoadFragmentProgram(m_fpDetailTextureTwoLayer, g_fpDetailTextureTwoLayer,
+		"Detail texture two layer");
 
-		//Single texture and detail texture
-		initOk &= LoadFragmentProgram(m_fpSingleTextureAndDetailTexture, g_fpSingleTextureAndDetailTexture,
-			TEXT("Complex surface single texture and detail texture"));
+	//Single texture and detail texture
+	initOk &= LoadFragmentProgram(m_fpSingleTextureAndDetailTexture, g_fpSingleTextureAndDetailTexture,
+		"Complex surface single texture and detail texture");
 
-		//Single texture and detail texture two layer
-		initOk &= LoadFragmentProgram(m_fpSingleTextureAndDetailTextureTwoLayer, g_fpSingleTextureAndDetailTextureTwoLayer,
-			TEXT("Complex surface single texture and detail texture two layer"));
+	//Single texture and detail texture two layer
+	initOk &= LoadFragmentProgram(m_fpSingleTextureAndDetailTextureTwoLayer, g_fpSingleTextureAndDetailTextureTwoLayer,
+		"Complex surface single texture and detail texture two layer");
 
-		//Dual texture and detail texture
-		initOk &= LoadFragmentProgram(m_fpDualTextureAndDetailTexture, g_fpDualTextureAndDetailTexture,
-			TEXT("Complex surface dual texture and detail texture"));
+	//Dual texture and detail texture
+	initOk &= LoadFragmentProgram(m_fpDualTextureAndDetailTexture, g_fpDualTextureAndDetailTexture,
+		"Complex surface dual texture and detail texture");
 
-		//Dual texture and detail texture two layer
-		initOk &= LoadFragmentProgram(m_fpDualTextureAndDetailTextureTwoLayer, g_fpDualTextureAndDetailTextureTwoLayer,
-			TEXT("Complex surface dual texture and detail texture two layer"));
-	}
+	//Dual texture and detail texture two layer
+	initOk &= LoadFragmentProgram(m_fpDualTextureAndDetailTextureTwoLayer, g_fpDualTextureAndDetailTextureTwoLayer,
+		"Complex surface dual texture and detail texture two layer");
 
 
 	//Reset to default fragment program and update current fragment program variable
 	glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, 0);
+	glDisable(GL_FRAGMENT_PROGRAM_ARB);
 	m_fpCurrent = 0;
 
 	return initOk;
-}
-
-bool UOpenGLRenderDevice::LoadFragmentProgram(GLuint fpId, const char *pProgram, const TCHAR *pName) {
-	GLint iErrorPos;
-
-#ifndef UTGLR_DONT_DEBUG_AT_ALL
-	if (DebugBit(DEBUG_BIT_BASIC)) {
-		dout << TEXT("utglr: Loading fragment program \"") << pName << TEXT("\"") << std::endl;
-	}
-#endif
-
-	glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, fpId);
-	glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, strlen(pProgram), pProgram);
-
-	glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &iErrorPos);
-
-#ifndef UTGLR_DONT_DEBUG_AT_ALL
-	if (DebugBit(DEBUG_BIT_BASIC)) {
-		if (iErrorPos != -1) {
-			dout << TEXT("utglr: Fragment program error at offset ") << iErrorPos << std::endl;
-			dout << TEXT("utglr: Fragment program text from error offset:\n") << appFromAnsi(pProgram + iErrorPos) << std::endl;
-		}
-	}
-#endif
-
-	if (iErrorPos != -1) {
-		return false;
-	}
-
-	return true;
 }
 
 //Attempts to initializes fragment program mode
@@ -6204,9 +6231,7 @@ void UOpenGLRenderDevice::TryInitializeFragmentProgramMode(void) {
 		UseFragmentProgram = 0;
 		PL_UseFragmentProgram = 0;
 
-#ifndef UTGLR_DONT_DEBUG_AT_ALL
-		if (DebugBit(DEBUG_BIT_BASIC)) dout << TEXT("utglr: Fragment program initialization failed") << std::endl;
-#endif
+		if (DebugBit(DEBUG_BIT_BASIC)) dbgPrintf("utglr: Fragment program initialization failed\n");
 	}
 
 	return;
@@ -6219,23 +6244,30 @@ void UOpenGLRenderDevice::ShutdownFragmentProgramMode(void) {
 	//Free fragment program names
 	FreeFragmentProgramNamesSafe();
 
-	//Disable fragment program mode if it was enabled
-	if (m_fpModeEnabled == true) {
-		//Mark fragment program mode as disabled
-		m_fpModeEnabled = false;
-
-		//Disable fragment program mode
-		glDisable(GL_FRAGMENT_PROGRAM_ARB);
+	//Disable vertex program mode if it was enabled
+	if (m_vpCurrent != 0) {
+		//Disable vertex program mode
+		glBindProgramARB(GL_VERTEX_PROGRAM_ARB, 0);
+		glDisable(GL_VERTEX_PROGRAM_ARB);
+		m_vpCurrent = 0;
 	}
 
-	//The default fragment program is now current
-	m_fpCurrent = 0;
+	//Disable fragment program mode if it was enabled
+	if (m_fpCurrent != 0) {
+		//Disable fragment program mode
+		glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, 0);
+		glDisable(GL_FRAGMENT_PROGRAM_ARB);
+		m_fpCurrent = 0;
+	}
 
 	return;
 }
 
 
 void UOpenGLRenderDevice::SetProjectionStateNoCheck(bool requestNearZRangeHackProjection) {
+	FLOAT zNear;
+	FLOAT zFar;
+
 	//Save new Z range hack projection state
 	m_nearZRangeHackProjectionActive = requestNearZRangeHackProjection;
 
@@ -6244,7 +6276,7 @@ void UOpenGLRenderDevice::SetProjectionStateNoCheck(bool requestNearZRangeHackPr
 	glLoadIdentity();
 
 	//Set default zNear
-	FLOAT zNear = 0.5f;
+	zNear = 0.5f;
 
 	if (requestNearZRangeHackProjection) {
 #ifdef UTGLR_DEBUG_Z_RANGE_HACK_WIREFRAME
@@ -6264,7 +6296,14 @@ void UOpenGLRenderDevice::SetProjectionStateNoCheck(bool requestNearZRangeHackPr
 		}
 	}
 
-	glFrustum(-m_RProjZ * zNear, +m_RProjZ * zNear, -m_Aspect*m_RProjZ * zNear, +m_Aspect*m_RProjZ * zNear, 1.0 * zNear, 32768.0);
+	//Set zFar
+#ifdef UTGLR_UNREAL_227_BUILD
+	zFar = 49152.0f;
+#else
+	zFar = 32768.0f;
+#endif
+
+	glFrustum(-m_RProjZ * zNear, +m_RProjZ * zNear, -m_Aspect*m_RProjZ * zNear, +m_Aspect*m_RProjZ * zNear, 1.0 * zNear, zFar);
 
 	return;
 }
@@ -6332,7 +6371,7 @@ void UOpenGLRenderDevice::RenderPassesExec(void) {
 
 #if 0
 {
-	dout << L"utglr: PassCount = " << m_rpPassCount << std::endl;
+	dbgPrintf("utglr: PassCount = %d\n", m_rpPassCount);
 }
 #endif
 	m_rpPassCount = 0;
@@ -6342,7 +6381,7 @@ void UOpenGLRenderDevice::RenderPassesExec(void) {
 }
 
 void UOpenGLRenderDevice::RenderPassesExec_SingleOrDualTextureAndDetailTexture(FTextureInfo &DetailTextureInfo) {
-	guard(UOpenGLRenderDevice::RenderPassesExec_DualTextureAndDetailTexture);
+	guard(UOpenGLRenderDevice::RenderPassesExec_SingleOrDualTextureAndDetailTexture);
 
 	//Some render passes paths may use fragment program
 
@@ -6385,7 +6424,7 @@ void UOpenGLRenderDevice::RenderPassesExec_SingleOrDualTextureAndDetailTexture(F
 
 #if 0
 {
-	dout << L"utglr: PassCount = " << m_rpPassCount << std::endl;
+	dbgPrintf("utglr: PassCount = %d\n", m_rpPassCount);
 }
 #endif
 	m_rpPassCount = 0;
@@ -6399,7 +6438,9 @@ void UOpenGLRenderDevice::RenderPassesNoCheckSetup(void) {
 	INT i;
 	INT t;
 
-	SetDefaultFragmentProgramState();
+	SetDefaultShaderState();
+
+	glColor3fv(m_complexSurfaceColor3f_1f);
 
 	SetBlend(MultiPass.TMU[0].PolyFlags);
 
@@ -6489,13 +6530,13 @@ void UOpenGLRenderDevice::RenderPassesNoCheckSetup(void) {
 }
 
 //Must be called with (m_rpPassCount > 0)
-void UOpenGLRenderDevice::RenderPassesNoCheckSetup_VP(void) {
+void UOpenGLRenderDevice::RenderPassesNoCheckSetup_FP(void) {
 	INT i;
 	GLuint fpId = 0;
 
-	SetBlend(MultiPass.TMU[0].PolyFlags);
+	glColor4fv(m_complexSurfaceColor3f_1f);
 
-	SetVertexProgram(m_vpComplexSurface[m_rpPassCount - 1]);
+	SetBlend(MultiPass.TMU[0].PolyFlags);
 
 	//Look for a fragment program that can use if they're enabled
 	if (UseFragmentProgram) {
@@ -6504,36 +6545,33 @@ void UOpenGLRenderDevice::RenderPassesNoCheckSetup_VP(void) {
 		}
 		else if (m_rpPassCount == 2) {
 			if (MultiPass.TMU[1].PolyFlags == PF_Modulated) {
-				if (OneXBlending) {
-					fpId = m_fpComplexSurfaceDualTextureModulated;
-				}
-				else {
-					fpId = m_fpComplexSurfaceDualTextureModulated2X;
-				}
+				fpId = m_fpComplexSurfaceDualTextureModulated;
 			}
 			else if (MultiPass.TMU[1].PolyFlags == PF_Highlighted) {
 				fpId = m_fpComplexSurfaceSingleTextureWithFog;
 			}
 		}
 		else if (m_rpPassCount == 3) {
-			if (MultiPass.TMU[2].PolyFlags == PF_Highlighted) {
-				if (OneXBlending) {
-					fpId = m_fpComplexSurfaceDualTextureModulatedWithFog;
-				}
-				else {
-					fpId = m_fpComplexSurfaceDualTextureModulated2XWithFog;
-				}
+			if (MultiPass.TMU[2].PolyFlags == PF_Modulated) {
+				fpId = m_fpComplexSurfaceTripleTextureModulated;
+			}
+			else if (MultiPass.TMU[2].PolyFlags == PF_Highlighted) {
+				fpId = m_fpComplexSurfaceDualTextureModulatedWithFog;
+			}
+		}
+		else if (m_rpPassCount == 4) {
+			if (MultiPass.TMU[3].PolyFlags == PF_Highlighted) {
+				fpId = m_fpComplexSurfaceTripleTextureModulatedWithFog;
 			}
 		}
 	}
 
 	//Check if found a fragment program to use
+	//All possible combinations are supposed to have a fragment program
 	if (fpId == 0) {
-		SetDisabledFragmentProgramState();
+		fpId = m_fpComplexSurfaceSingleTexture;
 	}
-	else {
-		SetFragmentProgram(fpId);
-	}
+	SetShaderState(m_vpComplexSurface[m_rpPassCount - 1], fpId);
 
 	i = 0;
 	do {
@@ -6556,7 +6594,7 @@ void UOpenGLRenderDevice::RenderPassesNoCheckSetup_VP(void) {
 		}
 
 		SetTexture(i, *MultiPass.TMU[i].Info, MultiPass.TMU[i].PolyFlags, MultiPass.TMU[i].PanBias);
-		
+
 		glVertexAttrib4fARB(i + 8, TexInfo[i].UPan, TexInfo[i].VPan, TexInfo[i].UMult, TexInfo[i].VMult);
 	} while (++i < m_rpPassCount);
 
@@ -6578,7 +6616,9 @@ void UOpenGLRenderDevice::RenderPassesNoCheckSetup_SingleOrDualTextureAndDetailT
 	//Two extra texture units used for detail texture
 	m_rpPassCount += 2;
 
-	SetDefaultFragmentProgramState();
+	SetDefaultShaderState();
+
+	glColor3fv(m_detailTextureColor3f_1f);
 
 	SetBlend(MultiPass.TMU[0].PolyFlags);
 
@@ -6613,8 +6653,6 @@ void UOpenGLRenderDevice::RenderPassesNoCheckSetup_SingleOrDualTextureAndDetailT
 
 		SetTexture(i, *MultiPass.TMU[i - 2].Info, MultiPass.TMU[i - 2].PolyFlags, MultiPass.TMU[i - 2].PanBias);
 	} while (++i < m_rpPassCount);
-
-	glColor3fv(m_detailTextureColor3f_1f);
 
 	glActiveTextureARB(GL_TEXTURE0_ARB);
 	SetAlphaTexture(0);
@@ -6728,89 +6766,11 @@ void UOpenGLRenderDevice::RenderPassesNoCheckSetup_SingleOrDualTextureAndDetailT
 }
 
 //Must be called with (m_rpPassCount > 0)
-void UOpenGLRenderDevice::RenderPassesNoCheckSetup_SingleOrDualTextureAndDetailTexture_VP(FTextureInfo &DetailTextureInfo) {
-	INT i;
-
-	//Two extra texture units used for detail texture
-	m_rpPassCount += 2;
-
-	SetDefaultFragmentProgramState();
-
-	SetBlend(MultiPass.TMU[0].PolyFlags);
-
-	//Surface texture must be 2X blended
-	//Also force PF_Modulated for the TexEnv stage
-	MultiPass.TMU[0].PolyFlags |= (PF_Modulated | PF_FlatShaded);
-
-	if (m_rpPassCount == 3) {
-		SetVertexProgram(m_vpComplexSurfaceSingleTextureAndDetailTexture);
-	}
-	else {
-		SetVertexProgram(m_vpComplexSurfaceDualTextureAndDetailTexture);
-	}
-
-	//Detail texture uses first two texture units
-	//Other textures use last two texture units
-	i = 2;
-	do {
-		if (i != 0) {
-			DWORD texBit;
-
-			glActiveTextureARB(GL_TEXTURE0_ARB + i);
-
-			texBit = 1 << i;
-			if ((m_texEnableBits & texBit) == 0) {
-				m_texEnableBits |= texBit;
-
-				glEnable(GL_TEXTURE_2D);
-			}
-
-			SetTexEnv(i, MultiPass.TMU[i - 2].PolyFlags);
-		}
-
-		SetTexture(i, *MultiPass.TMU[i - 2].Info, MultiPass.TMU[i - 2].PolyFlags, MultiPass.TMU[i - 2].PanBias);
-
-		glVertexAttrib4fARB(i + 8, TexInfo[i].UPan, TexInfo[i].VPan, TexInfo[i].UMult, TexInfo[i].VMult);
-	} while (++i < m_rpPassCount);
-
-	glColor3fv(m_detailTextureColor3f_1f);
-
-	glActiveTextureARB(GL_TEXTURE0_ARB);
-	SetAlphaTexture(0);
-	{
-		DWORD texBit = 1 << 0;
-		if ((m_texEnableBits & texBit) == 0) {
-			m_texEnableBits |= texBit;
-
-			glEnable(GL_TEXTURE_2D);
-		}
-	}
-
-	glActiveTextureARB(GL_TEXTURE1_ARB);
-	SetTexEnv(1, PF_Memorized);
-	SetTextureNoPanBias(1, DetailTextureInfo, PF_Modulated);
-	{
-		DWORD texBit = 1 << 1;
-		if ((m_texEnableBits & texBit) == 0) {
-			m_texEnableBits |= texBit;
-
-			glEnable(GL_TEXTURE_2D);
-		}
-	}
-	glVertexAttrib4fARB(9, TexInfo[1].UPan, TexInfo[1].VPan, TexInfo[1].UMult, TexInfo[1].VMult);
-
-	//Check for additional enabled texture units that should be disabled
-	DisableSubsequentTextures(m_rpPassCount);
-	//Disable all client textures for this vertex program path
-	DisableSubsequentClientTextures(0);
-
-	return;
-}
-
-//Must be called with (m_rpPassCount > 0)
 void UOpenGLRenderDevice::RenderPassesNoCheckSetup_SingleOrDualTextureAndDetailTexture_FP(FTextureInfo &DetailTextureInfo) {
 	INT i;
 	DWORD detailTexUnit;
+	GLuint vpId = 0;
+	GLuint fpId = 0;
 
 	//One extra texture unit used for detail texture
 	m_rpPassCount += 1;
@@ -6819,27 +6779,30 @@ void UOpenGLRenderDevice::RenderPassesNoCheckSetup_SingleOrDualTextureAndDetailT
 	detailTexUnit = (m_rpPassCount - 1);
 
 	if (m_rpPassCount == 2) {
-		SetVertexProgram(m_vpComplexSurfaceDualTextureWithPos);
+		vpId = m_vpComplexSurfaceDualTextureWithPos;
 	}
 	else {
-		SetVertexProgram(m_vpComplexSurfaceTripleTextureWithPos);
+		vpId = m_vpComplexSurfaceTripleTextureWithPos;
 	}
 	if (DetailMax >= 2) {
 		if (m_rpPassCount == 2) {
-			SetFragmentProgram(m_fpSingleTextureAndDetailTextureTwoLayer);
+			fpId = m_fpSingleTextureAndDetailTextureTwoLayer;
 		}
 		else {
-			SetFragmentProgram(m_fpDualTextureAndDetailTextureTwoLayer);
+			fpId = m_fpDualTextureAndDetailTextureTwoLayer;
 		}
 	}
 	else {
 		if (m_rpPassCount == 2) {
-			SetFragmentProgram(m_fpSingleTextureAndDetailTexture);
+			fpId = m_fpSingleTextureAndDetailTexture;
 		}
 		else {
-			SetFragmentProgram(m_fpDualTextureAndDetailTexture);
+			fpId = m_fpDualTextureAndDetailTexture;
 		}
 	}
+	SetShaderState(vpId, fpId);
+
+	glColor4fv(m_detailTextureColor3f_1f);
 
 	SetBlend(MultiPass.TMU[0].PolyFlags);
 
@@ -6866,9 +6829,6 @@ void UOpenGLRenderDevice::RenderPassesNoCheckSetup_SingleOrDualTextureAndDetailT
 
 		glVertexAttrib4fARB(i + 8, TexInfo[i].UPan, TexInfo[i].VPan, TexInfo[i].UMult, TexInfo[i].VMult);
 	} while (++i < detailTexUnit);
-
-	m_detailTextureColor3f_1f[3] = (OneXBlending) ? 0.0f : 1.0f;
-	glColor4fv(m_detailTextureColor3f_1f);
 
 	//Detail texture in second or third texture unit
 	glActiveTextureARB(GL_TEXTURE0_ARB + detailTexUnit);
@@ -6897,6 +6857,8 @@ void UOpenGLRenderDevice::RenderPassesNoCheckSetup_SingleOrDualTextureAndDetailT
 void UOpenGLRenderDevice::DrawDetailTexture(FTextureInfo &DetailTextureInfo, INT BaseClipIndex, bool clipDetailTexture) {
 	//Setup detail texture state
 	SetBlend(PF_Modulated);
+
+	SetDefaultShaderState();
 
 	//Set detail alpha mode flag
 	bool detailAlphaMode = ((clipDetailTexture == false) && UseDetailAlpha) ? true : false;
@@ -7134,75 +7096,16 @@ void UOpenGLRenderDevice::DrawDetailTexture(FTextureInfo &DetailTextureInfo, INT
 
 //Modified this routine to always set up detail texture state
 //It should only be called if at least one polygon will be detail textured
-void UOpenGLRenderDevice::DrawDetailTexture_VP(FTextureInfo &DetailTextureInfo) {
-	INT Index = 0;
-
-	//Setup detail texture state
-	SetBlend(PF_Modulated);
-
-	SetVertexProgram(m_vpComplexSurfaceDetailAlpha);
-
-	glColor3fv(m_detailTextureColor3f_1f);
-
-	glActiveTextureARB(GL_TEXTURE0_ARB);
-	SetAlphaTexture(0);
-	//TexEnv 0 is PF_Modulated by default
-
-	glActiveTextureARB(GL_TEXTURE1_ARB);
-	SetTexEnv(1, PF_Memorized);
-	SetTextureNoPanBias(1, DetailTextureInfo, PF_Modulated);
-	if ((m_texEnableBits & 0x2) == 0) {
-		m_texEnableBits |= 0x2;
-
-		glEnable(GL_TEXTURE_2D);
-	}
-	glVertexAttrib4fARB(9, TexInfo[1].UPan, TexInfo[1].VPan, TexInfo[1].UMult, TexInfo[1].VMult);
-
-	//Check for additional enabled texture units that should be disabled
-	DisableSubsequentTextures(2);
-	DisableSubsequentClientTextures(0);
-
-
-	INT *pNumPts = &MultiDrawCountArray[0];
-	DWORD *pDetailTextureIsNear = DetailTextureIsNearArray;
-	DWORD csPolyCount = m_csPolyCount;
-	for (DWORD PolyNum = 0; PolyNum < csPolyCount; PolyNum++, pNumPts++, pDetailTextureIsNear++) {
-		DWORD NumPts = *pNumPts;
-		DWORD isNearBits = *pDetailTextureIsNear;
-
-		//Skip the polygon if it will not be detail textured
-		if (isNearBits == 0) {
-			Index += NumPts;
-			continue;
-		}
-
-		glDrawArrays(GL_TRIANGLE_FAN, Index, NumPts);
-		Index += NumPts;
-	}
-
-
-	//Clear detail texture state
-	glActiveTextureARB(GL_TEXTURE0_ARB);
-	//TexEnv 0 was left in default state of PF_Modulated
-
-	return;
-}
-
-//Modified this routine to always set up detail texture state
-//It should only be called if at least one polygon will be detail textured
 void UOpenGLRenderDevice::DrawDetailTexture_FP(FTextureInfo &DetailTextureInfo) {
 	INT Index = 0;
+	GLuint fpId;
 
 	//Setup detail texture state
 	SetBlend(PF_Modulated);
 
-	SetVertexProgram(m_vpComplexSurfaceSingleTextureWithPos);
-	if (DetailMax >= 2) {
-		SetFragmentProgram(m_fpDetailTextureTwoLayer);
-	}
-	else {
-		SetFragmentProgram(m_fpDetailTexture);
-	}
+	fpId = m_fpDetailTexture;
+	if (DetailMax >= 2) fpId = m_fpDetailTextureTwoLayer;
+	SetShaderState(m_vpComplexSurfaceSingleTextureWithPos, fpId);
 
 	glColor3fv(m_detailTextureColor3f_1f);
 
@@ -7246,9 +7149,9 @@ void UOpenGLRenderDevice::DrawDetailTexture_FP(FTextureInfo &DetailTextureInfo) 
 }
 
 INT UOpenGLRenderDevice::BufferStaticComplexSurfaceGeometry(const FSurfaceFacet& Facet) {
-	INT Index = 0;
+	INT numVerts = 0;
 
-	// Buffer "static" geometry.
+	//Buffer static geometry
 	m_csPolyCount = 0;
 	FGLMapDot *pMapDot = &MapDotArray[0];
 	FGLVertex *pVertex = &VertexArray[0];
@@ -7260,12 +7163,12 @@ INT UOpenGLRenderDevice::BufferStaticComplexSurfaceGeometry(const FSurfaceFacet&
 		}
 
 		DWORD csPolyCount = m_csPolyCount;
-		MultiDrawFirstArray[csPolyCount] = Index;
+		MultiDrawFirstArray[csPolyCount] = numVerts;
 		MultiDrawCountArray[csPolyCount] = NumPts;
 		m_csPolyCount = csPolyCount + 1;
 
-		Index += NumPts;
-		if (Index > VERTEX_ARRAY_SIZE) {
+		numVerts += NumPts;
+		if (numVerts > VERTEX_ARRAY_SIZE) {
 			return 0;
 		}
 		FTransform **pPts = &Poly->Pts[0];
@@ -7283,13 +7186,13 @@ INT UOpenGLRenderDevice::BufferStaticComplexSurfaceGeometry(const FSurfaceFacet&
 		} while (--NumPts != 0);
 	}
 
-	return Index;
+	return numVerts;
 }
 
 INT UOpenGLRenderDevice::BufferStaticComplexSurfaceGeometry_VP(const FSurfaceFacet& Facet) {
-	INT Index = 0;
+	INT numVerts = 0;
 
-	// Buffer "static" geometry.
+	//Buffer static geometry
 	m_csPolyCount = 0;
 	FGLVertex *pVertex = &VertexArray[0];
 	for (FSavedPoly* Poly = Facet.Polys; Poly; Poly = Poly->Next) {
@@ -7300,12 +7203,12 @@ INT UOpenGLRenderDevice::BufferStaticComplexSurfaceGeometry_VP(const FSurfaceFac
 		}
 
 		DWORD csPolyCount = m_csPolyCount;
-		MultiDrawFirstArray[csPolyCount] = Index;
+		MultiDrawFirstArray[csPolyCount] = numVerts;
 		MultiDrawCountArray[csPolyCount] = NumPts;
 		m_csPolyCount = csPolyCount + 1;
 
-		Index += NumPts;
-		if (Index > VERTEX_ARRAY_SIZE) {
+		numVerts += NumPts;
+		if (numVerts > VERTEX_ARRAY_SIZE) {
 			return 0;
 		}
 		FTransform **pPts = &Poly->Pts[0];
@@ -7319,7 +7222,7 @@ INT UOpenGLRenderDevice::BufferStaticComplexSurfaceGeometry_VP(const FSurfaceFac
 		} while (--NumPts != 0);
 	}
 
-	return Index;
+	return numVerts;
 }
 
 DWORD UOpenGLRenderDevice::BufferDetailTextureData(FLOAT NearZ) {
@@ -7401,13 +7304,12 @@ __declspec(naked) DWORD UOpenGLRenderDevice::BufferDetailTextureData_SSE2(FLOAT 
 	}
 }
 #endif //UTGLR_INCLUDE_SSE_CODE
-	
+
 void UOpenGLRenderDevice::EndGouraudPolygonBufferingNoCheck(void) {
 	SetDefaultAAState();
 	//EndGouraudPolygonBufferingNoCheck sets its own projection state
 	//EndGouraudPolygonBufferingNoCheck sets its own color state
-	//Vertex program state set when start buffering
-	//Fragment program state set when start buffering
+	//Shader state set when start buffering
 	//Default texture state set when start buffering
 
 	clock(GouraudCycles);
@@ -7443,8 +7345,7 @@ void UOpenGLRenderDevice::EndTileBufferingNoCheck(void) {
 	}
 	SetDefaultProjectionState();
 	//EndTileBufferingNoCheck sets its own color state
-	//Vertex program state set when start buffering
-	//Fragment program state set when start buffering
+	//Shader state set when start buffering
 	//Default texture state set when start buffering
 
 	clock(TileCycles);
@@ -7462,9 +7363,9 @@ void UOpenGLRenderDevice::EndTileBufferingNoCheck(void) {
 
 
 // Static variables.
-INT		UOpenGLRenderDevice::NumDevices		= 0;
-INT		UOpenGLRenderDevice::LockCount		= 0;
-UBOOL 		UOpenGLRenderDevice::GLLoaded	= false;
+INT UOpenGLRenderDevice::NumDevices = 0;
+INT UOpenGLRenderDevice::LockCount  = 0;
+UBOOL UOpenGLRenderDevice::GLLoaded = false;
 
 bool UOpenGLRenderDevice::g_gammaFirstTime = false;
 bool UOpenGLRenderDevice::g_haveOriginalGammaRamp = false;
@@ -7475,18 +7376,17 @@ CCachedTextureChain UOpenGLRenderDevice::m_sharedNonZeroPrefixBindChain;
 UOpenGLRenderDevice::QWORD_CTTree_NodePool_t UOpenGLRenderDevice::m_sharedNonZeroPrefixTexIdPool;
 UOpenGLRenderDevice::TexPoolMap_t UOpenGLRenderDevice::m_sharedRGBA8TexPool;
 
-// OpenGL function pointers.
-#define GL_EXT(name) bool UOpenGLRenderDevice::SUPPORTS##name = 0;
-#define GL_PROC(ext,ret,func,parms) ret (STDCALL *UOpenGLRenderDevice::func)parms;
-#ifdef UTGLR_ALL_GL_PROCS
-#define GL_PROX(ext,ret,func,parms) ret (STDCALL *UOpenGLRenderDevice::func)parms;
-#else
-#define GL_PROX(ext,ret,func,parms)
-#endif
-#include "OpenGLFuncs.h"
-#undef GL_EXT
-#undef GL_PROC
-#undef GL_PROX
+//OpenGL 1.x function pointers for remaining subset to be used with OpenGL 3.2
+#define GL1_PROC(ret, func, params) ret (STDCALL *UOpenGLRenderDevice::func)params;
+#include "OpenGL1Funcs.h"
+#undef GL1_PROC
+
+//OpenGL extension function pointers
+#define GL_EXT_NAME(name) bool UOpenGLRenderDevice::SUPPORTS##name = 0;
+#define GL_EXT_PROC(ext, ret, func, params) ret (STDCALL *UOpenGLRenderDevice::func)params;
+#include "OpenGLExtFuncs.h"
+#undef GL_EXT_NAME
+#undef GL_EXT_PROC
 
 /*-----------------------------------------------------------------------------
 	The End.

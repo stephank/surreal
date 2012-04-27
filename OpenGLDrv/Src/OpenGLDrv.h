@@ -14,16 +14,11 @@
 	Includes.
 -----------------------------------------------------------------------------*/
 
-#include <math.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-
 #ifdef WIN32
 #include <windows.h>
+#else
+#include <SDL/SDL.h>
 #endif
-#include "SDL.h"
 #include <GL/gl.h>
 #ifdef WIN32
 #include "glext.h"
@@ -32,12 +27,18 @@
 #include <GL/glext.h>
 #endif
 
-#ifndef UTGLR_DONT_DEBUG_AT_ALL
 #define UTGLR_NO_APP_MALLOC
-#endif
+#include <stdlib.h>
 
 #include "Engine.h"
 #include "UnRender.h"
+
+#ifdef UTGLR_UNREAL_227_BUILD
+// Hack so I don't have to move UOpenGLRenderDevice's interface into a header.  --ryan.
+//#define AUTO_INITIALIZE_REGISTRANTS_OPENGLDRV UOpenGLRenderDevice::StaticClass();
+extern "C" { void autoInitializeRegistrantsOpenGLDrv(void); }
+// #define AUTO_INITIALIZE_REGISTRANTS_OPENGLDRV autoInitializeRegistrantsOpenGLDrv();
+#endif
 
 /*-----------------------------------------------------------------------------
 	The End.
