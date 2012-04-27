@@ -208,6 +208,7 @@ MDRIVER MusicDriver = {
 	255,
 	"unreal",
 	NULL,
+	NULL,
 	UnMM_IsPresent,
 	VC_SampleLoad,
 	VC_SampleUnload,
