@@ -217,9 +217,11 @@ void USDLClient::ShowViewportWindows( DWORD ShowFlags, int DoShow )
 	guard(USDLClient::ShowViewportWindows); 	
 	for( int i=0; i<Viewports.Num(); i++ )
 	{
+		/* FIXME
 		USDLViewport* Viewport = (USDLViewport*)Viewports(i);
 		if( (Viewport->Actor->ShowFlags & ShowFlags)==ShowFlags )
-			;// XMapWindow(XDisplay, Viewport->XWindow);
+			XMapWindow(XDisplay, Viewport->XWindow);
+		*/
 	}
 	unguard;
 }

@@ -5685,7 +5685,7 @@ void UOpenGLRenderDevice::SetTexEnvNoCheck(DWORD texUnit, DWORD texEnvFlags) {
 	m_curTexEnvFlags[texUnit] = texEnvFlags;
 
 	if (texEnvFlags & PF_Modulated) {
-		if ((texEnvFlags & PF_FlatShaded) || (texUnit != 0) && !OneXBlending) {
+		if ((texEnvFlags & PF_FlatShaded) || ((texUnit != 0) && !OneXBlending)) {
 			glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_EXT);
 
 			glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_EXT, GL_MODULATE);
