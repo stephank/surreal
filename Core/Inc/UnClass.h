@@ -126,66 +126,6 @@ class CORE_API UField : public UObject
 };
 
 /*-----------------------------------------------------------------------------
-	TFieldIterator.
------------------------------------------------------------------------------*/
-
-//
-// For iterating through a linked list of fields.
-//
-template <class T> class TFieldIterator
-{
-public:
-	TFieldIterator( UStruct* InStruct )
-	: Struct( InStruct )
-	, Field( InStruct ? InStruct->Children : NULL )
-	{
-		IterateToNext();
-	}
-	operator UBOOL()
-	{
-		return Field != NULL;
-	}
-	void operator++()
-	{
-		checkSlow(Field);
-		Field = Field->Next;
-		IterateToNext();
-	}
-	T* operator*()
-	{
-		checkSlow(Field);
-		return (T*)Field;
-	}
-	T* operator->()
-	{
-		checkSlow(Field);
-		return (T*)Field;
-	}
-	UStruct* GetStruct()
-	{
-		return Struct;
-	}
-protected:
-	void IterateToNext()
-	{
-		while( Struct )
-		{
-			while( Field )
-			{
-				if( Field->IsA(T::StaticClass()) )
-					return;
-				Field = Field->Next;
-			}
-			Struct = Struct->GetInheritanceSuper();
-			if( Struct )
-				Field = Struct->Children;
-		}
-	}
-	UStruct* Struct;
-	UField* Field;
-};
-
-/*-----------------------------------------------------------------------------
 	UStruct.
 -----------------------------------------------------------------------------*/
 
@@ -272,6 +212,66 @@ class CORE_API UStruct : public UField
 		unguardSlow;
 	}
 	UBOOL StructCompare( const void* A, const void* B );
+};
+
+/*-----------------------------------------------------------------------------
+	TFieldIterator.
+-----------------------------------------------------------------------------*/
+
+//
+// For iterating through a linked list of fields.
+//
+template <class T> class TFieldIterator
+{
+public:
+	TFieldIterator( UStruct* InStruct )
+	: Struct( InStruct )
+	, Field( InStruct ? InStruct->Children : NULL )
+	{
+		IterateToNext();
+	}
+	operator UBOOL()
+	{
+		return Field != NULL;
+	}
+	void operator++()
+	{
+		checkSlow(Field);
+		Field = Field->Next;
+		IterateToNext();
+	}
+	T* operator*()
+	{
+		checkSlow(Field);
+		return (T*)Field;
+	}
+	T* operator->()
+	{
+		checkSlow(Field);
+		return (T*)Field;
+	}
+	UStruct* GetStruct()
+	{
+		return Struct;
+	}
+protected:
+	void IterateToNext()
+	{
+		while( Struct )
+		{
+			while( Field )
+			{
+				if( Field->IsA(T::StaticClass()) )
+					return;
+				Field = Field->Next;
+			}
+			Struct = Struct->GetInheritanceSuper();
+			if( Struct )
+				Field = Struct->Children;
+		}
+	}
+	UStruct* Struct;
+	UField* Field;
 };
 
 /*-----------------------------------------------------------------------------
