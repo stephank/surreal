@@ -7,15 +7,18 @@
 	Platform compiler definitions.
 ----------------------------------------------------------------------------*/
 
-#ifdef __LINUX_X86__
+#ifdef __LINUX__
 	#define __UNIX__  1
-	#define __LINUX__ 1
 	#define __INTEL__ 1
 	#define __INTEL_BYTE_ORDER__ 1
 	#undef ASM
 	#undef ASM3DNOW
 	#undef ASMKNI
-	#define ASMLINUX 1
+	#ifdef __LP64__
+		#undef ASMLINUX
+	#else
+		#define ASMLINUX 1
+	#endif
 	#define COMPILER "Compiled with GNU g++ ("__VERSION__")"
 #else
 	#error Unsupported platform.

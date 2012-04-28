@@ -10,7 +10,7 @@
 	typedef FFileManagerWindows FFileManagerNative;
 	#include "FMallocWindows.h"
 	typedef FMallocWindows FMallocNative;
-#elif __LINUX_X86__
+#elif __LINUX__
 	#include "FFileManagerLinux.h"
 	typedef FFileManagerLinux FFileManagerNative;
 	#include "FMallocAnsi.h"
