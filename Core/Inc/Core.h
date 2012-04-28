@@ -406,6 +406,7 @@ extern "C" DLL_EXPORT TCHAR GPackage[];
 #include "UnCId.h"          // Cache ID's.
 #include "UnBits.h"         // Bitstream archiver.
 #include "UnMath.h"         // Vector math functions.
+#include "UnFunctions.h"	// Core functions.
 
 #if __STATIC_LINK
 #include "UnCoreNative.h"
