@@ -15,19 +15,12 @@
 
 #if defined(__LINUX__)
 
-	#undef ASMLINUX
-	#if !defined(__LP64__)
-		#define ASMLINUX 1
-	#endif
-
 	#include <endian.h>
 	#if __BYTE_ORDER == __LITTLE_ENDIAN
 		#define __INTEL_BYTE_ORDER__ 1
 	#endif
 
 #elif defined(__APPLE__)
-
-	#undef ASMLINUX
 
 	#if defined(__LITTLE_ENDIAN__)
 		#define __INTEL_BYTE_ORDER__ 1
@@ -231,22 +224,6 @@ inline INT appFloor( FLOAT f )
 #endif
 
 //
-// CPU cycles, related to GSecondsPerCycle.
-//
-#if ASMLINUX
-#define DEFINED_appCycles 1
-inline DWORD appCycles()
-{
-	if( GTimestamp )
-	{
-		DWORD r;
-		asm("rdtsc" : "=a" (r) : "d" (r));
-		return r;
-	}
-}
-#endif
-
-//
 // Seconds, arbitrarily based.
 //
 #define DEFINED_appSeconds 1
@@ -273,39 +250,6 @@ inline FTime appSeconds()
 	return appSecondsSlow();
 #endif
 }
-
-//
-// Memory copy.
-//
-#if ASMLINUX
-#define DEFINED_appMemcpy 1
-inline void appMemcpy( void* Dest, const void* Src, INT Count )
-{
-	asm volatile("
-		pushl %%ebx;
-		pushl %%ecx;
-		pushl %%esi;
-		pushl %%edi;
-		mov %%ecx, %%ebx;
-		shr $2, %%ecx;
-		and $3, %%ebx;
-		rep;
-		movsl;
-		mov %%ebx, %%ecx;
-		rep;
-		movsb;
-		popl %%edi;
-		popl %%esi;
-		popl %%ecx;
-		popl %%ebx;
-	"
-	:
-	: "S" (Src),
-	  "D" (Dest),
-	  "c" (Count)
-	);
-}
-#endif
 
 //
 // Memory zero.
