@@ -429,8 +429,10 @@ public: \
 		IMPLEMENT_PACKAGE_PLATFORM(pkg)
 #else
 	#define IMPLEMENT_PACKAGE(pkg) \
-	extern "C" DLL_EXPORT {TCHAR GPackage[] = TEXT(#pkg);} \
-		IMPLEMENT_PACKAGE_PLATFORM(pkg)
+	extern "C" { \
+		DLL_EXPORT {TCHAR GPackage[] = TEXT(#pkg);} \
+		IMPLEMENT_PACKAGE_PLATFORM(pkg) \
+	}
 #endif
 
 /*-----------------------------------------------------------------------------
