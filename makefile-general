@@ -74,10 +74,6 @@ endif
 $(BUILD_DIR)/%.o : %.cpp
 	$(CXX) -c $(CXXFLAGS) -o $@ $< > $(BUILD_DIR)/$*.lst
 
-# Compile a DSM file.
-$(BUILD_DIR)/%.o : %.dsm
-	$(STD_DVPASM) $(DVPASMFLAGS) -o $@ $< > $(BUILD_DIR)/$*.lst
-
 # Generate dependencies for a C++ file.
 $(BUILD_DIR)/%.d : %.cpp
 	@echo Generating dependencies for $(notdir $<)
