@@ -397,7 +397,8 @@ public:
 	{
 		guard(FFileManagerLinux::GetDefaultDirectory);
 		ANSICHAR Buffer[PATH_MAX]="";
-		getcwd( Buffer, ARRAY_COUNT(Buffer) );
+		if (getcwd( Buffer, ARRAY_COUNT(Buffer) ) == NULL)
+			Buffer[0] = '\0';
 		return appFromAnsi( Buffer );
 		unguard;
 	}
