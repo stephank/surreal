@@ -621,6 +621,10 @@ template <class T> inline void ExchangeArray( TArray<T>& A, TArray<T>& B )
 template< class T > class TTransArray : public TArray<T>
 {
 public:
+	using FArray::ArrayNum;
+	using FArray::Num;
+
+public:
 	// Constructors.
 	TTransArray( UObject* InOwner, INT InNum=0 )
 	:	TArray<T>( InNum )
@@ -817,6 +821,9 @@ public:
 //
 template <class T> class TLazyArray : public TArray<T>, public FLazyLoader
 {
+public:
+	using TArray<T>::Empty;
+
 public:
 	TLazyArray( INT InNum=0 )
 	: TArray<T>( InNum )
@@ -1557,6 +1564,9 @@ public:
 template< class TK, class TI > class TMap : public TMapBase<TK,TI>
 {
 public:
+	using TMapBase<TK,TI>::Pairs;
+
+public:
 	TMap& operator=( const TMap& Other )
 	{
 		TMapBase<TK,TI>::operator=( Other );
@@ -1572,6 +1582,12 @@ public:
 };
 template< class TK, class TI > class TMultiMap : public TMapBase<TK,TI>
 {
+public:
+	using TMapBase<TK,TI>::Pairs;
+	using TMapBase<TK,TI>::Hash;
+	using TMapBase<TK,TI>::HashCount;
+	using TMapBase<TK,TI>::Relax;
+
 public:
 	TMultiMap& operator=( const TMultiMap& Other )
 	{
