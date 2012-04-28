@@ -31,8 +31,8 @@
 class __Context
 {
 public:
-	__Context() { Last = Env; }
-	~__Context() { Env = Last; }
+	__Context() { memcpy(Last, Env, sizeof(jmp_buf)); }
+	~__Context() { memcpy(Env, Last, sizeof(jmp_buf)); }
 	static void StaticInit();
 	static jmp_buf Env;
 
