@@ -136,12 +136,10 @@ typedef unsigned short      UNICHARU;	// A unicode character.
 typedef signed int			UBOOL;		// Boolean 0 (false) or 1 (true).
 typedef float				FLOAT;		// 32-bit IEEE floating point.
 typedef double				DOUBLE;		// 64-bit IEEE floating point.
-typedef unsigned int        SIZE_T;     // Corresponds to C SIZE_T.
+typedef size_t				SIZE_T;		// Corresponds to C SIZE_T.
 
 // Bitfield type.
 typedef unsigned int		BITFIELD;	// For bitfields.
-
-typedef unsigned int size_t;
 
 // Make sure characters are unsigned.
 #ifdef __CHAR_UNSIGNED__
