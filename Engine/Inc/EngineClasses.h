@@ -3315,7 +3315,7 @@ AUTOGENERATE_FUNCTION(ALevelInfo,-1,execGetLocalURL);
 #ifndef NAMES_ONLY
 #undef AUTOGENERATE_NAME
 #undef AUTOGENERATE_FUNCTION
-#endif NAMES_ONLY
+#endif /* NAMES_ONLY */
 
 #if _MSC_VER
 #pragma pack (pop)
