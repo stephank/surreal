@@ -446,7 +446,10 @@ CORE_API void appMemzero( void* Dest, INT Count );
 //
 // C++ style memory allocation.
 //
-inline void* operator new( unsigned int Size, const TCHAR* Tag )
+
+#include <new>
+
+inline void* operator new( size_t Size, const TCHAR* Tag ) throw (std::bad_alloc)
 {
 	guardSlow(new);
 #ifdef UTGLR_NO_APP_MALLOC
@@ -456,7 +459,7 @@ inline void* operator new( unsigned int Size, const TCHAR* Tag )
 #endif
 	unguardSlow;
 }
-inline void* operator new( unsigned int Size )
+inline void* operator new( size_t Size ) throw (std::bad_alloc)
 {
 	guardSlow(new);
 #ifdef UTGLR_NO_APP_MALLOC
@@ -466,7 +469,7 @@ inline void* operator new( unsigned int Size )
 #endif
 	unguardSlow;
 }
-inline void operator delete( void* Ptr )
+inline void operator delete( void* Ptr ) throw ()
 {
 	guardSlow(delete);
 #ifdef UTGLR_NO_APP_MALLOC
@@ -478,7 +481,7 @@ inline void operator delete( void* Ptr )
 }
 
 #if PLATFORM_NEEDS_ARRAY_NEW
-inline void* operator new[]( unsigned int Size, const TCHAR* Tag )
+inline void* operator new[]( size_t Size, const TCHAR* Tag ) throw (std::bad_alloc)
 {
 	guardSlow(new);
 #ifdef UTGLR_NO_APP_MALLOC
@@ -488,7 +491,7 @@ inline void* operator new[]( unsigned int Size, const TCHAR* Tag )
 #endif
 	unguardSlow;
 }
-inline void* operator new[]( unsigned int Size )
+inline void* operator new[]( size_t Size ) throw (std::bad_alloc)
 {
 	guardSlow(new);
 #ifdef UTGLR_NO_APP_MALLOC
@@ -498,7 +501,7 @@ inline void* operator new[]( unsigned int Size )
 #endif
 	unguardSlow;
 }
-inline void operator delete[]( void* Ptr )
+inline void operator delete[]( void* Ptr ) throw ()
 {
 	guardSlow(delete);
 #ifdef UTGLR_NO_APP_MALLOC
