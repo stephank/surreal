@@ -37,7 +37,7 @@ public:
 		checkSlow(Top<=End);
 
 		// Try to get memory from the current chunk.
-		BYTE* Result = (BYTE *)(((INT)Top+(Align-1))&~(Align-1));
+		BYTE* Result = (BYTE *)(((uintptr_t)Top+(Align-1))&~(Align-1));
 		Top = Result + AllocSize;
 
 		// Make sure we didn't overflow.
@@ -45,7 +45,7 @@ public:
 		{
 			// We'd pass the end of the current chunk, so allocate a new one.
 			AllocateNewChunk( AllocSize + Align );
-			Result = (BYTE *)(((INT)Top+(Align-1))&~(Align-1));
+			Result = (BYTE *)(((uintptr_t)Top+(Align-1))&~(Align-1));
 			Top    = Result + AllocSize;
 		}
 		return Result;

@@ -413,8 +413,8 @@ class UOpenGLRenderDevice : public URenderDevice {
 	BYTE m_localTexComposeBuffer[LOCAL_TEX_COMPOSE_BUFFER_SIZE + 16];
 
 
-	inline void * FASTCALL AlignMemPtr(void *ptr, DWORD align) {
-		return (void *)(((DWORD)ptr + (align - 1)) & -align);
+	inline void * FASTCALL AlignMemPtr(void *ptr, size_t align) {
+		return (void *)(((uintptr_t)ptr + (align - 1)) & -align);
 	}
 	enum { VERTEX_ARRAY_ALIGN = 64 };	//Must be even multiple of 16B for SSE
 	enum { VERTEX_ARRAY_TAIL_PADDING = 72 };	//Must include 8B for half SSE tail

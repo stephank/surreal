@@ -42,7 +42,7 @@ public:
 			Result = NULL;
 		}
 		return Result;
-		unguardf(( TEXT("%08X %i %s"), (INT)Ptr, NewSize, Tag ));
+		unguardf(( TEXT("%08X %i %s"), (uintptr_t)Ptr, NewSize, Tag ));
 	}
 	void Free( void* Ptr )
 	{

@@ -111,7 +111,7 @@ template< class T > inline T Clamp( const T X, const T Min, const T Max )
 }
 template< class T > inline T Align( const T Ptr, INT Alignment )
 {
-	return (T)(((DWORD)Ptr + Alignment - 1) & ~(Alignment-1));
+	return (T)(((uintptr_t)Ptr + Alignment - 1) & ~(Alignment-1));
 }
 template< class T > inline void Exchange( T& A, T& B )
 {
