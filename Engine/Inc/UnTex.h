@@ -287,7 +287,7 @@ class ENGINE_API UTexture : public UBitmap
 	BITFIELD	bParametric:1;      // Texture data need not be stored.
 	BITFIELD	bRealtimeChanged:1; // Changed since last render.
 	BITFIELD    bHasComp:1;         // Compressed version included?
-	BYTE        LODSet GCC_PACK(4); // Level of detail type.
+	BYTE        LODSet GCC_ALIGN(4); // Level of detail type.
 
 	// Animation related.
 	UTexture*	AnimNext;			// Next texture in looped animation sequence.

@@ -725,7 +725,7 @@ public:
     BITFIELD bTrailerPrePivot:1;
     BITFIELD bClientAnim:1;
     BITFIELD bSimFall:1;
-    BYTE Physics GCC_PACK(4);
+    BYTE Physics GCC_ALIGN(4);
     BYTE Role;
     BYTE RemoteRole;
     INT NetTag;
@@ -836,7 +836,7 @@ public:
     BITFIELD bBlockActors:1;
     BITFIELD bBlockPlayers:1;
     BITFIELD bProjTarget:1;
-    BYTE LightType GCC_PACK(4);
+    BYTE LightType GCC_ALIGN(4);
     BYTE LightEffect;
     BYTE LightBrightness;
     BYTE LightHue;
@@ -857,7 +857,7 @@ public:
     BITFIELD bRotateToDesired:1;
     BITFIELD bInterpolating:1;
     BITFIELD bJustTeleported:1;
-    BYTE DodgeDir GCC_PACK(4);
+    BYTE DodgeDir GCC_ALIGN(4);
     FLOAT Mass;
     FLOAT Buoyancy;
     FRotator RotationRate;
@@ -2019,7 +2019,7 @@ public:
     BITFIELD bMuzzleFlashParticles:1;
     BITFIELD bToggleSteadyFlash:1;
     BITFIELD bSteadyToggle:1;
-    BYTE FlashCount GCC_PACK(4);
+    BYTE FlashCount GCC_ALIGN(4);
     BYTE OldFlashCount;
     BYTE MuzzleFlashStyle;
     class UMesh* MuzzleFlashMesh;
@@ -2129,7 +2129,7 @@ public:
     FRotator AdjustedAim;
     BITFIELD bSetFlashTime:1 GCC_PACK(4);
     BITFIELD bDrawMuzzleFlash:1;
-    BYTE bMuzzleFlash GCC_PACK(4);
+    BYTE bMuzzleFlash GCC_ALIGN(4);
     FLOAT FlashTime;
     FLOAT MuzzleScale;
     FLOAT FlashY;
@@ -2417,7 +2417,7 @@ public:
     BITFIELD bAltFire:1;
     BITFIELD bForceFire:1;
     BITFIELD bForceAltFire:1;
-    BYTE DodgeMove GCC_PACK(4);
+    BYTE DodgeMove GCC_ALIGN(4);
     DECLARE_CLASS(ASavedMove,AInfo,0,Engine)
     NO_DEFAULT_CONSTRUCTOR(ASavedMove)
 };
@@ -2464,7 +2464,7 @@ public:
     BITFIELD bNoInventory:1;
     BITFIELD bMoveProjectiles:1;
     BITFIELD bBounceVelocity:1;
-    BYTE AmbientBrightness GCC_PACK(4);
+    BYTE AmbientBrightness GCC_ALIGN(4);
     BYTE AmbientHue;
     BYTE AmbientSaturation;
     FColor FogColor;
@@ -2613,7 +2613,7 @@ public:
     INT HubStackLevel;
     BYTE LevelAction;
     BITFIELD bNeverPrecache:1 GCC_PACK(4);
-    BYTE NetMode GCC_PACK(4);
+    BYTE NetMode GCC_ALIGN(4);
     FStringNoInit ComputerName;
     FStringNoInit EngineVersion;
     FStringNoInit MinNetVersion;
@@ -3048,7 +3048,7 @@ class ENGINE_API ACarcass : public ADecoration
 {
 public:
     BITFIELD bPlayerCarcass:1 GCC_PACK(4);
-    BYTE flies GCC_PACK(4);
+    BYTE flies GCC_ALIGN(4);
     BYTE rats;
     BITFIELD bReducedHeight:1 GCC_PACK(4);
     BITFIELD bDecorative:1;
