@@ -112,7 +112,7 @@ template <class T> inline T* NewZeroed( FMemStack& Mem, INT Count=1, INT Align=D
 template <class T> inline T* NewOned( FMemStack& Mem, INT Count=1, INT Align=DEFAULT_ALIGNMENT )
 {
 	guardSlow(FMemStack::New);
-	return (T*)Mem.PushBytes( Count*sizeof(T), Align );
+	BYTE* Result = Mem.PushBytes( Count*sizeof(T), Align );
 	appMemset( Result, 0xff, Count*sizeof(T) );
 	return (T*)Result;
 	unguardSlow;
