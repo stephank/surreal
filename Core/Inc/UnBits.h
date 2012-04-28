@@ -19,7 +19,7 @@ struct CORE_API FBitWriter : public FArchive
 public:
 	FBitWriter( INT InMaxBits );
 	void SerializeBits( void* Src, INT LengthBits );
-	void SerializeInt( DWORD& Value, DWORD Max );
+	void SerializeInt( void* Src, DWORD Max );
 	void WriteInt( DWORD Result, DWORD Max );
 	void WriteBit( BYTE In );
 	void Serialize( void* Src, INT LengthBytes );
@@ -69,7 +69,7 @@ public:
 	FBitReader( BYTE* Src=NULL, INT CountBits=0 );
 	void SetData( FBitReader& Src, INT CountBits );
 	void SerializeBits( void* Dest, INT LengthBits );
-	void SerializeInt( DWORD& Value, DWORD Max );
+	void SerializeInt( void* Src, DWORD Max );
 	DWORD ReadInt( DWORD Max );
 	BYTE ReadBit();
 	void Serialize( void* Dest, INT LengthBytes );

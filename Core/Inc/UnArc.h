@@ -28,9 +28,9 @@ public:
 		if( IsLoading() )
 			((BYTE*)V)[LengthBits/8] &= ((1<<(LengthBits&7))-1);
 	}
-	virtual void SerializeInt( DWORD& Value, DWORD Max )
+	virtual void SerializeInt( void* V, DWORD Max )
 	{
-		*this << *(DWORD*)Value;
+		*this << *(DWORD*)V;
 	}
 	virtual void Preload( UObject* Object )
 	{}
