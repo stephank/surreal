@@ -1838,22 +1838,6 @@ UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL F
 	//Reset previous SwapBuffers status to okay
 	m_prevSwapBuffersStatus = true;
 
-	// Get info and extensions.
-
-	//PrintFormat( hDC, nPixelFormat );
-	debugf(NAME_Init, TEXT("GL_VENDOR     : %s"), appFromAnsi((const ANSICHAR *)glGetString(GL_VENDOR)));
-	debugf(NAME_Init, TEXT("GL_RENDERER   : %s"), appFromAnsi((const ANSICHAR *)glGetString(GL_RENDERER)));
-	debugf(NAME_Init, TEXT("GL_VERSION    : %s"), appFromAnsi((const ANSICHAR *)glGetString(GL_VERSION)));
-
-	// vogel: logging of more than 1024 characters is dangerous at the moment.
-	const char *pGLExtensions = (const char *)glGetString(GL_EXTENSIONS);
-	if (strlen(pGLExtensions) < 1024) {
-		debugf(NAME_Init, TEXT("GL_EXTENSIONS : %s"), appFromAnsi(pGLExtensions));
-	}
-	else {
-		printf("GL_EXTENSIONS : %s\n", pGLExtensions);
-	}
-
 	//Get OpenGL extension function pointers
 	GetGLExtProcs();
 
