@@ -36,7 +36,7 @@ public:
 	{
 		return FieldsBase+Fields.Num();
 	}
-	INT FClassNetCache::GetRepConditionCount()
+	INT GetRepConditionCount()
 	{
 		return RepConditionCount;
 	}
