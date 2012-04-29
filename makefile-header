@@ -264,7 +264,8 @@ NULLDRV_SONAME		= NullDrv.so
 ifeq ($(TARGETTYPE),linux)
 STD_CXX		= g++-2.95
 STD_CXXFLAGS	= -D__LINUX__ -D__STATIC_LINK=$(STATICLINK) \
-			$(BUILD_CXXFLAGS)
+			-fno-for-scope $(BUILD_CXXFLAGS)
+STD_LDFLAGS	= -Wl,-rpath,. -L$(TMPDIR)
 STD_LIBS	= -lm -lrt -ldl -lnsl -lpthread
 
 STD_AR		= ar
