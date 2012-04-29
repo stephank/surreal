@@ -74,7 +74,7 @@ License situation
 -----------------
 
 A copy of the Artistic License is included in `LICENSE`. This is the license
-that OpenUT has used during it's lifetime.
+that OpenUT has used during its lifetime.
 
 Because I could not find a license in the 432 source code release, with the
 exception of the vague guideline in the Help file, I have assumed that both
