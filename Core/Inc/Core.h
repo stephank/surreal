@@ -394,9 +394,10 @@ extern "C" DLL_EXPORT TCHAR GPackage[];
 #include "UnName.h"			// Global name subsystem.
 #include "UnStack.h"		// Script stack definition.
 #include "UnObjBas.h"		// Object base class.
-#include "UnCoreNet.h"		// Core networking.
 #include "UnCorObj.h"		// Core object class definitions.
 #include "UnClass.h"		// Class definition.
+#include "UnFunctions.h"	// Core functions.
+#include "UnCoreNet.h"		// Core networking.
 #include "UnType.h"			// Base property type.
 #include "UnScript.h"		// Script class.
 #include "UFactory.h"		// Factory definition.
@@ -406,7 +407,6 @@ extern "C" DLL_EXPORT TCHAR GPackage[];
 #include "UnCId.h"          // Cache ID's.
 #include "UnBits.h"         // Bitstream archiver.
 #include "UnMath.h"         // Vector math functions.
-#include "UnFunctions.h"	// Core functions.
 
 #if __STATIC_LINK
 #include "UnCoreNative.h"
