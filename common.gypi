@@ -9,7 +9,7 @@
 
 	"target_defaults": {
 		"type": "<(library)",
-		"product_prefix": '',
+		"product_prefix": "",
 
 		"include_dirs": [ "<(package_includes)" ],
 		"all_dependent_settings": {
