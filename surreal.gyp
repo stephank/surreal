@@ -4,6 +4,12 @@
 		{
 			"target_name": "RootMeta",
 			"type": "none",
+			"default_configuration": "Release",
+			"configurations": {
+				"Debug": {},
+				"Release": {}
+			},
+
 			"dependencies": [
 				"MiniLaunch/package.gyp:*",
 				"SDLLaunch/package.gyp:*",
