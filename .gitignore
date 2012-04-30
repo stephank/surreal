@@ -1,19 +1,10 @@
+# Full installation files.
 .manifest
 NetGamesUSA.com
-System/Surreal
-System/UnrealTournament
-System/ucc
 System/*-bin
-System/*.u
 System/*.int
 System/*.ini
-System/*.so*
 System/*.log
-System/*.exe
-System/*.exp
-System/*.ilk
-System/*.lib
-System/*.dll
 Help/*.txt
 Help/*.ico
 Help/*.bmp
@@ -26,11 +17,6 @@ Web/*.uhtm
 Web/*.uhtm
 Web/**/*.uhtm
 Web/**/*.gif
-*/release-*
-*/debug-*
-*/Src/Release
-*/Src/Debug
-*/Lib
 README
 README.Loki
 README.bonus.pack.collection
@@ -42,6 +28,25 @@ ucc
 uninstall
 ut
 ut.xpm
+
+# Generated project files.
+Makefile
+*.Makefile
+*.mk
+*.sln
 *.suo
 *.ncb
 *.vcproj.*
+
+# Build products.
+out
+System/Surreal
+System/UnrealTournament
+System/ucc
+System/*.so*
+System/*.u
+System/*.exe
+System/*.lib
+System/*.dll
+System/*.exp
+System/*.ilk
