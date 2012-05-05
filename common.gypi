@@ -10,9 +10,7 @@
 	"target_defaults": {
 		"type": "<(library)",
 		"product_prefix": "",
-		# FIXME This should work, but doesn't. Different generators produce
-		# different broken results with this enabled.
-		#"product_dir": "System",
+		"product_dir": "System",
 
 		"include_dirs": [ "<(package_includes)" ],
 		"all_dependent_settings": {
