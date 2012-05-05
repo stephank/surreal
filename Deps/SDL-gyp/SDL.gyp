@@ -1,7 +1,7 @@
 {
 	"variables": {
 		"library%": "shared_library",
-		"sdl_dir%": "../SDL",
+		"sdl_dir%": "../SDL"
 	},
 
 	# FIXME: Needs Windows and OS X love.
@@ -14,7 +14,7 @@
 
 		"target_conditions": [
 			["_type == 'shared_library'", {
-				"cflags": [ "-fPIC" ],
+				"cflags": [ "-fPIC" ]
 			}]
 		],
 
@@ -137,7 +137,7 @@
 				"<(sdl_dir)/src/video/x11/SDL_x11window.c",
 				"<(sdl_dir)/src/video/dummy/SDL_nullevents.c",
 				"<(sdl_dir)/src/video/dummy/SDL_nullframebuffer.c",
-				"<(sdl_dir)/src/video/dummy/SDL_nullvideo.c",
+				"<(sdl_dir)/src/video/dummy/SDL_nullvideo.c"
 			],
 			"all_dependent_settings": {
 				"include_dirs": [ "include", "<(sdl_dir)/include" ]
