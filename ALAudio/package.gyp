@@ -5,10 +5,10 @@
 			"target_name": "ALAudio",
 			"dependencies": [
 				"../Core/package.gyp:*",
-				"../Engine/package.gyp:*"
+				"../Engine/package.gyp:*",
+				"../Deps/openal-soft-gyp/openal-soft.gyp:*"
 			],
 			"libraries": [
-				"-lopenal",
 				"-lalure",
 				"-lmikmod"
 			],
