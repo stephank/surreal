@@ -40,11 +40,24 @@ FFileManagerNative FileManager;
 
 // Splash
 static const TCHAR* SplashPath = TEXT("..") PATH_SEPARATOR TEXT("Help") PATH_SEPARATOR TEXT("Logo.bmp");
-SDL_Surface* Splash = NULL;
+static SDL_Window* SplashWindow = NULL;
+static SDL_Renderer* SplashRenderer = NULL;
 
 /*-----------------------------------------------------------------------------
 	Splash
 -----------------------------------------------------------------------------*/
+
+static void CloseSplash()
+{
+	if ( SplashRenderer != NULL ) {
+		SDL_DestroyRenderer( SplashRenderer );
+		SplashRenderer = NULL;
+	}
+	if ( SplashWindow != NULL ) {
+		SDL_DestroyWindow( SplashWindow );
+		SplashWindow = NULL;
+	}
+}
 
 static void OpenSplash()
 {
@@ -52,28 +65,47 @@ static void OpenSplash()
 	if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
 		appErrorf( TEXT("Couldn't initialize SDL: %s\n"), SDL_GetError() );
 
+	SDL_Surface* SplashSurface = NULL;
+	SDL_Texture* SplashTexture = NULL;
+
 	// Load the splash.
-	SDL_Surface* Splash = SDL_LoadBMP( appToAnsi(SplashPath) );
-	if( Splash == NULL )
+	SplashSurface = SDL_LoadBMP( appToAnsi(SplashPath) );
+	if( SplashSurface == NULL )
 		return;
 
 	// Create a centered frameless window.
-	SDL_putenv( "SDL_VIDEO_CENTERED=center" );
-	SDL_Surface* Fb = SDL_SetVideoMode( Splash->w, Splash->h, 0, SDL_ANYFORMAT | SDL_NOFRAME );
-	if( Fb == NULL )
-		return;
+	SplashWindow = SDL_CreateWindow(
+		"Unreal Tournament",
+		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+		SplashSurface->w, SplashSurface->h,
+		SDL_WINDOW_SHOWN
+	);
+	if( SplashWindow == NULL )
+		goto splash_fail;
 
-	SDL_BlitSurface( Splash, NULL, Fb, NULL );
-	SDL_Flip( Fb );
-}
+	SplashRenderer = SDL_CreateRenderer(
+		SplashWindow, -1, SDL_RENDERER_SOFTWARE
+	);
+	if( SplashRenderer == NULL )
+		goto splash_fail;
 
-static void CloseSplash()
-{
-	// Unload splash.
-	if ( Splash )
-	{
-		SDL_FreeSurface( Splash );
-		Splash = NULL;
+	SplashTexture = SDL_CreateTextureFromSurface(
+		SplashRenderer, SplashSurface
+	);
+	SDL_FreeSurface( SplashSurface );
+	SplashSurface = NULL;
+	if( SplashTexture == NULL )
+		goto splash_fail;
+
+	SDL_RenderCopy( SplashRenderer, SplashTexture, NULL, NULL );
+	SDL_RenderPresent( SplashRenderer );
+	return;
+
+splash_fail:
+	CloseSplash();
+	if( SplashSurface != NULL ) {
+		SDL_FreeSurface( SplashSurface );
+		SplashSurface = NULL;
 	}
 }
 
@@ -174,7 +206,7 @@ static void MainLoop( UEngine* Engine )
 //
 // Entry point.
 //
-int main( int argc, char* argv[] )
+int SDL_main( int argc, char* argv[] )
 {
 	#if !_MSC_VER
 		__Context::StaticInit();
