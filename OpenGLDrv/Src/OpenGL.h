@@ -7,6 +7,9 @@
 =============================================================================*/
 
 
+#include "OpenGLDrv.h"
+
+
 //Make sure valid build config selected
 #undef UTGLR_VALID_BUILD_CONFIG
 
@@ -560,6 +563,9 @@ class UOpenGLRenderDevice : public URenderDevice {
 
 	//Use UViewport* in URenderDevice
 	//UViewport* Viewport;
+	inline SDL_Window* GetWindow() { return (SDL_Window*) Viewport->GetWindow(); }
+	SDL_GLContext Context;
+	inline INT SetContext() { return SDL_GL_MakeCurrent( GetWindow(), Context ); }
 
 
 	// Timing.

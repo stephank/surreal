@@ -49,7 +49,6 @@ TODO:
 
 =============================================================================*/
 
-#include "OpenGLDrv.h"
 #include "OpenGL.h"
 
 
@@ -1638,7 +1637,7 @@ void UOpenGLRenderDevice::SetGamma(FLOAT GammaCorrection) {
 
 	BuildGammaRamp(GammaCorrection + GammaOffsetRed, GammaCorrection + GammaOffsetGreen, GammaCorrection + GammaOffsetBlue, Brightness, gammaRamp);
 
-	SDL_SetGammaRamp( gammaRamp.red, gammaRamp.green, gammaRamp.blue );
+	SDL_SetWindowGammaRamp( GetWindow(), gammaRamp.red, gammaRamp.green, gammaRamp.blue );
 
 	return;
 }
@@ -1750,8 +1749,10 @@ UBOOL UOpenGLRenderDevice::FailedInitf(const TCHAR* Fmt, ...) {
 void UOpenGLRenderDevice::Exit() {
 	guard(UOpenGLRenderDevice::Exit);
 	check(NumDevices > 0);
+	check(SetContext() == 0);
 
 	UnsetRes();
+	SDL_GL_DeleteContext( Context );
 
 	// Shut down global GL.
 	if (--NumDevices == 0) {
@@ -1788,9 +1789,10 @@ void UOpenGLRenderDevice::ShutdownAfterError() {
 
 
 UBOOL UOpenGLRenderDevice::SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL Fullscreen) {
-	unsigned int u;
-
 	guard(UOpenGLRenderDevice::SetRes);
+	check(SetContext() == 0);
+
+	unsigned int u;
 
 	//Get debug bits
 	{
@@ -2312,6 +2314,8 @@ void UOpenGLRenderDevice::ConfigValidate_Main(void) {
 UBOOL UOpenGLRenderDevice::Init(UViewport* InViewport, INT NewX, INT NewY, INT NewColorBytes, UBOOL Fullscreen) {
 	guard(UOpenGLRenderDevice::Init);
 
+	// FIXME: Check viewport class is SDL.
+
 	debugf(TEXT("Initializing OpenGLDrv..."));
 
 	if (NumDevices == 0) {
@@ -2356,17 +2360,9 @@ UBOOL UOpenGLRenderDevice::Init(UViewport* InViewport, INT NewX, INT NewY, INT N
 	m_RGBA8TexPool = ShareLists ? &m_sharedRGBA8TexPool : &m_localRGBA8TexPool;
 
 	Viewport = InViewport;
-
-#if 0
-	{
-		//Print all PFD's exposed
-		INT pf;
-		INT pfCount = DescribePixelFormat(m_hDC, 0, 0, NULL);
-		for (pf = 1; pf <= pfCount; pf++) {
-			PrintFormat(m_hDC, pf);
-		}
-	}
-#endif
+	Context = SDL_GL_CreateContext( GetWindow() );
+	if( !Context )
+		return 0;
 
 	if (!SetRes(NewX, NewY, NewColorBytes, Fullscreen)) {
 		return FailedInitf(LocalizeError("ResFailed"));
@@ -2403,45 +2399,6 @@ UBOOL UOpenGLRenderDevice::Exec(const TCHAR* Cmd, FOutputDevice& Ar) {
 
 		return 0;
 	}
-	else if (ParseCommand(&Cmd, TEXT("GetRes"))) {
-		// Changing Resolutions:
-		// Entries in the resolution box in the console is
-		// apparently controled building a string of relevant
-		// resolutions and sending it to the engine via Ar.Log()
-
-		// Here I am querying SDL_ListModes for available resolutions,
-		// and populating the dropbox with its output.
-		FString Str = "";
-		SDL_Rect **modes;
-		INT i, j;
-
-		// Available fullscreen video modes
-		modes = SDL_ListModes(NULL, SDL_FULLSCREEN);
-
-		if (modes == (SDL_Rect **)0) {
-			debugf(NAME_Init, TEXT("No available fullscreen video modes"));
-		}
-		else if (modes == (SDL_Rect **)-1) {
-			debugf(NAME_Init, TEXT("No special fullscreen video modes"));
-		}
-		else {
-			// count the number of available modes
-			for (i = 0, j = 0; modes[i]; ++i) {
-				++j;
-			}
-
-			// Load the string with resolutions from smallest to
-			// largest. SDL_ListModes() provides them from lg
-			// to sm...
-			for (i = (j - 1); i >= 0; --i) {
-				Str += FString::Printf(TEXT("%ix%i "), modes[i]->w, modes[i]->h);
-			}
-		}
-
-		// Send the resolution string to the engine.
-		Ar.Log(*Str.LeftChop(1));
-		return 1;
-	}
 
 	return 0;
 
@@ -2449,10 +2406,11 @@ UBOOL UOpenGLRenderDevice::Exec(const TCHAR* Cmd, FOutputDevice& Ar) {
 }
 
 void UOpenGLRenderDevice::Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane ScreenClear, DWORD RenderLockFlags, BYTE* InHitData, INT* InHitSize) {
-	UTGLR_DEBUG_CALL_COUNT(Lock);
 	guard(UOpenGLRenderDevice::Lock);
+	check(SetContext() == 0);
 	check(LockCount == 0);
 	++LockCount;
+	UTGLR_DEBUG_CALL_COUNT(Lock);
 
 
 	//Reset stats
@@ -2782,8 +2740,9 @@ void UOpenGLRenderDevice::Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane Sc
 }
 
 void UOpenGLRenderDevice::SetSceneNode(FSceneNode* Frame) {
-	UTGLR_DEBUG_CALL_COUNT(SetSceneNode);
 	guard(UOpenGLRenderDevice::SetSceneNode);
+	check(SetContext() == 0);
+	UTGLR_DEBUG_CALL_COUNT(SetSceneNode);
 
 	EndBuffering();		// Flush vertex array before changing the projection matrix!
 
@@ -2896,8 +2855,9 @@ void UOpenGLRenderDevice::SetSceneNode(FSceneNode* Frame) {
 }
 
 void UOpenGLRenderDevice::Unlock(UBOOL Blit) {
-	UTGLR_DEBUG_CALL_COUNT(Unlock);
 	guard(UOpenGLRenderDevice::Unlock);
+	check(SetContext() == 0);
+	UTGLR_DEBUG_CALL_COUNT(Unlock);
 
 	EndBuffering();
 
@@ -2916,7 +2876,7 @@ void UOpenGLRenderDevice::Unlock(UBOOL Blit) {
 		CheckGLErrorFlag(TEXT("please report this bug"));
 
 		//Swap buffers
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow( GetWindow() );
 	}
 
 	--LockCount;
@@ -2992,6 +2952,8 @@ void UOpenGLRenderDevice::Unlock(UBOOL Blit) {
 
 void UOpenGLRenderDevice::Flush(UBOOL AllowPrecache) {
 	guard(UOpenGLRenderDevice::Flush);
+	check(SetContext() == 0);
+
 	unsigned int u;
 	TArray<GLuint> Binds;
 
@@ -3052,8 +3014,9 @@ void UOpenGLRenderDevice::Flush(UBOOL AllowPrecache) {
 
 
 void UOpenGLRenderDevice::DrawComplexSurface(FSceneNode* Frame, FSurfaceInfo& Surface, FSurfaceFacet& Facet) {
-	UTGLR_DEBUG_CALL_COUNT(DrawComplexSurface);
 	guard(UOpenGLRenderDevice::DrawComplexSurface);
+	check(SetContext() == 0);
+	UTGLR_DEBUG_CALL_COUNT(DrawComplexSurface);
 
 	EndBuffering();
 
@@ -3288,8 +3251,8 @@ void UOpenGLRenderDevice::DrawComplexSurface(FSceneNode* Frame, FSurfaceInfo& Su
 
 #ifdef UTGLR_RUNE_BUILD
 void UOpenGLRenderDevice::PreDrawFogSurface() {
-	UTGLR_DEBUG_CALL_COUNT(PreDrawFogSurface);
 	guard(UOpenGLRenderDevice::PreDrawFogSurface);
+	UTGLR_DEBUG_CALL_COUNT(PreDrawFogSurface);
 
 	EndBuffering();
 
@@ -3306,8 +3269,8 @@ void UOpenGLRenderDevice::PreDrawFogSurface() {
 }
 
 void UOpenGLRenderDevice::PostDrawFogSurface() {
-	UTGLR_DEBUG_CALL_COUNT(PostDrawFogSurface);
 	guard(UOpenGLRenderDevice::PostDrawFogSurface);
+	UTGLR_DEBUG_CALL_COUNT(PostDrawFogSurface);
 
 	SetBlend(0);
 
@@ -3315,8 +3278,8 @@ void UOpenGLRenderDevice::PostDrawFogSurface() {
 }
 
 void UOpenGLRenderDevice::DrawFogSurface(FSceneNode* Frame, FFogSurf &FogSurf) {
-	UTGLR_DEBUG_CALL_COUNT(DrawFogSurface);
 	guard(UOpenGLRenderDevice::DrawFogSurface);
+	UTGLR_DEBUG_CALL_COUNT(DrawFogSurface);
 
 	FPlane Modulate(FogSurf.FogColor.X, FogSurf.FogColor.Y, FogSurf.FogColor.Z, 0.0f);
 
@@ -3350,8 +3313,8 @@ void UOpenGLRenderDevice::DrawFogSurface(FSceneNode* Frame, FFogSurf &FogSurf) {
 }
 
 void UOpenGLRenderDevice::PreDrawGouraud(FSceneNode* Frame, FLOAT FogDistance, FPlane FogColor) {
-	UTGLR_DEBUG_CALL_COUNT(PreDrawGouraud);
 	guard(UOpenGLRenderDevice::PreDrawGouraud);
+	UTGLR_DEBUG_CALL_COUNT(PreDrawGouraud);
 
 	if (FogDistance > 0.0f) {
 		EndBuffering();
@@ -3370,8 +3333,8 @@ void UOpenGLRenderDevice::PreDrawGouraud(FSceneNode* Frame, FLOAT FogDistance, F
 }
 
 void UOpenGLRenderDevice::PostDrawGouraud(FLOAT FogDistance) {
-	UTGLR_DEBUG_CALL_COUNT(PostDrawGouraud);
 	guard(UOpenGLRenderDevice::PostDrawGouraud);
+	UTGLR_DEBUG_CALL_COUNT(PostDrawGouraud);
 
 	if (FogDistance > 0.0f) {
 		EndBuffering();
@@ -3386,8 +3349,8 @@ void UOpenGLRenderDevice::PostDrawGouraud(FLOAT FogDistance) {
 #endif
 
 void UOpenGLRenderDevice::DrawGouraudPolygonOld(FSceneNode* Frame, FTextureInfo& Info, FTransTexture** Pts, INT NumPts, DWORD PolyFlags, FSpanBuffer* Span) {
-	UTGLR_DEBUG_CALL_COUNT(DrawGouraudPolygonOld);
 	guard(UOpenGLRenderDevice::DrawGouraudPolygonOld);
+	UTGLR_DEBUG_CALL_COUNT(DrawGouraudPolygonOld);
 	clock(GouraudCycles);
 
 	//Decide if should request near Z range hack projection
@@ -3478,8 +3441,9 @@ void UOpenGLRenderDevice::DrawGouraudPolygonOld(FSceneNode* Frame, FTextureInfo&
 }
 
 void UOpenGLRenderDevice::DrawGouraudPolygon(FSceneNode* Frame, FTextureInfo& Info, FTransTexture** Pts, INT NumPts, DWORD PolyFlags, FSpanBuffer* Span) {
-	UTGLR_DEBUG_CALL_COUNT(DrawGouraudPolygon);
 	guard(UOpenGLRenderDevice::DrawGouraudPolygon);
+	check(SetContext() == 0);
+	UTGLR_DEBUG_CALL_COUNT(DrawGouraudPolygon);
 
 	//DrawGouraudPolygon only uses PolyFlags2 locally
 	DWORD PolyFlags2 = 0;
@@ -3660,8 +3624,9 @@ void UOpenGLRenderDevice::DrawGouraudPolygon(FSceneNode* Frame, FTextureInfo& In
 }
 
 void UOpenGLRenderDevice::DrawTile(FSceneNode* Frame, FTextureInfo& Info, FLOAT X, FLOAT Y, FLOAT XL, FLOAT YL, FLOAT U, FLOAT V, FLOAT UL, FLOAT VL, class FSpanBuffer* Span, FLOAT Z, FPlane Color, FPlane Fog, DWORD PolyFlags) {
-	UTGLR_DEBUG_CALL_COUNT(DrawTile);
 	guard(UOpenGLRenderDevice::DrawTile);
+	check(SetContext() == 0);
+	UTGLR_DEBUG_CALL_COUNT(DrawTile);
 
 	//DrawTile does not use PolyFlags2
 	const DWORD PolyFlags2 = 0;
@@ -3983,8 +3948,9 @@ void UOpenGLRenderDevice::DrawTile(FSceneNode* Frame, FTextureInfo& Info, FLOAT 
 }
 
 void UOpenGLRenderDevice::Draw3DLine(FSceneNode* Frame, FPlane Color, DWORD LineFlags, FVector P1, FVector P2) {
-	UTGLR_DEBUG_CALL_COUNT(Draw3DLine);
 	guard(UOpenGLRenderDevice::Draw3DLine);
+	check(SetContext() == 0);
+	UTGLR_DEBUG_CALL_COUNT(Draw3DLine);
 
 	EndBuffering();
 
@@ -4044,8 +4010,9 @@ void UOpenGLRenderDevice::Draw3DLine(FSceneNode* Frame, FPlane Color, DWORD Line
 }
 
 void UOpenGLRenderDevice::Draw2DLine(FSceneNode* Frame, FPlane Color, DWORD LineFlags, FVector P1, FVector P2) {
-	UTGLR_DEBUG_CALL_COUNT(Draw2DLine);
 	guard(UOpenGLRenderDevice::Draw2DLine);
+	check(SetContext() == 0);
+	UTGLR_DEBUG_CALL_COUNT(Draw2DLine);
 
 	EndBuffering();
 
@@ -4097,8 +4064,9 @@ void UOpenGLRenderDevice::Draw2DLine(FSceneNode* Frame, FPlane Color, DWORD Line
 }
 
 void UOpenGLRenderDevice::Draw2DPoint(FSceneNode* Frame, FPlane Color, DWORD LineFlags, FLOAT X1, FLOAT Y1, FLOAT X2, FLOAT Y2, FLOAT Z) {
-	UTGLR_DEBUG_CALL_COUNT(Draw2DPoint);
 	guard(UOpenGLRenderDevice::Draw2DPoint);
+	check(SetContext() == 0);
+	UTGLR_DEBUG_CALL_COUNT(Draw2DPoint);
 
 	EndBuffering();
 
@@ -4176,8 +4144,9 @@ void UOpenGLRenderDevice::Draw2DPoint(FSceneNode* Frame, FPlane Color, DWORD Lin
 
 
 void UOpenGLRenderDevice::ClearZ(FSceneNode* Frame) {
-	UTGLR_DEBUG_CALL_COUNT(ClearZ);
 	guard(UOpenGLRenderDevice::ClearZ);
+	check(SetContext() == 0);
+	UTGLR_DEBUG_CALL_COUNT(ClearZ);
 
 	EndBuffering();
 
@@ -4259,6 +4228,7 @@ void UOpenGLRenderDevice::GetStats(TCHAR* Result) {
 
 void UOpenGLRenderDevice::ReadPixels(FColor* Pixels) {
 	guard(UOpenGLRenderDevice::ReadPixels);
+	check(SetContext() == 0);
 
 	INT x, y;
 	INT SizeX, SizeY;
@@ -4292,8 +4262,10 @@ void UOpenGLRenderDevice::ReadPixels(FColor* Pixels) {
 }
 
 void UOpenGLRenderDevice::EndFlash() {
-	UTGLR_DEBUG_CALL_COUNT(EndFlash);
 	guard(UOpenGLRenderDevice::EndFlash);
+	check(SetContext() == 0);
+	UTGLR_DEBUG_CALL_COUNT(EndFlash);
+
 	if ((FlashScale != FPlane(0.5f, 0.5f, 0.5f, 0.0f)) || (FlashFog != FPlane(0.0f, 0.0f, 0.0f, 0.0f))) {
 		EndBuffering();
 
@@ -4329,7 +4301,10 @@ void UOpenGLRenderDevice::EndFlash() {
 
 void UOpenGLRenderDevice::PrecacheTexture(FTextureInfo& Info, DWORD PolyFlags) {
 	guard(UOpenGLRenderDevice::PrecacheTexture);
+	check(SetContext() == 0);
+
 	SetTextureNoPanBias(0, Info, PolyFlags);
+
 	unguard;
 }
 

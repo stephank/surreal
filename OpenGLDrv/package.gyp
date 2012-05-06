@@ -5,13 +5,11 @@
 			"target_name": "OpenGLDrv",
 			"dependencies": [
 				"../Core/package.gyp:*",
-				"../Engine/package.gyp:*"
+				"../Engine/package.gyp:*",
+				"../Deps/SDL-gyp/SDL.gyp:SDL2"
 			],
 			"defines": [
 				"UTGLR_UT_BUILD=1"
-			],
-			"libraries": [
-				"-lSDL"
 			],
 			"sources": [
 				"Src/OpenGLDrv.cpp",
