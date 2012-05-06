@@ -27,28 +27,34 @@
 /**
  *  \file SDL_config.h
  */
- 
-/* Add any platform that doesn't build using the configure system. */
+
+/* Contains build configuration specific to Unreal Tournament. */
+
+/* We don't use these subsystems. */
+/* FIXME: See if we can reduce on compiled objects. */
+#define SDL_ATOMIC_DISABLED 1
+#define SDL_AUDIO_DISABLED 1
+#define SDL_CPUINFO_DISABLED 1
+/* #undef SDL_EVENTS_DISABLED */
+/* #undef SDL_FILE_DISABLED */
+#define SDL_JOYSTICK_DISABLED 1
+#define SDL_HAPTIC_DISABLED 1
+/* #undef SDL_LOADSO_DISABLED */
+#define SDL_RENDER_DISABLED 1
+#define SDL_THREADS_DISABLED 1
+#define SDL_TIMERS_DISABLED 1
+/* #undef SDL_VIDEO_DISABLED */
+#define SDL_POWER_DISABLED 1
+
+/* Configurations for platforms we support in Unreal Tournament. */
 #if defined(__WIN32__)
 #include "SDL_config_windows.h"
 #elif defined(__MACOSX__)
 #include "SDL_config_macosx.h"
-#elif defined(__IPHONEOS__) 
-#include "SDL_config_iphoneos.h"
-#elif defined(__ANDROID__)
-#include "SDL_config_android.h"
-#elif defined(__NINTENDODS__)
-#include "SDL_config_nintendods.h"
 #elif defined(__LINUX__)
-/* Configuration for a GYP-based build on Linux. */
 #include "SDL_config_linux.h"
 #else
-/* This is a minimal configuration just to get SDL running on new platforms */
-#include "SDL_config_minimal.h"
-#endif /* platform config */
-
-#ifdef USING_GENERATED_CONFIG_H
-#error Wrong SDL_config.h, check your include path?
+#error Unsupported platform for SDL gyp build
 #endif
 
 #endif /* _SDL_config_h */

@@ -1,4 +1,3 @@
-/* Modified version of SDL_config.h, originally generated on Ubuntu 12.04. */
 /*
   Simple DirectMedia Layer
   Copyright (C) 1997-2012 Sam Lantinga <slouken@libsdl.org>
@@ -20,32 +19,29 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-#ifndef _SDL_config_linux_h
-#define _SDL_config_linux_h
+#ifndef _SDL_config_macosx_h
+#define _SDL_config_macosx_h
 
 #include "SDL_platform.h"
 
+/* This gets us MAC_OS_X_VERSION_MIN_REQUIRED... */
+#include <AvailabilityMacros.h>
+
 /* This is a set of defines to configure the SDL features */
 
-#define HAVE_LIBC 1
-#define HAVE_LINUX_VERSION_H 1
-
 /* Useful headers */
-#define HAVE_ALLOCA_H 1
+/* If we specified an SDK or have a post-PowerPC chip, then alloca.h exists. */
+#if ( (MAC_OS_X_VERSION_MIN_REQUIRED >= 1030) || (!defined(__POWERPC__)) )
+#define HAVE_ALLOCA_H  1
+#endif
 #define HAVE_SYS_TYPES_H 1
 #define HAVE_STDIO_H 1
 #define STDC_HEADERS 1
-#define HAVE_STDLIB_H 1
-#define HAVE_STDARG_H 1
-#define HAVE_MALLOC_H 1
-#define HAVE_MEMORY_H 1
 #define HAVE_STRING_H 1
-#define HAVE_STRINGS_H 1
 #define HAVE_INTTYPES_H 1
 #define HAVE_STDINT_H 1
 #define HAVE_CTYPE_H 1
 #define HAVE_MATH_H 1
-#define HAVE_ICONV_H 1
 #define HAVE_SIGNAL_H 1
 
 /* C library functions */
@@ -66,6 +62,8 @@
 #define HAVE_MEMMOVE 1
 #define HAVE_MEMCMP 1
 #define HAVE_STRLEN 1
+#define HAVE_STRLCPY 1
+#define HAVE_STRLCAT 1
 #define HAVE_STRDUP 1
 #define HAVE_STRCHR 1
 #define HAVE_STRRCHR 1
@@ -84,9 +82,6 @@
 #define HAVE_SSCANF 1
 #define HAVE_SNPRINTF 1
 #define HAVE_VSNPRINTF 1
-#define HAVE_M_PI 1
-#define HAVE_ATAN 1
-#define HAVE_ATAN2 1
 #define HAVE_CEIL 1
 #define HAVE_COPYSIGN 1
 #define HAVE_COS 1
@@ -100,45 +95,28 @@
 #define HAVE_SINF 1
 #define HAVE_SQRT 1
 #define HAVE_SIGACTION 1
-#define HAVE_SA_SIGACTION 1
 #define HAVE_SETJMP 1
 #define HAVE_NANOSLEEP 1
 #define HAVE_SYSCONF 1
-#define HAVE_CLOCK_GETTIME 1
-#define HAVE_MPROTECT 1
-#define HAVE_ICONV 1
-#define HAVE_PTHREAD_SETNAME_NP 1
-#define HAVE_SEM_TIMEDWAIT 1
-
-/* Enable input driver */
-#define SDL_INPUT_LINUXEV 1
+#define HAVE_SYSCTLBYNAME 1
+#define HAVE_ATAN 1
+#define HAVE_ATAN2 1
 
 /* Enable shared object loading system */
 #define SDL_LOADSO_DLOPEN 1
 
-/* Enable X11 video driver */
-#define SDL_VIDEO_DRIVER_X11 1
-#define SDL_VIDEO_DRIVER_X11_DYNAMIC "libX11.so.6"
-#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XSS "libXss.so.1"
-#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XEXT "libXext.so.6"
-#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XCURSOR "libXcursor.so.1"
-#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XINERAMA "libXinerama.so.1"
-#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XINPUT "libXi.so.6"
-#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XRANDR "libXrandr.so.2"
-#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XVIDMODE "libXxf86vm.so.1"
-#define SDL_VIDEO_DRIVER_X11_XCURSOR 1
-#define SDL_VIDEO_DRIVER_X11_XINERAMA 1
-#define SDL_VIDEO_DRIVER_X11_XINPUT 1
-#define SDL_VIDEO_DRIVER_X11_XRANDR 1
-#define SDL_VIDEO_DRIVER_X11_XSCRNSAVER 1
-#define SDL_VIDEO_DRIVER_X11_XSHAPE 1
-#define SDL_VIDEO_DRIVER_X11_XVIDMODE 1
+/* Enable Cocoa video driver */
+#define SDL_VIDEO_DRIVER_COCOA 1
 
 /* Enable OpenGL support */
 #define SDL_VIDEO_OPENGL 1
+#define SDL_VIDEO_OPENGL_CGL 1
 #define SDL_VIDEO_OPENGL_GLX 1
 
 /* Enable assembly routines */
 #define SDL_ASSEMBLY_ROUTINES 1
+#ifdef __ppc__
+#define SDL_ALTIVEC_BLITTERS 1
+#endif
 
-#endif /* _SDL_config_linux_h */
+#endif /* _SDL_config_macosx_h */
