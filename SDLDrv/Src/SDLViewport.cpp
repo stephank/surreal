@@ -97,7 +97,7 @@ void USDLViewport::OpenWindow( DWORD InParentWindow, UBOOL IsTemporary, INT NewX
 	const TCHAR* IniPath;
 	if( GIsEditor )
 		IniPath = TEXT("ini:Engine.Engine.RenderDevice");
-	else if( Client->StartupFullscreen )
+	else if( Fullscreen )
 		IniPath = TEXT("ini:Engine.Engine.GameRenderDevice");
 	else
 		IniPath = TEXT("ini:Engine.Engine.WindowedRenderDevice");
@@ -280,20 +280,24 @@ UBOOL USDLViewport::ResizeViewport( DWORD NewBlitFlags, INT NewX, INT NewY, INT 
 	if( Client->Engine->Audio && !GIsEditor && !(GetFlags() & RF_Destroyed) )
 		SavedViewport = Client->Engine->Audio->GetViewport();
 
-	// Close current window.
-	CloseWindow();
-
-	// Apply new parameters. Sizes are applied in OpenWindow.
+	// Apply new parameters.
 	if( NewColorBytes!=INDEX_NONE )
 		ColorBytes = NewColorBytes;
 	BlitFlags = NewBlitFlags;
-	UBOOL Fullscreen = IsFullscreen();
-
-	// Reopen the window.
-	OpenWindow(0, 0, NewX, NewY, 0, 0);
 
 	// Grab mouse if fullscreen.
-	SetMouseCapture( Fullscreen, Fullscreen, 0 );
+	if( IsFullscreen() ){
+		// FIXME: SDL_SetWindowDisplayMode
+		SDL_SetWindowFullscreen( Window, SDL_TRUE );
+		SetMouseCapture( 1, 1, 0 );
+	}
+	else{
+		SDL_SetWindowFullscreen( Window, SDL_FALSE );
+		// FIXME: Check that ColorBytes matches the current mode.
+		// SDL2 no longer allows changing modes when windowed.
+		SDL_SetWindowSize( Window, SizeX, SizeY );
+		SetMouseCapture( 0, 0, 0 );
+	}
 
 	// Make this viewport current and update its title bar.
 	GetOuterUClient()->MakeCurrent( this );	
@@ -308,7 +312,7 @@ UBOOL USDLViewport::ResizeViewport( DWORD NewBlitFlags, INT NewX, INT NewY, INT 
 	// Save new config.
 	if( RenDev && !GIsEditor )
 	{
-		if( Fullscreen )
+		if( IsFullscreen() )
 		{
 			Client->FullscreenViewportX = SizeX;
 			Client->FullscreenViewportY = SizeY;
