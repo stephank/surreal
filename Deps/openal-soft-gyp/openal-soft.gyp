@@ -52,6 +52,7 @@
 				}]
 			],
 			"type": "<(library)",
+			"product_dir": "../../System",
 			"cflags": [ "-fvisibility=internal", "-pthread" ],
 			"libraries": [ "-lrt", "-lpthread", "-ldl", "-lm" ],
 			"sources": [

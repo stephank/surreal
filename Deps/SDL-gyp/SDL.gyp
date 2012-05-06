@@ -33,6 +33,7 @@
 		{
 			"target_name": "SDL2",
 			"type": "<(library)",
+			"product_dir": "../../System",
 			"sources": [
 				"<(sdl_dir)/src/SDL_assert.c",
 				"<(sdl_dir)/src/SDL.c",
