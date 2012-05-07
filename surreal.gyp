@@ -17,14 +17,6 @@
 				"OpenGLDrv/package.gyp:*",
 				"ALAudio/package.gyp:*",
 				"UCC/package.gyp:*"
-			],
-			"conditions": [
-				["OS == 'win'", {
-					"dependencies": [
-						"D3DDrv/package.gyp:*"
-						"D3D9Drv/package.gyp:*"
-					]
-				}]
 			]
 		}
 	]
