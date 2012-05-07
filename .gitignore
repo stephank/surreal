@@ -29,14 +29,19 @@ uninstall
 ut
 ut.xpm
 
-# Generated project files.
+# Generated project and IDE files.
 Makefile
 *.Makefile
 *.mk
+*.sdf
 *.sln
 *.suo
 *.ncb
+*.vcproj
 *.vcproj.*
+*.vcxproj
+*.vcxproj.*
+*.opensdf
 
 # Build products.
 out
