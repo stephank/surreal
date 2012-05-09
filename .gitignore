@@ -45,6 +45,8 @@ Makefile
 
 # Build products.
 out
+Debug
+Release
 System/Surreal
 System/UnrealTournament
 System/ucc
