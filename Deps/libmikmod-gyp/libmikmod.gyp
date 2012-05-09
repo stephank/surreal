@@ -48,6 +48,10 @@
 			"product_dir": "../../System",
 			"libraries": [ "-lm" ],
 			"sources": [
+				"<(mikmod_dir)/drivers/drv_nos.c",
+				"<(mikmod_dir)/drivers/drv_raw.c",
+				"<(mikmod_dir)/drivers/drv_stdout.c",
+				"<(mikmod_dir)/drivers/drv_wav.c",
 				"<(mikmod_dir)/loaders/load_669.c",
 				"<(mikmod_dir)/loaders/load_amf.c",
 				"<(mikmod_dir)/loaders/load_asy.c",
