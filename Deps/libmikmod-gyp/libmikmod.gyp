@@ -4,27 +4,33 @@
 		"mikmod_dir%": "../libmikmod"
 	},
 
-	# FIXME: Needs Windows and OS X love.
-
 	"target_defaults": {
 		"include_dirs": [
 			"include",
 			"<(mikmod_dir)/include"
 		],
 
+		"defines": [
+			"HAVE_CONFIG_H"
+		],
 		"cflags": [
 			"-Wall",
 			"-finline-functions",
 			"-funroll-loops",
 			"-ffast-math"
 		],
-		"defines": [
-			"HAVE_CONFIG_H",
-			"unix"
-		],
 
 		"target_conditions": [
-			["_type == 'shared_library'", {
+			["OS == 'win'", {
+				"defines": [ "WIN32" ]
+			}],
+			["OS != 'win'", {
+				"defines": [ "unix" ]
+			}],
+			["_type == 'shared_library' and OS == 'win'", {
+				"defines": [ "_DLL", "DLL_EXPORTS" ]
+			}],
+			["_type == 'shared_library' and OS != 'win'", {
 				"cflags": [ "-fPIC" ]
 			}]
 		],
@@ -32,11 +38,21 @@
 		"default_configuration": "Release",
 		"configurations": {
 			"Debug": {
+				"defines": [ "MIKMOD_DEBUG" ],
 				"cflags": [ "-g3", "-Werror" ],
-				"defines": [ "MIKMOD_DEBUG" ]
+				"conditions": [
+					["OS == 'win'", {
+						"defines": [ "_DEBUG" ]
+					}]
+				]
 			},
 			"Release": {
-				"cflags": [ "-g", "-O2" ]
+				"cflags": [ "-g", "-O2" ],
+				"conditions": [
+					["OS == 'win'", {
+						"defines": [ "NDEBUG" ]
+					}]
+				]
 			}
 		}
 	},
@@ -46,7 +62,6 @@
 			"target_name": "mikmod",
 			"type": "<(library)",
 			"product_dir": "../../System",
-			"libraries": [ "-lm" ],
 			"sources": [
 				"<(mikmod_dir)/drivers/drv_nos.c",
 				"<(mikmod_dir)/drivers/drv_raw.c",
@@ -92,7 +107,12 @@
 			],
 			"all_dependent_settings": {
 				"include_dirs": [ "<(mikmod_dir)/include" ]
-			}
+			},
+			"conditions": [
+				["OS != 'win'", {
+					"libraries": [ "-lm" ]
+				}]
+			]
 		}
 	]
 }

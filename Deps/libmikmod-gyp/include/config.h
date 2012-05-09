@@ -1,6 +1,9 @@
 #define HAVE_FCNTL_H 1
-#define HAVE_INTTYPES_H 1
 #define HAVE_MALLOC_H 1
+
+#ifndef WIN32
+
+#define HAVE_INTTYPES_H 1
 #define HAVE_MEMORY_H 1
 #define HAVE_SETENV 1
 #define HAVE_SNPRINTF 1
@@ -23,3 +26,5 @@
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 # define WORDS_BIGENDIAN 1
 #endif
+
+#endif /* WIN32 */
