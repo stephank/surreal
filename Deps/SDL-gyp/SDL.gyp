@@ -4,15 +4,17 @@
 		"sdl_dir%": "../SDL"
 	},
 
-	# FIXME: Needs Windows and OS X love.
-
 	"target_defaults": {
 		"include_dirs": [ "include", "<(sdl_dir)/include" ],
-		"cflags": [ "-g", "-fvisibility=hidden", "-Wall" ],
-		"defines": [ "__LINUX__", "_REENTRANT" ],
-		"libraries": [ "-lm", "-ldl", "-lpthread" ],
+		"cflags": [ "-g", "-Wall" ],
 
 		"target_conditions": [
+			["OS == 'linux'", {
+				"defines": [ "__LINUX__", "_REENTRANT" ]
+			}],
+			["OS == 'win'", {
+				"defines": [ "_WINDOWS" ]
+			}],
 			["_type == 'shared_library'", {
 				"cflags": [ "-fPIC" ]
 			}]
@@ -21,10 +23,20 @@
 		"default_configuration": "Release",
 		"configurations": {
 			"Debug": {
-				"cflags": [ "-O0" ]
+				"cflags": [ "-O0" ],
+				"conditions": [
+					["OS == 'win'", {
+						"defines": [ "_DEBUG" ]
+					}]
+				]
 			},
 			"Release": {
-				"cflags": [ "-O3" ]
+				"cflags": [ "-O3" ],
+				"conditions": [
+					["OS == 'win'", {
+						"defines": [ "NDEBUG" ]
+					}]
+				]
 			}
 		}
 	},
@@ -34,6 +46,7 @@
 			"target_name": "SDL2",
 			"type": "<(library)",
 			"product_dir": "../../System",
+			"cflags": [ "-fvisibility=hidden" ],
 			"sources": [
 				"<(sdl_dir)/src/SDL_assert.c",
 				"<(sdl_dir)/src/SDL.c",
@@ -102,22 +115,66 @@
 				"<(sdl_dir)/src/video/SDL_shape.c",
 				"<(sdl_dir)/src/video/SDL_stretch.c",
 				"<(sdl_dir)/src/video/SDL_surface.c",
-				"<(sdl_dir)/src/video/SDL_video.c",
-				"<(sdl_dir)/src/video/x11/imKStoUCS.c",
-				"<(sdl_dir)/src/video/x11/SDL_x11clipboard.c",
-				"<(sdl_dir)/src/video/x11/SDL_x11dyn.c",
-				"<(sdl_dir)/src/video/x11/SDL_x11events.c",
-				"<(sdl_dir)/src/video/x11/SDL_x11framebuffer.c",
-				"<(sdl_dir)/src/video/x11/SDL_x11keyboard.c",
-				"<(sdl_dir)/src/video/x11/SDL_x11modes.c",
-				"<(sdl_dir)/src/video/x11/SDL_x11mouse.c",
-				"<(sdl_dir)/src/video/x11/SDL_x11opengl.c",
-				"<(sdl_dir)/src/video/x11/SDL_x11opengles.c",
-				"<(sdl_dir)/src/video/x11/SDL_x11shape.c",
-				"<(sdl_dir)/src/video/x11/SDL_x11touch.c",
-				"<(sdl_dir)/src/video/x11/SDL_x11video.c",
-				"<(sdl_dir)/src/video/x11/SDL_x11window.c",
-				"<(sdl_dir)/src/loadso/dlopen/SDL_sysloadso.c"
+				"<(sdl_dir)/src/video/SDL_video.c"
+			],
+			"conditions": [
+				["OS == 'linux'", {
+					"libraries": [ "-lm", "-ldl", "-lpthread" ],
+					"sources": [
+						"<(sdl_dir)/src/video/x11/imKStoUCS.c",
+						"<(sdl_dir)/src/video/x11/SDL_x11clipboard.c",
+						"<(sdl_dir)/src/video/x11/SDL_x11dyn.c",
+						"<(sdl_dir)/src/video/x11/SDL_x11events.c",
+						"<(sdl_dir)/src/video/x11/SDL_x11framebuffer.c",
+						"<(sdl_dir)/src/video/x11/SDL_x11keyboard.c",
+						"<(sdl_dir)/src/video/x11/SDL_x11modes.c",
+						"<(sdl_dir)/src/video/x11/SDL_x11mouse.c",
+						"<(sdl_dir)/src/video/x11/SDL_x11opengl.c",
+						"<(sdl_dir)/src/video/x11/SDL_x11opengles.c",
+						"<(sdl_dir)/src/video/x11/SDL_x11shape.c",
+						"<(sdl_dir)/src/video/x11/SDL_x11touch.c",
+						"<(sdl_dir)/src/video/x11/SDL_x11video.c",
+						"<(sdl_dir)/src/video/x11/SDL_x11window.c",
+						"<(sdl_dir)/src/loadso/dlopen/SDL_sysloadso.c"
+					]
+				}],
+				["OS == 'win'", {
+					"libraries": [ "-lwinmm.lib", "-limm32.lib", "-lversion.lib" ],
+					"sources": [
+						"<(sdl_dir)/src/libm/e_atan2.c",
+						"<(sdl_dir)/src/libm/e_log.c",
+						"<(sdl_dir)/src/libm/e_pow.c",
+						"<(sdl_dir)/src/libm/e_rem_pio2.c",
+						"<(sdl_dir)/src/libm/e_sqrt.c",
+						"<(sdl_dir)/src/libm/k_cos.c",
+						"<(sdl_dir)/src/libm/k_rem_pio2.c",
+						"<(sdl_dir)/src/libm/k_sin.c",
+						"<(sdl_dir)/src/libm/s_atan.c",
+						"<(sdl_dir)/src/libm/s_copysign.c",
+						"<(sdl_dir)/src/libm/s_cos.c",
+						"<(sdl_dir)/src/libm/s_fabs.c",
+						"<(sdl_dir)/src/libm/s_floor.c",
+						"<(sdl_dir)/src/libm/s_scalbn.c",
+						"<(sdl_dir)/src/libm/s_sin.c",
+						"<(sdl_dir)/src/timer/windows/SDL_systimer.c",
+						"<(sdl_dir)/src/thread/windows/SDL_sysmutex.c",
+						"<(sdl_dir)/src/thread/windows/SDL_syssem.c",
+						"<(sdl_dir)/src/thread/windows/SDL_systhread.c",
+						"<(sdl_dir)/src/thread/generic/SDL_syscond.c",
+						"<(sdl_dir)/src/video/windows/SDL_windowsclipboard.c",
+						"<(sdl_dir)/src/video/windows/SDL_windowsevents.c",
+						"<(sdl_dir)/src/video/windows/SDL_windowsframebuffer.c",
+						"<(sdl_dir)/src/video/windows/SDL_windowskeyboard.c",
+						"<(sdl_dir)/src/video/windows/SDL_windowsmodes.c",
+						"<(sdl_dir)/src/video/windows/SDL_windowsmouse.c",
+						"<(sdl_dir)/src/video/windows/SDL_windowsopengl.c",
+						"<(sdl_dir)/src/video/windows/SDL_windowsshape.c",
+						"<(sdl_dir)/src/video/windows/SDL_windowsvideo.c",
+						"<(sdl_dir)/src/video/windows/SDL_windowswindow.c",
+						"<(sdl_dir)/src/loadso/windows/SDL_sysloadso.c",
+						"<(sdl_dir)/src/core/windows/SDL_windows.c"
+					]
+				}]
 			],
 			"all_dependent_settings": {
 				"include_dirs": [ "include", "<(sdl_dir)/include" ]
@@ -134,8 +191,18 @@
 		{
 			"target_name": "SDL2main",
 			"type": "static_library",
-			"sources": [
-				"<(sdl_dir)/src/main/dummy/SDL_dummy_main.c"
+			"conditions": [
+				["OS == 'linux'", {
+					"sources": [
+						"<(sdl_dir)/src/main/dummy/SDL_dummy_main.c"
+					]
+				}],
+				["OS == 'win'", {
+					"sources": [
+						"<(sdl_dir)/src/main/windows/SDL_windows_main.c",
+						"<(sdl_dir)/src/main/windows/version.rc"
+					]
+				}]
 			]
 		}
 	]

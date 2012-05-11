@@ -30,6 +30,17 @@
 #error WinCE SDL build not supported by Unreal Tournament
 #endif
 
+/* Threading is required by other subsystems. */
+#undef SDL_THREADS_DISABLED
+#define SDL_THREAD_WINDOWS 1
+
+/* Timer is required by other subsystems. */
+#undef SDL_TIMERS_DISABLED
+#define SDL_TIMER_WINDOWS 1
+
+/* FIXME: disabling render breaks the build. */
+#undef SDL_RENDER_DISABLED
+
 #if !defined(_STDINT_H_) && (!defined(HAVE_STDINT_H) || !_HAVE_STDINT_H)
 #if defined(__GNUC__) || defined(__DMC__) || defined(__WATCOMC__)
 #define HAVE_STDINT_H 1
