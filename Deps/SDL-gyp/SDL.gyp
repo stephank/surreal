@@ -136,7 +136,16 @@
 						"<(sdl_dir)/src/video/x11/SDL_x11video.c",
 						"<(sdl_dir)/src/video/x11/SDL_x11window.c",
 						"<(sdl_dir)/src/loadso/dlopen/SDL_sysloadso.c"
-					]
+					],
+					"direct_dependent_settings": {
+						"target_conditions": [
+							["_type == 'executable'", {
+								"sources": [
+									"<(sdl_dir)/src/main/dummy/SDL_dummy_main.c"
+								]
+							}]
+						]
+					}
 				}],
 				["OS == 'win'", {
 					"libraries": [ "-lwinmm.lib", "-limm32.lib", "-lversion.lib" ],
@@ -173,37 +182,22 @@
 						"<(sdl_dir)/src/video/windows/SDL_windowswindow.c",
 						"<(sdl_dir)/src/loadso/windows/SDL_sysloadso.c",
 						"<(sdl_dir)/src/core/windows/SDL_windows.c"
-					]
+					],
+					"direct_dependent_settings": {
+						"target_conditions": [
+							["_type == 'executable'", {
+								"sources": [
+									"<(sdl_dir)/src/main/windows/SDL_windows_main.c",
+									"<(sdl_dir)/src/main/windows/version.rc"
+								]
+							}]
+						]
+					}
 				}]
 			],
 			"all_dependent_settings": {
 				"include_dirs": [ "include", "<(sdl_dir)/include" ]
-			},
-			"direct_dependent_settings": {
-				"conditions": [
-					["_type == 'executable'", {
-						"dependencies": [ "SDL2main" ]
-					}]
-				]
 			}
-		},
-
-		{
-			"target_name": "SDL2main",
-			"type": "static_library",
-			"conditions": [
-				["OS == 'linux'", {
-					"sources": [
-						"<(sdl_dir)/src/main/dummy/SDL_dummy_main.c"
-					]
-				}],
-				["OS == 'win'", {
-					"sources": [
-						"<(sdl_dir)/src/main/windows/SDL_windows_main.c",
-						"<(sdl_dir)/src/main/windows/version.rc"
-					]
-				}]
-			]
 		}
 	]
 }

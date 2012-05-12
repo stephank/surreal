@@ -6,7 +6,7 @@
 			"dependencies": [
 				"../Core/package.gyp:*",
 				"../Engine/package.gyp:*",
-				"../Deps/SDL-gyp/SDL.gyp:SDL2"
+				"../Deps/SDL-gyp/SDL.gyp:*"
 			],
 			"defines": [
 				"UTGLR_UT_BUILD=1"

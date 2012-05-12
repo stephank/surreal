@@ -206,7 +206,7 @@ static void MainLoop( UEngine* Engine )
 //
 // Entry point.
 //
-int SDL_main( int argc, char* argv[] )
+int main( int argc, char* argv[] )
 {
 	#if !_MSC_VER
 		__Context::StaticInit();
