@@ -97,19 +97,22 @@
 						"<(openal_dir)/Alc/backends/dsound.c",
 						"<(openal_dir)/Alc/backends/winmm.c"
 					],
-					"libraries": [ "-lwinmm.lib", "-ldsound.lib" ]
+					"libraries": [ "-lwinmm.lib", "-ldsound.lib" ],
+					"all_dependent_settings": {
+						"include_dirs": [ "<(openal_dir)/include/AL" ]
+					}
 				}],
 				["OS == 'linux'", {
 					"sources": [
 						"<(openal_dir)/Alc/backends/alsa.c",
 						"<(openal_dir)/Alc/backends/pulseaudio.c"
 					],
-					"libraries": [ "-lrt", "-lpthread", "-ldl", "-lm" ]
+					"libraries": [ "-lrt", "-lpthread", "-ldl", "-lm" ],
+					"all_dependent_settings": {
+						"include_dirs": [ "<(openal_dir)/include" ]
+					}
 				}]
 			],
-			"all_dependent_settings": {
-				"include_dirs": [ "<(openal_dir)/include" ]
-			}
 		}
 	]
 }
