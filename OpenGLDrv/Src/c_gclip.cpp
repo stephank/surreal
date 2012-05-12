@@ -201,7 +201,7 @@ void CGClip::SelectModeStart(void) {
 	ClearHitNameStack();
 
 	//Reset best depth value to farthest
-	m_selClosestDepth = INFINITY;
+	m_selClosestDepth = std::numeric_limits<float>::infinity();
 
 	//Initial reset hit flag
 	m_selHit = false;

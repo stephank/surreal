@@ -2318,11 +2318,6 @@ UBOOL UOpenGLRenderDevice::Init(UViewport* InViewport, INT NewX, INT NewY, INT N
 
 	debugf(TEXT("Initializing OpenGLDrv..."));
 
-	if (NumDevices == 0) {
-		g_gammaFirstTime = true;
-		g_haveOriginalGammaRamp = false;
-	}
-
 	// Init global GL.
 	if (NumDevices == 0) {
 		bool loadRet;
@@ -7325,9 +7320,6 @@ void UOpenGLRenderDevice::EndTileBufferingNoCheck(void) {
 INT UOpenGLRenderDevice::NumDevices = 0;
 INT UOpenGLRenderDevice::LockCount  = 0;
 UBOOL UOpenGLRenderDevice::GLLoaded = false;
-
-bool UOpenGLRenderDevice::g_gammaFirstTime = false;
-bool UOpenGLRenderDevice::g_haveOriginalGammaRamp = false;
 
 UOpenGLRenderDevice::DWORD_CTTree_t UOpenGLRenderDevice::m_sharedZeroPrefixBindTrees[NUM_CTTree_TREES];
 UOpenGLRenderDevice::QWORD_CTTree_t UOpenGLRenderDevice::m_sharedNonZeroPrefixBindTrees[NUM_CTTree_TREES];

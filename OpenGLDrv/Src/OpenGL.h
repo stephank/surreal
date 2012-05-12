@@ -777,19 +777,7 @@ class UOpenGLRenderDevice : public URenderDevice {
 	static INT NumDevices;
 	static INT LockCount;
 
-#ifdef _WIN32
-	static HGLRC   hCurrentRC;
-	static HMODULE hModuleGlMain;
-	static TArray<HGLRC> AllContexts;
-#else
 	static UBOOL GLLoaded;
-#endif
-
-	static bool g_gammaFirstTime;
-	static bool g_haveOriginalGammaRamp;
-#ifdef _WIN32
-	static FGammaRamp g_originalGammaRamp;
-#endif
 
 	//OpenGL 1.x function pointers for remaining subset to be used with OpenGL 3.2
 	#define GL1_PROC(ret, func, params) static ret (STDCALL *func)params;

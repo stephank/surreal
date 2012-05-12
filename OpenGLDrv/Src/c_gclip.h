@@ -4,6 +4,7 @@
 
 #include <math.h>
 #include <deque>
+#include <limits>
 
 class CGClip {
 public:

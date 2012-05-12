@@ -14,6 +14,10 @@
 	Includes.
 -----------------------------------------------------------------------------*/
 
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 #include <SDL.h>
 #include <GL/gl.h>
 #ifdef WIN32
