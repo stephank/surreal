@@ -2323,17 +2323,17 @@ UBOOL UOpenGLRenderDevice::Init(UViewport* InViewport, INT NewX, INT NewY, INT N
 		bool loadRet;
 
 		// Bind the library.
-		FString OpenGLLibName;
-		// Default to libGL.so.1 if not defined
-		if (!GConfig->GetString(g_pSection, TEXT("OpenGLLibName"), OpenGLLibName)) {
-			OpenGLLibName = TEXT("libGL.so.1");
+		const char* GLLibName = NULL;
+		FString GLLibNameString;
+		if (GConfig->GetString(g_pSection, TEXT("OpenGLLibName"), GLLibNameString)) {
+			debugf(TEXT("binding %s"), *GLLibNameString);
+			GLLibName = appToAnsi(*GLLibNameString);
 		}
 
 		if (!GLLoaded) {
 			// Only call it once as succeeding calls will 'fail'.
-			debugf(TEXT("binding %s"), *OpenGLLibName);
-			if (SDL_GL_LoadLibrary(*OpenGLLibName) == -1) {
-				appErrorf(TEXT(SDL_GetError()));
+			if (SDL_GL_LoadLibrary(GLLibName) == -1) {
+				appErrorf(appFromAnsi(SDL_GetError()));
 			}
 			GLLoaded = true;
 		}
