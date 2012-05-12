@@ -63,11 +63,6 @@
 				"defines": [
 					"WIN32",
 					"ThisPackage=>(_target_name)"
-				],
-				"conditions": [
-					["_type == 'shared_library'", {
-						"defines": [ "_DLL" ]
-					}]
 				]
 			}]
 		],
@@ -83,8 +78,8 @@
 						"InlineFunctionExpansion": 0,
 						"MinimalRebuild": "true",
 						"BasicRuntimeChecks": 0,
-						"RuntimeLibrary": 1,
-						"DebugInformationFormat": 3
+						"DebugInformationFormat": 3,
+						"RuntimeLibrary": 3
 					},
 					"VCLinkerTool": {
 						"LinkIncremental": 2,
@@ -99,10 +94,10 @@
 						"Optimization": 2,
 						"InlineFunctionExpansion": 1,
 						"StringPooling": "true",
-						"RuntimeLibrary": 0,
 						"EnableFunctionLevelLinking": "true",
 						"AssemblerOutput": 4,
-						"DebugInformationFormat": 0
+						"DebugInformationFormat": 0,
+						"RuntimeLibrary": 2
 					},
 					"VCLinkerTool": {
 						"LinkIncremental": 1

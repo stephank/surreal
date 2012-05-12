@@ -24,19 +24,19 @@
 		"configurations": {
 			"Debug": {
 				"cflags": [ "-O0" ],
-				"conditions": [
-					["OS == 'win'", {
-						"defines": [ "_DEBUG" ]
-					}]
-				]
+				"msvs_settings": {
+					"VCCLCompilerTool": {
+						"RuntimeLibrary": 3
+					}
+				}
 			},
 			"Release": {
 				"cflags": [ "-O3" ],
-				"conditions": [
-					["OS == 'win'", {
-						"defines": [ "NDEBUG" ]
-					}]
-				]
+				"msvs_settings": {
+					"VCCLCompilerTool": {
+						"RuntimeLibrary": 2
+					}
+				}
 			}
 		}
 	},

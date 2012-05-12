@@ -44,11 +44,19 @@
 		"configurations": {
 			"Debug": {
 				"cflags": [ "-g3" ],
-				"defines": [ "_DEBUG" ]
+				"msvs_settings": {
+					"VCCLCompilerTool": {
+						"RuntimeLibrary": 3
+					}
+				}
 			},
 			"Release": {
 				"cflags": [ "-O2", "-fomit-frame-pointer" ],
-				"defines": [ "NDEBUG" ]
+				"msvs_settings": {
+					"VCCLCompilerTool": {
+						"RuntimeLibrary": 2
+					}
+				}
 			}
 		}
 	},

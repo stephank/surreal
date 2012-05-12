@@ -28,7 +28,7 @@
 				"defines": [ "unix" ]
 			}],
 			["_type == 'shared_library' and OS == 'win'", {
-				"defines": [ "_DLL", "DLL_EXPORTS" ]
+				"defines": [ "DLL_EXPORTS" ]
 			}],
 			["_type == 'shared_library' and OS != 'win'", {
 				"cflags": [ "-fPIC" ]
@@ -40,19 +40,19 @@
 			"Debug": {
 				"defines": [ "MIKMOD_DEBUG" ],
 				"cflags": [ "-g3", "-Werror" ],
-				"conditions": [
-					["OS == 'win'", {
-						"defines": [ "_DEBUG" ]
-					}]
-				]
+				"msvs_settings": {
+					"VCCLCompilerTool": {
+						"RuntimeLibrary": 3
+					}
+				}
 			},
 			"Release": {
 				"cflags": [ "-g", "-O2" ],
-				"conditions": [
-					["OS == 'win'", {
-						"defines": [ "NDEBUG" ]
-					}]
-				]
+				"msvs_settings": {
+					"VCCLCompilerTool": {
+						"RuntimeLibrary": 2
+					}
+				}
 			}
 		}
 	},

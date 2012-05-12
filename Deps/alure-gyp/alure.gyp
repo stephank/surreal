@@ -34,7 +34,6 @@
 		"default_configuration": "Release",
 		"configurations": {
 			"Debug": {
-				"defines": [ "_DEBUG" ],
 				"cflags": [ "-g3" ],
 				"msvs_settings": {
 					"VCCLCompilerTool": {
@@ -43,7 +42,6 @@
 				}
 			},
 			"Release": {
-				"defines": [ "NDEBUG" ],
 				"cflags": [ "-g", "-O2" ],
 				"msvs_settings": {
 					"VCCLCompilerTool": {
