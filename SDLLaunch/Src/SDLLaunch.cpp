@@ -78,7 +78,7 @@ static void OpenSplash()
 		"Unreal Tournament",
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		SplashSurface->w, SplashSurface->h,
-		SDL_WINDOW_SHOWN
+		SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS
 	);
 	if( SplashWindow == NULL )
 		goto splash_fail;
