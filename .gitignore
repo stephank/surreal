@@ -58,3 +58,4 @@ System/*.dll
 System/*.exp
 System/*.ilk
 System/*.map
+System/*.dylib

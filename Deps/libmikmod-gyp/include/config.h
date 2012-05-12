@@ -1,8 +1,10 @@
 #define HAVE_FCNTL_H 1
+
+#if !defined(__APPLE__)
 #define HAVE_MALLOC_H 1
+#endif
 
-#ifndef WIN32
-
+#if !defined(WIN32)
 #define HAVE_INTTYPES_H 1
 #define HAVE_MEMORY_H 1
 #define HAVE_SETENV 1
@@ -21,10 +23,15 @@
 #define HAVE_SYS_WAIT_H 1
 #define HAVE_UNISTD_H 1
 #define STDC_HEADERS 1
-
-#include <endian.h>
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-# define WORDS_BIGENDIAN 1
 #endif
 
-#endif /* WIN32 */
+#if defined(__APPLE__)
+# ifdef __BIG_ENDIAN__
+#  define WORDS_BIGENDIAN 1
+# endif
+#elif !defined(WIN32)
+# include <endian.h>
+# if __BYTE_ORDER == __LITTLE_ENDIAN
+#  define WORDS_BIGENDIAN 1
+# endif
+#endif

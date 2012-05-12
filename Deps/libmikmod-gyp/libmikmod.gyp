@@ -30,7 +30,7 @@
 			["_type == 'shared_library' and OS == 'win'", {
 				"defines": [ "DLL_EXPORTS" ]
 			}],
-			["_type == 'shared_library' and OS != 'win'", {
+			["_type == 'shared_library' and OS == 'linux'", {
 				"cflags": [ "-fPIC" ]
 			}]
 		],
