@@ -50,7 +50,11 @@ USDLViewport::USDLViewport()
 void USDLViewport::Destroy()
 {
 	guard(USDLViewport::Destroy);
+
+	CloseWindow();
+
 	Super::Destroy();
+
 	unguard;
 }
 

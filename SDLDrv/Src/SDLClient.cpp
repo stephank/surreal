@@ -165,6 +165,9 @@ void USDLClient::Destroy()
 {
 	guard(USDLClient::Destroy);
 
+	for( INT i=Viewports.Num()-1; i>=0; i-- )
+		Viewports( i )->CloseWindow();
+
 	SDL_Quit();
 	debugf( NAME_Exit, TEXT("SDL client shut down.") );
 
