@@ -14,7 +14,7 @@
 		],
 
 		"cflags": [ "-Winline", "-Wall", "-Wextra" ],
-		"defines": [ "AL_BUILD_LIBRARY", "AL_ALEXT_PROTOTYPES", "_GNU_SOURCE=1" ],
+		"defines": [ "AL_BUILD_LIBRARY", "AL_ALEXT_PROTOTYPES" ],
 
 		"target_conditions": [
 			["_type == 'shared_library'", {
@@ -25,6 +25,20 @@
 				"all_dependent_settings": {
 					"defines": [ "AL_LIBTYPE_STATIC" ]
 				}
+			}],
+			["OS == 'linux'", {
+				"defines": [
+					"LINUX", "_GNU_SOURCE=1",
+				]
+			}],
+			["OS == 'win'", {
+				"defines": [
+					"WIN32", "_WINDOWS",
+					"_WIN32", "_WIN32_WINNT=0x0501",
+					"_CRT_SECURE_NO_WARNINGS", "_CRT_NONSTDC_NO_DEPRECATE",
+					"strcasecmp=_stricmp", "strncasecmp=_strnicmp",
+					"snprintf=_snprintf", "isfinite=_finite", "isnan=_isnan"
+				]
 			}]
 		],
 
@@ -43,18 +57,9 @@
 
 	"targets": [
 		{
-			"conditions": [
-				["OS == 'win'", {
-					"target_name": "OpenAL32"
-				}],
-				["OS != 'win'", {
-					"target_name": "openal"
-				}]
-			],
 			"type": "<(library)",
 			"product_dir": "../../System",
 			"cflags": [ "-fvisibility=internal", "-pthread" ],
-			"libraries": [ "-lrt", "-lpthread", "-ldl", "-lm" ],
 			"sources": [
 				"<(openal_dir)/OpenAL32/alAuxEffectSlot.c",
 				"<(openal_dir)/OpenAL32/alBuffer.c",
@@ -81,9 +86,28 @@
 				"<(openal_dir)/Alc/mixer.c",
 				"<(openal_dir)/Alc/panning.c",
 				"<(openal_dir)/Alc/backends/loopback.c",
-				"<(openal_dir)/Alc/backends/null.c",
-				"<(openal_dir)/Alc/backends/alsa.c",
-				"<(openal_dir)/Alc/backends/pulseaudio.c"
+				"<(openal_dir)/Alc/backends/null.c"
+			],
+			"conditions": [
+				["OS != 'win'", {
+					"target_name": "openal"
+				}],
+				["OS == 'win'", {
+					"target_name": "OpenAL32",
+					"sources": [
+						"<(openal_dir)/Alc/backends/mmdevapi.c",
+						"<(openal_dir)/Alc/backends/dsound.c",
+						"<(openal_dir)/Alc/backends/winmm.c"
+					],
+					"libraries": [ "-lwinmm.lib", "-ldsound.lib" ]
+				}],
+				["OS == 'linux'", {
+					"sources": [
+						"<(openal_dir)/Alc/backends/alsa.c",
+						"<(openal_dir)/Alc/backends/pulseaudio.c"
+					],
+					"libraries": [ "-lrt", "-lpthread", "-ldl", "-lm" ]
+				}]
 			],
 			"all_dependent_settings": {
 				"include_dirs": [ "<(openal_dir)/include" ]
