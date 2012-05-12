@@ -77,15 +77,18 @@
 					"target_name": "alure"
 				}],
 				["OS == 'win'", {
-					"target_name": "ALURE32"
+					"target_name": "ALURE32",
+					"all_dependent_settings": {
+						"include_dirs": [ "<(alure_dir)/include/AL" ]
+					}
 				}],
 				["OS == 'linux'", {
-					"libraries": [ "-lm", "-lpthread" ]
+					"libraries": [ "-lm", "-lpthread" ],
+					"all_dependent_settings": {
+						"include_dirs": [ "<(alure_dir)/include" ]
+					}
 				}]
-			],
-			"all_dependent_settings": {
-				"include_dirs": [ "<(alure_dir)/include" ]
-			}
+			]
 		}
 	]
 }
