@@ -11,7 +11,6 @@
 			},
 
 			"dependencies": [
-				"MiniLaunch/package.gyp:*",
 				"SDLLaunch/package.gyp:*",
 				"SDLDrv/package.gyp:*",
 				"OpenGLDrv/package.gyp:*",
