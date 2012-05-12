@@ -4,23 +4,14 @@
 		"alure_dir%": "../alure"
 	},
 
-	# FIXME: Needs Windows and OS X love.
-
 	"target_defaults": {
 		"include_dirs": [
 			"include",
 			"<(alure_dir)/include"
 		],
 
-		"cflags": [
-			"-Wall", "-Wextra",
-			"-funswitch-loops"
-		],
-		"defines": [
-			"ALURE_BUILD_LIBRARY",
-			"_GNU_SOURCE=1",
-			"HAVE_CONFIG_H"
-		],
+		"cflags": [ "-Wall", "-Wextra", "-funswitch-loops" ],
+		"defines": [ "ALURE_BUILD_LIBRARY", "HAVE_CONFIG_H" ],
 
 		"target_conditions": [
 			["_type == 'shared_library'", {
@@ -31,34 +22,43 @@
 				"all_dependent_settings": {
 					"defines": [ "ALURE_STATIC_LIBRARY" ]
 				}
+			}],
+			["OS == 'linux'", {
+				"defines": [ "LINUX", "_GNU_SOURCE=1" ]
+			}],
+			["OS == 'win'", {
+				"defines": [ "WIN32", "_WINDOWS", "_WIN32" ]
 			}]
 		],
 
 		"default_configuration": "Release",
 		"configurations": {
 			"Debug": {
-				"cflags": [ "-g3" ]
+				"defines": [ "_DEBUG" ],
+				"cflags": [ "-g3" ],
+				"msvs_settings": {
+					"VCCLCompilerTool": {
+						"RuntimeLibrary": 3
+					}
+				}
 			},
 			"Release": {
-				"cflags": [ "-g", "-O2" ]
+				"defines": [ "NDEBUG" ],
+				"cflags": [ "-g", "-O2" ],
+				"msvs_settings": {
+					"VCCLCompilerTool": {
+						"RuntimeLibrary": 2
+					}
+				}
 			}
 		}
 	},
 
 	"targets": [
 		{
-			"conditions": [
-				["OS == 'win'", {
-					"target_name": "ALURE32"
-				}],
-				["OS != 'win'", {
-					"target_name": "alure"
-				}]
-			],
 			"type": "<(library)",
 			"product_dir": "../../System",
 			"cflags": [ "-fvisibility=hidden", "-pthread" ],
-			"libraries": [ "-lm", "-lpthread" ],
 			"dependencies": [
 				"../openal-soft-gyp/openal-soft.gyp:*"
 			],
@@ -71,6 +71,17 @@
 				"<(alure_dir)/src/streamplay.cpp",
 				"<(alure_dir)/src/codec_wav.cpp",
 				"<(alure_dir)/src/codec_aiff.cpp"
+			],
+			"conditions": [
+				["OS != 'win'", {
+					"target_name": "alure"
+				}],
+				["OS == 'win'", {
+					"target_name": "ALURE32"
+				}],
+				["OS == 'linux'", {
+					"libraries": [ "-lm", "-lpthread" ]
+				}]
 			],
 			"all_dependent_settings": {
 				"include_dirs": [ "<(alure_dir)/include" ]
