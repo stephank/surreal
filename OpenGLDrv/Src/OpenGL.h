@@ -133,10 +133,6 @@
 //Must be at least 2000
 #define VERTEX_ARRAY_SIZE	4000	// vogel: better safe than sorry
 
-#ifdef _WIN32
-#define GL_DLL ("OpenGL32.dll")
-#endif
-
 
 /*-----------------------------------------------------------------------------
 	OpenGLDrv.
@@ -338,20 +334,6 @@ struct FGLMapDot {
 };
 
 
-#ifdef _WIN32
-typedef struct {
-	PFNWGLCHOOSEPIXELFORMATARBPROC p_wglChoosePixelFormatARB;
-	bool haveWGLMultisampleARB;
-} InitARBPixelFormatRet_t;
-
-typedef struct {
-	INT NewColorBytes;
-	PFNWGLCHOOSEPIXELFORMATARBPROC p_wglChoosePixelFormatARB;
-	bool haveWGLMultisampleARB;
-} InitARBPixelFormatWndProcParams_t;
-#endif
-
-
 //
 // An OpenGL rendering device attached to a viewport.
 //
@@ -513,13 +495,6 @@ class UOpenGLRenderDevice : public URenderDevice {
 		BYTE green[256];
 		BYTE blue[256];
 	};
-
-#ifdef _WIN32
-	// Permanent variables.
-	HGLRC m_hRC;
-	HWND m_hWnd;
-	HDC m_hDC;
-#endif
 
 	UBOOL WasFullscreen;
 
@@ -1053,41 +1028,6 @@ class UOpenGLRenderDevice : public URenderDevice {
 	void ConfigValidate_RefreshDCV(void);
 	void ConfigValidate_RequiredExtensions(void);
 	void ConfigValidate_Main(void);
-
-#ifdef _WIN32
-	void FASTCALL InitARBPixelFormat(INT NewColorBytes, InitARBPixelFormatRet_t *pRet);
-	static LRESULT CALLBACK InitARBPixelFormatWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-	void FASTCALL SetBasicPixelFormat(INT NewColorBytes);
-	bool FASTCALL SetAAPixelFormat(INT NewColorBytes);
-#endif
-
-
-#ifndef __UNIX__
-	void PrintFormat(HDC hDC, INT nPixelFormat) {
-		guard(UOpenGlRenderDevice::PrintFormat);
-		TCHAR Flags[1024] = TEXT("");
-		PIXELFORMATDESCRIPTOR pfd;
-		DescribePixelFormat(hDC, nPixelFormat, sizeof(pfd), &pfd);
-		if (pfd.dwFlags & PFD_DRAW_TO_WINDOW) appStrcat(Flags, TEXT(" PFD_DRAW_TO_WINDOW"));
-		if (pfd.dwFlags & PFD_DRAW_TO_BITMAP) appStrcat(Flags, TEXT(" PFD_DRAW_TO_BITMAP"));
-		if (pfd.dwFlags & PFD_SUPPORT_GDI) appStrcat(Flags, TEXT(" PFD_SUPPORT_GDI"));
-		if (pfd.dwFlags & PFD_SUPPORT_OPENGL) appStrcat(Flags, TEXT(" PFD_SUPPORT_OPENGL"));
-		if (pfd.dwFlags & PFD_GENERIC_ACCELERATED) appStrcat(Flags, TEXT(" PFD_GENERIC_ACCELERATED"));
-		if (pfd.dwFlags & PFD_GENERIC_FORMAT) appStrcat(Flags, TEXT(" PFD_GENERIC_FORMAT"));
-		if (pfd.dwFlags & PFD_NEED_PALETTE) appStrcat(Flags, TEXT(" PFD_NEED_PALETTE"));
-		if (pfd.dwFlags & PFD_NEED_SYSTEM_PALETTE) appStrcat(Flags, TEXT(" PFD_NEED_SYSTEM_PALETTE"));
-		if (pfd.dwFlags & PFD_DOUBLEBUFFER) appStrcat(Flags, TEXT(" PFD_DOUBLEBUFFER"));
-		if (pfd.dwFlags & PFD_STEREO) appStrcat(Flags, TEXT(" PFD_STEREO"));
-		if (pfd.dwFlags & PFD_SWAP_LAYER_BUFFERS) appStrcat(Flags, TEXT("PFD_SWAP_LAYER_BUFFERS"));
-		debugf(NAME_Init, TEXT("Pixel format %i:"), nPixelFormat);
-		debugf(NAME_Init, TEXT("   Flags:%s"), Flags);
-		debugf(NAME_Init, TEXT("   Pixel Type: %i"), pfd.iPixelType);
-		debugf(NAME_Init, TEXT("   Bits: Color=%i R=%i G=%i B=%i A=%i"), pfd.cColorBits, pfd.cRedBits, pfd.cGreenBits, pfd.cBlueBits, pfd.cAlphaBits);
-		debugf(NAME_Init, TEXT("   Bits: Accum=%i Depth=%i Stencil=%i"), pfd.cAccumBits, pfd.cDepthBits, pfd.cStencilBits);
-		unguard;
-	}
-#endif
 
 	UBOOL Init(UViewport* InViewport, INT NewX, INT NewY, INT NewColorBytes, UBOOL Fullscreen);
 
