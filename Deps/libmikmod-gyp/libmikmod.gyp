@@ -106,7 +106,10 @@
 				"<(mikmod_dir)/playercode/virtch_common.c"
 			],
 			"all_dependent_settings": {
-				"include_dirs": [ "<(mikmod_dir)/include" ]
+				"include_dirs": [
+					"include",
+					"<(mikmod_dir)/include"
+				]
 			},
 			"conditions": [
 				["OS != 'win'", {
