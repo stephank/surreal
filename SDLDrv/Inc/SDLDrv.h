@@ -104,9 +104,12 @@ class USDLViewport : public UViewport
 
 	// Mouse motion events.
 	// These variables are only used by USDLClient.
+	UBOOL			MouseMoved;
 	INT				MouseX;
 	INT				MouseY;
-	INT				MouseWheelY;
+	INT				MouseDX;
+	INT				MouseDY;
+	INT				MouseWheelDY;
 
 	// SDL Keysym to EInputKey map.
 	

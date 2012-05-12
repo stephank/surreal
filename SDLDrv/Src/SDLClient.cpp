@@ -329,7 +329,7 @@ void USDLClient::Tick()
 
 			// Regardless of amount scrolled, we emit just one mouse wheel event
 			// to the engine per tick. Collect the total scroll here.
-			Viewport->MouseWheelY += Event.wheel.y;
+			Viewport->MouseWheelDY += Event.wheel.y;
 
 		case SDL_MOUSEMOTION:
 
@@ -343,9 +343,11 @@ void USDLClient::Tick()
 				break;
 
 			// Collect data for a combined mouse motion event to the engine.
-			// FIXME: How to send absolute coordinates when not grabbed?
-			Viewport->MouseX += Event.motion.xrel;
-			Viewport->MouseY += Event.motion.yrel;
+			Viewport->MouseMoved = TRUE;
+			Viewport->MouseX = Event.motion.x;
+			Viewport->MouseY = Event.motion.y;
+			Viewport->MouseDX += Event.motion.xrel;
+			Viewport->MouseDY -= Event.motion.yrel;
 
 			break;
 
@@ -360,21 +362,18 @@ void USDLClient::Tick()
 		Viewport = CastChecked<USDLViewport>(Viewports(i));
 
 		// Flush collected motion events.
-		INT Delta;
-		if( (Delta = Viewport->MouseWheelY)!=0 ) {
-			Viewport->MouseWheelY = 0;
-			if( Delta > 0 )
+		if( Viewport->MouseWheelDY != 0 ) {
+			if( Viewport->MouseWheelDY > 0 )
 				Engine->InputEvent( Viewport, IK_MouseWheelUp, IST_Press );
 			else
 				Engine->InputEvent( Viewport, IK_MouseWheelDown, IST_Press );
+			Viewport->MouseWheelDY = 0;
 		}
-		if( (Delta = Viewport->MouseX)!=0 ){
-			Viewport->MouseX = 0;
-			Engine->InputEvent( Viewport, IK_MouseX, IST_Axis, +Delta );
-		}
-		if( (Delta = Viewport->MouseY)!=0 ){
-			Viewport->MouseY = 0;
-			Engine->InputEvent( Viewport, IK_MouseY, IST_Axis, -Delta );
+		if( Viewport->MouseMoved ){
+			Engine->MouseDelta( Viewport, 0, Viewport->MouseDX, Viewport->MouseDY );
+			Engine->MousePosition( Viewport, 0, Viewport->MouseX, Viewport->MouseY );
+			Viewport->MouseMoved = FALSE;
+			Viewport->MouseDX = Viewport->MouseDY = 0;
 		}
 
 		// Blit any viewports that need blitting.
