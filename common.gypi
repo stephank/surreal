@@ -46,7 +46,9 @@
 		"conditions": [
 			["library == 'static_library'", {
 				"defines": [ "__STATIC_LINK=1" ]
-			}],
+			}]
+		],
+		"target_conditions": [
 			["_type == 'shared_library'", {
 				"cflags": [ "-fPIC" ]
 			}],
