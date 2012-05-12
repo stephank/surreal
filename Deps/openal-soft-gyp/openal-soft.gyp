@@ -4,8 +4,6 @@
 		"openal_dir%": "../openal-soft"
 	},
 
-	# FIXME: Needs Windows and OS X love.
-
 	"target_defaults": {
 		"include_dirs": [
 			"include",
@@ -28,7 +26,7 @@
 			}],
 			["OS == 'linux'", {
 				"defines": [
-					"LINUX", "_GNU_SOURCE=1",
+					"LINUX", "_GNU_SOURCE=1"
 				]
 			}],
 			["OS == 'win'", {
