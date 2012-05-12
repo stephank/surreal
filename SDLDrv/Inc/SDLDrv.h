@@ -70,7 +70,6 @@ class USDLClient : public UClient, public FNotifyHook
 
 	// UObject interface.
 	void Destroy();
-	void PostEditChange();
 	void ShutdownAfterError();
 
 	// UClient interface.
