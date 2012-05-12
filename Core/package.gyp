@@ -11,9 +11,22 @@
 			"all_dependent_settings": {
 				"include_dirs": [ "Inc" ]
 			},
+
 			"direct_dependent_settings": {
-				"libraries": [
-					"-lCore"
+				"conditions": [
+					["OS == 'linux'", {
+						"libraries": [ "-lCore" ]
+					}],
+					["OS == 'win'", {
+						"libraries": [ "-lCore.lib" ],
+						"msvs_settings": {
+							"VCLinkerTool": {
+								"AdditionalLibraryDirectories": [
+									">(DEPTH)/Core/Lib"
+								]
+							}
+						}
+					}]
 				]
 			}
 		}
