@@ -19,17 +19,7 @@
 #endif
 
 #include <SDL.h>
-#if defined(WIN32)
-	#include <GL/gl.h>
-	#include "glext.h"
-	#include "wglext.h"
-#elif defined(__APPLE__)
-	#include <OpenGL/gl.h>
-	#include <OpenGL/glext.h>
-#else
-	#include <GL/gl.h>
-	#include <GL/glext.h>
-#endif
+#include <SDL_opengl.h>
 
 #define UTGLR_NO_APP_MALLOC
 #include <stdlib.h>
