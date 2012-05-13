@@ -21,64 +21,49 @@ The goal is to get Unreal Tournament running smoothly on modern systems.
 For now, this project is codenamed Surreal.
 
 
-Dependencies
-------------
-
-For building, you need development files for the following libraries:
-
- * SDL 1.2.x
- * OpenGL 1.?
- * OpenAL 1.1
- * ALURE 1.0
- * MikMod 3.x
-
-
 Building on Windows
 -------------------
 
-On Windows, building was tested using Visual Studio 2008 express. This is a
-free download from Microsoft. You can simply open the solution file
-`Surreal.sln` and build from there.
+Make sure you have the Windows and DirectX SDKs installed. Also either opt to
+install the Visual Studio C compilers during the Windows SDK install, or use
+the compilers from an existing install of Visual Studio.
 
-The biggest hurdle is getting the dependencies in place. You will likely
-need to reconfigure the additional include and library paths for many of the
-projects in order to build.
+TODO: Describe how to install GYP on Windows.
 
-In addition, if you want to build D3D9Drv, or build SDL from source, you will
-need the DirectX SDK. This is also a free download from Microsoft.
+Roughly, you will then want to generate the project files and the build them.
+To get any meaningful result, make sure you're building the Release
+configuration. On the command line, this would look as follows:
+
+    gyp --depth=.
+    msbuild surreal.sln /p:Configuration:Release
 
 
-Building on Linux
------------------
+Other platforms
+---------------
 
-To build on Linux, you must first place the packages for which source code is
-not available in the `System` directory. The files required are `Core.so`,
-`Engine.so` and `Render.so`.
-
-An xdelta patch is included for `Core.so`. This patch simply alters the
-SDL dependency from SDL 1.1 to SDL 1.2. The only SDL function actually
-referenced by `Core.so` is `SDL_Quit`, so it's no biggy. Apply the patch with:
-
-    mv System/Core.so System/Core.so-SDL1.1
-    xdelta patch Core-SDL-patch.xdelta System/Core.so-SDL1.1 System/Core.so
-    chmod a+x System/Core.so
-
-Finally, you need G++ 2.95. This is required to keep binary compatibility with
-the above binaries. One solution is to use Ubuntu 6.06.2 (Dapper Drake) in a
-virtual machine, which is the last Ubuntu to distribute this old version.
-
-Now you should be able to simply run `make`.
+Building on other platforms is currently not possible. Care has been taken to
+make as much of the source compile on Linux and Mac OS X, but there are no
+compatible binaries to link to.
 
 
 License situation
 -----------------
 
-A copy of the Artistic License is included in `LICENSE`. This is the license
-that OpenUT has used during its lifetime.
+A copy of the Artistic License is included in `LICENSE`.
 
-Because I could not find a license in the 432 source code release, with the
-exception of the vague guideline in the Help file, I have assumed that both
-these official releases are distributed with the Artistic License.
+This license does *not* apply to the included dependencies SDL, OpenAL Soft,
+ALURE and MikMod. For their licenses, see documentation found in the
+individual subdirectories underneath `Deps`.
 
-The updated renderers by Chris Dohnal are based on OpenUT source code. Both his
-work and original work done here will also use the Artistic License.
+All other source code found here effectively uses the Artistics License:
+
+ * The OpenUT project used the Artistic License during its lifetime.
+
+ * No license was included with the 432 source code release. It is assumed
+   both official releases (OpenUT, and the 432 source code) were using the
+   Artistic License.
+
+ * The updated renderers by Chris Dohnal are based on OpenUT source code.
+   The Artistic License applies to this work.
+
+ * Original work done here also uses the Artistic License.
