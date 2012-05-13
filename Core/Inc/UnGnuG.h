@@ -7,21 +7,40 @@
 	Platform compiler definitions.
 ----------------------------------------------------------------------------*/
 
-#ifdef __LINUX__
-	#define __UNIX__  1
-	#define __INTEL__ 1
-	#define __INTEL_BYTE_ORDER__ 1
-	#undef ASM
-	#undef ASM3DNOW
-	#undef ASMKNI
-	#ifdef __LP64__
-		#undef ASMLINUX
-	#else
+#define __UNIX__  1
+#define __INTEL__ 1
+#undef ASM
+#undef ASM3DNOW
+#undef ASMKNI
+
+#if defined(__LINUX__)
+
+	#undef ASMLINUX
+	#if !defined(__LP64__)
 		#define ASMLINUX 1
 	#endif
-	#define COMPILER "Compiled with GNU g++ ("__VERSION__")"
+
+	#include <endian.h>
+	#if __BYTE_ORDER == __LITTLE_ENDIAN
+		#define __INTEL_BYTE_ORDER__ 1
+	#endif
+
+#elif defined(__APPLE__)
+
+	#undef ASMLINUX
+
+	#if defined(__LITTLE_ENDIAN__)
+		#define __INTEL_BYTE_ORDER__ 1
+	#endif
+
 #else
 	#error Unsupported platform.
+#endif
+
+#if defined(__clang__)
+	#define COMPILER "Compiled with Clang ("__VERSION__")"
+#else
+	#define COMPILER "Compiled with GNU g++ ("__VERSION__")"
 #endif
 
 // Stack control.
