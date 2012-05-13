@@ -64,6 +64,3 @@
 #define HAVE_STDINT_H
 #define HAVE_FLOAT_H
 #define HAVE___RESTRICT
-
-#define SIZEOF_LONG sizeof(long)
-#define SIZEOF_LONG_LONG sizeof(long long)
