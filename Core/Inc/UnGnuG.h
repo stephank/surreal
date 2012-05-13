@@ -222,7 +222,11 @@ inline INT appFloor( FLOAT f )
 	return (INT)(f);
 }
 
-#include <time.h>
+#if defined(__MACH__)
+	#include <mach/mach_time.h>
+#else
+	#include <time.h>
+#endif
 
 //
 // CPU cycles, related to GSecondsPerCycle.
@@ -246,9 +250,26 @@ inline DWORD appCycles()
 #define DEFINED_appSeconds 1
 inline FTime appSeconds()
 {
+#if defined(CLOCK_MONOTONIC)
 	struct timespec t;
 	clock_gettime(CLOCK_MONOTONIC, &t);
-	return (FLOAT)t.tv_sec + (FLOAT)t.tv_nsec / 1000000000.0;
+	return 1e-9 * (FLOAT)t.tv_sec + (FLOAT)t.tv_nsec;
+#elif defined(__MACH__)
+	static FLOAT factor = 0;
+	if( factor == 0 ){
+		mach_timebase_info_data_t info;
+		if( mach_timebase_info( &info ) == 0 )
+			factor = 1e-9 * (FLOAT)info.numer / (FLOAT)info.denom;
+		else
+			factor = -1;
+	}
+	if( factor != -1 )
+		return factor * (FLOAT)mach_absolute_time();
+	else
+		return appSecondsSlow();
+#else
+	return appSecondsSlow();
+#endif
 }
 
 //
