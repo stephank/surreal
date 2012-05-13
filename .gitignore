@@ -5,6 +5,12 @@ System/*-bin
 System/*.int
 System/*.ini
 System/*.log
+System/*.url
+System/*.bat
+System/*.icd
+System/*.bmp
+System/*.mpi
+System/editorres
 Help/*.txt
 Help/*.ico
 Help/*.bmp
