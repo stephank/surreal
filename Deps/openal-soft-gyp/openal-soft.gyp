@@ -119,8 +119,23 @@
 					"all_dependent_settings": {
 						"include_dirs": [ "<(openal_dir)/include" ]
 					}
+				}],
+				["OS == 'mac'", {
+					"sources": [
+						"<(openal_dir)/Alc/backends/coreaudio.c"
+					],
+					"libraries": [
+						"-framework AudioToolbox",
+						"-framework ApplicationServices",
+						"-framework AudioUnit",
+						"-framework CoreAudio",
+						"-lpthread", "-ldl", "-lm"
+					],
+					"all_dependent_settings": {
+						"include_dirs": [ "<(openal_dir)/include" ]
+					}
 				}]
-			],
+			]
 		}
 	]
 }
