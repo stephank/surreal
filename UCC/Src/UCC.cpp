@@ -6,13 +6,15 @@ Revision history:
 	* Created by Tim Sweeney.
 =============================================================================*/
 
-#if WIN32
+#if defined(WIN32)
 	#include <windows.h>
 #else
 	#include <errno.h>
 	#include <sys/stat.h>
 #endif
-#include <malloc.h>
+#if !defined(__APPLE__)
+	#include <malloc.h>
+#endif
 #include <stdio.h>
 
 // Core and Engine

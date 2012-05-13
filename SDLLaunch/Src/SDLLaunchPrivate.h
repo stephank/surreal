@@ -6,7 +6,7 @@ Revision history:
 	* Created by Brandon Reinhart.
 =============================================================================*/
 
-#if WIN32
+#if defined(WIN32)
 	#include <windows.h>
 #else
 	#include <errno.h>
@@ -14,7 +14,9 @@ Revision history:
 #endif
 #include <stdio.h>
 #include <stdlib.h>
-#include <malloc.h>
+#if !defined(__APPLE__)
+	#include <malloc.h>
+#endif
 #include <fcntl.h>
 #include "SDL.h"
 #include "Engine.h"
