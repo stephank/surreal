@@ -4,11 +4,11 @@ Unreal Tournament
 This is a continuation of the original Unreal Tournament engine. It is based
 on several parts from different sources:
 
- * The partial source code release to version 432
+ * The partial source code release to version 432:
    http://unreal.epicgames.com/ (site offline)
- * The OpenUT project
+ * The OpenUT project:
    http://openut.sourceforge.net/
- * Chris Dohnal's work on OpenGLDrv and D3D9Drv
+ * Chris Dohnal's work on OpenGLDrv and D3D9Drv:
    http://www.cwdohnal.com/utglr/
  * Original work done here.
 
@@ -30,12 +30,12 @@ the compilers from an existing install of Visual Studio.
 
 TODO: Describe how to install GYP on Windows.
 
-Roughly, you will then want to generate the project files and the build them.
+Roughly, you will then want to generate the project files and build them.
 To get any meaningful result, make sure you're building the Release
 configuration. On the command line, this would look as follows:
 
     gyp --depth=.
-    msbuild surreal.sln /p:Configuration:Release
+    msbuild surreal.sln /p:Configuration=Release
 
 
 Other platforms
@@ -55,7 +55,7 @@ This license does *not* apply to the included dependencies SDL, OpenAL Soft,
 ALURE and MikMod. For their licenses, see documentation found in the
 individual subdirectories underneath `Deps`.
 
-All other source code found here effectively uses the Artistics License:
+All other source code found here effectively uses the Artistic License:
 
  * The OpenUT project used the Artistic License during its lifetime.
 
