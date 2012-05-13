@@ -31,7 +31,7 @@
 # endif
 #elif !defined(WIN32)
 # include <endian.h>
-# if __BYTE_ORDER == __LITTLE_ENDIAN
+# if __BYTE_ORDER == __BIG_ENDIAN
 #  define WORDS_BIGENDIAN 1
 # endif
 #endif
