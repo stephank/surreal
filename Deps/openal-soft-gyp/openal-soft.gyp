@@ -132,7 +132,7 @@
 						"-lpthread", "-ldl", "-lm"
 					],
 					"all_dependent_settings": {
-						"include_dirs": [ "<(openal_dir)/include" ]
+						"include_dirs": [ "include-mac" ]
 					}
 				}]
 			]

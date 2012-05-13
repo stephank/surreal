@@ -77,11 +77,18 @@
 						"include_dirs": [ "<(alure_dir)/include/AL" ]
 					}
 				}],
-				["OS != 'win'", {
+				["OS == 'linux'", {
 					"target_name": "alure",
 					"libraries": [ "-lm", "-lpthread" ],
 					"all_dependent_settings": {
 						"include_dirs": [ "<(alure_dir)/include" ]
+					}
+				}],
+				["OS == 'mac'", {
+					"target_name": "alure",
+					"libraries": [ "-lm", "-lpthread" ],
+					"all_dependent_settings": {
+						"include_dirs": [ "include-mac" ]
 					}
 				}]
 			]
