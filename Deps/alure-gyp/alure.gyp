@@ -23,11 +23,11 @@
 					"defines": [ "ALURE_STATIC_LIBRARY" ]
 				}
 			}],
-			["OS == 'linux'", {
-				"defines": [ "LINUX", "_GNU_SOURCE=1" ]
-			}],
 			["OS == 'win'", {
 				"defines": [ "WIN32", "_WINDOWS", "_WIN32" ]
+			}],
+			["OS != 'win'", {
+				"defines": [ "_GNU_SOURCE=1" ]
 			}]
 		],
 
@@ -71,16 +71,14 @@
 				"<(alure_dir)/src/codec_aiff.cpp"
 			],
 			"conditions": [
-				["OS != 'win'", {
-					"target_name": "alure"
-				}],
 				["OS == 'win'", {
 					"target_name": "ALURE32",
 					"all_dependent_settings": {
 						"include_dirs": [ "<(alure_dir)/include/AL" ]
 					}
 				}],
-				["OS == 'linux'", {
+				["OS != 'win'", {
+					"target_name": "alure",
 					"libraries": [ "-lm", "-lpthread" ],
 					"all_dependent_settings": {
 						"include_dirs": [ "<(alure_dir)/include" ]

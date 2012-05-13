@@ -2,36 +2,29 @@
 #define ALURE_VER_MINOR 2
 
 
-#if defined(LINUX)
+/* Exports */
 
-#ifndef ALURE_STATIC_LIBRARY
-#define ALURE_API __attribute__((visibility("protected")))
+#if !defined(ALURE_STATIC_LIBRARY)
+# if defined(WIN32)
+#  define ALURE_API __declspec(dllexport)
+# else
+#  define ALURE_API __attribute__((visibility("protected")))
+# endif
 #endif
 
-#define HAVE_GCC_CONSTRUCTOR
-#define HAVE_GCC_VISIBILITY
 
-#define HAVE_SYS_WAIT_H
-#define HAVE_FSEEKO
-#define HAVE_NANOSLEEP
+/* Platform support */
 
-
-#elif defined(WIN32)
-
-#ifndef ALURE_STATIC_LIBRARY
-#define ALURE_API __declspec(dllexport)
-#endif
-
-#define HAVE_WINDOWS_H
-#define HAVE__FSEEKI64
-
-
+#if defined(WIN32)
+# define HAVE_WINDOWS_H
+# define HAVE__FSEEKI64
 #else
-
-#error Unsupported platform for ALURE gyp build
-
+# define HAVE_GCC_CONSTRUCTOR
+# define HAVE_GCC_VISIBILITY
+# define HAVE_SYS_WAIT_H
+# define HAVE_FSEEKO
+# define HAVE_NANOSLEEP
 #endif
-
 
 #define HAVE_SYS_TYPES_H
 #define HAVE_SIGNAL_H
