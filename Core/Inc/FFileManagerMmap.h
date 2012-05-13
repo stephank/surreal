@@ -1,5 +1,5 @@
 /*=============================================================================
-	FFileManagerLinux.h: Unreal Linux based file manager.
+	FFileManagerMmap.h: Unreal mmap based file manager.
 	Copyright 1997-1999 Epic Games, Inc. All Rights Reserved.
 
 	Revision history:
@@ -188,7 +188,7 @@ protected:
 	BYTE			Buffer[4096];
 };
 
-class FFileManagerLinux : public FFileManagerGeneric
+class FFileManagerMmap : public FFileManagerGeneric
 {
 private:
 	TCHAR	ConfigDir[PATH_MAX];
@@ -196,7 +196,7 @@ private:
 public:
 	void Init( UBOOL Startup )
 	{
-		guard(FFileManagerLinux::Init);
+		guard(FFileManagerMmap::Init);
 
 		const ANSICHAR* XdgConfigHome = getenv( "XDG_CONFIG_HOME" );
 		if( XdgConfigHome )
@@ -212,7 +212,7 @@ public:
 
 	FArchive* CreateFileReader( const TCHAR* OrigFilename, DWORD Flags, FOutputDevice* Error )
 	{
-		guard(FFileManagerLinux::CreateFileReader);
+		guard(FFileManagerMmap::CreateFileReader);
 
 		TCHAR FixedFilename[PATH_MAX], Filename[PATH_MAX];
 		PathSeparatorFixup( FixedFilename, OrigFilename );
@@ -243,13 +243,13 @@ public:
 			return NULL;
 		}
 
-		return new(TEXT("LinuxFileReader"))FArchiveFileReader(File,Map,Error,Size);
+		return new(TEXT("MmapFileReader"))FArchiveFileReader(File,Map,Error,Size);
 
 		unguard;
 	}
 	FArchive* CreateFileWriter( const TCHAR* OrigFilename, DWORD Flags, FOutputDevice* Error )
 	{
-		guard(FFileManagerLinux::CreateFileWriter);
+		guard(FFileManagerMmap::CreateFileWriter);
 
 		TCHAR FixedFilename[PATH_MAX], Filename[PATH_MAX];
 		PathSeparatorFixup( FixedFilename, OrigFilename );
@@ -289,13 +289,13 @@ public:
 		if( Flags & FILEWRITE_Unbuffered )
 			setvbuf( File, 0, _IONBF, 0 );
 
-		return new(TEXT("LinuxFileWriter"))FArchiveFileWriter(File,Error);
+		return new(TEXT("MmapFileWriter"))FArchiveFileWriter(File,Error);
 
 		unguard;
 	}
 	UBOOL Delete( const TCHAR* OrigFilename, UBOOL RequireExists=0, UBOOL EvenReadOnly=0 )
 	{
-		guard(FFileManagerLinux::Delete);
+		guard(FFileManagerMmap::Delete);
 
 		TCHAR Filename[PATH_MAX];
 		PathSeparatorFixup( Filename, OrigFilename );
@@ -308,7 +308,7 @@ public:
 	}
 	SQWORD GetGlobalTime( const TCHAR* Filename )
 	{
-		guard(FFileManagerLinux::GetGlobalTime);
+		guard(FFileManagerMmap::GetGlobalTime);
 
 		return 0;
 		
@@ -316,7 +316,7 @@ public:
 	}
 	UBOOL SetGlobalTime( const TCHAR* Filename )
 	{
-		guard(FFileManagerLinux::SetGlobalTime);
+		guard(FFileManagerMmap::SetGlobalTime);
 
 		return 0;
 
@@ -324,7 +324,7 @@ public:
 	}
 	UBOOL MakeDirectory( const TCHAR* OrigPath, UBOOL Tree=0 )
 	{
-		guard(FFileManagerLinux::MakeDirectory);
+		guard(FFileManagerMmap::MakeDirectory);
 
 		TCHAR Path[PATH_MAX];
 		PathSeparatorFixup( Path, OrigPath );
@@ -338,7 +338,7 @@ public:
 	}
 	UBOOL DeleteDirectory( const TCHAR* OrigPath, UBOOL RequireExists=0, UBOOL Tree=0 )
 	{
-		guard(FFileManagerLinux::DeleteDirectory);
+		guard(FFileManagerMmap::DeleteDirectory);
 
 		TCHAR Path[PATH_MAX];
 		PathSeparatorFixup( Path, OrigPath );
@@ -352,7 +352,7 @@ public:
 	}
 	TArray<FString> FindFiles( const TCHAR* OrigPattern, UBOOL Files, UBOOL Directories )
 	{
-		guard(FFileManagerLinux::FindFiles);
+		guard(FFileManagerMmap::FindFiles);
 
 		TArray<FString> Result;
 		TCHAR FixedPattern[PATH_MAX], Pattern[PATH_MAX];
@@ -389,13 +389,13 @@ public:
 	}
 	UBOOL SetDefaultDirectory( const TCHAR* Filename )
 	{
-		guard(FFileManagerLinux::SetDefaultDirectory);
+		guard(FFileManagerMmap::SetDefaultDirectory);
 		return chdir(TCHAR_TO_ANSI(Filename))==0;
 		unguard;
 	}
 	FString GetDefaultDirectory()
 	{
-		guard(FFileManagerLinux::GetDefaultDirectory);
+		guard(FFileManagerMmap::GetDefaultDirectory);
 		ANSICHAR Buffer[PATH_MAX]="";
 		if (getcwd( Buffer, ARRAY_COUNT(Buffer) ) == NULL)
 			Buffer[0] = '\0';

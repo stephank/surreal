@@ -11,8 +11,8 @@
 	#include "FMallocWindows.h"
 	typedef FMallocWindows FMallocNative;
 #elif defined(__LINUX__) || defined(__APPLE__)
-	#include "FFileManagerLinux.h"
-	typedef FFileManagerLinux FFileManagerNative;
+	#include "FFileManagerMmap.h"
+	typedef FFileManagerMmap FFileManagerNative;
 	#include "FMallocAnsi.h"
 	typedef FMallocAnsi FMallocNative;
 #else
