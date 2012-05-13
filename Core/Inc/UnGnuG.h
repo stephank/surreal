@@ -199,9 +199,11 @@ typedef unsigned int		BITFIELD;	// For bitfields.
 // Memory
 #define appAlloca(size) alloca((size+7)&~7)
 
-extern CORE_API UBOOL GTimestamp;
-extern CORE_API FLOAT GSecondsPerCycle;
-CORE_API FTime appSecondsSlow();
+// Forward declaration.
+extern "C"
+{
+	CORE_API FTime appSecondsSlow();
+}
 
 //
 // Round a floating point number to an integer.
