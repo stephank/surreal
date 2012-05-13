@@ -255,7 +255,7 @@ public:
 		PathSeparatorFixup( FixedFilename, OrigFilename );
 
 		if( Flags & FILEWRITE_EvenIfReadOnly )
-			chmod(TCHAR_TO_ANSI(Filename), __S_IREAD | __S_IWRITE);
+			chmod(TCHAR_TO_ANSI(Filename), S_IRUSR | S_IWUSR);
 		if( (Flags & FILEWRITE_NoReplaceExisting) && FileSize(Filename)>=0 )
 			return NULL;
 
@@ -301,7 +301,7 @@ public:
 		PathSeparatorFixup( Filename, OrigFilename );
 
 		if( EvenReadOnly )
-			chmod(TCHAR_TO_ANSI(Filename), __S_IREAD | __S_IWRITE);
+			chmod(TCHAR_TO_ANSI(Filename), S_IRUSR | S_IWUSR);
 		return unlink(TCHAR_TO_ANSI(Filename))==0 || (errno==ENOENT && !RequireExists);
 
 		unguard;
