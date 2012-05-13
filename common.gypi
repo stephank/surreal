@@ -52,17 +52,17 @@
 			["_type == 'shared_library'", {
 				"cflags": [ "-fPIC" ]
 			}],
-			["OS == 'linux'", {
-				"defines": [
-					"__LINUX__", "_REENTRANT",
-					"GPackage=GPackage>(_target_name)"
-				]
-			}],
 			["OS == 'win'", {
 				"defines": [
 					"WIN32", "UNICODE", "_UNICODE",
 					"ThisPackage=>(_target_name)"
 				]
+			}],
+			["OS != 'win'", {
+				"defines": [ "GPackage=GPackage>(_target_name)" ]
+			}],
+			["OS == 'linux'", {
+				"defines": [ "__LINUX__", "_REENTRANT" ]
 			}]
 		],
 
