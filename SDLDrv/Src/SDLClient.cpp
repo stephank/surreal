@@ -343,7 +343,7 @@ void USDLClient::Tick()
 				break;
 
 			// Collect data for a combined mouse motion event to the engine.
-			Viewport->MouseMoved = TRUE;
+			Viewport->MouseMoved = 1;
 			Viewport->MouseX = Event.motion.x;
 			Viewport->MouseY = Event.motion.y;
 			Viewport->MouseDX += Event.motion.xrel;
@@ -372,7 +372,7 @@ void USDLClient::Tick()
 		if( Viewport->MouseMoved ){
 			Engine->MouseDelta( Viewport, 0, Viewport->MouseDX, Viewport->MouseDY );
 			Engine->MousePosition( Viewport, 0, Viewport->MouseX, Viewport->MouseY );
-			Viewport->MouseMoved = FALSE;
+			Viewport->MouseMoved = 0;
 			Viewport->MouseDX = Viewport->MouseDY = 0;
 		}
 
