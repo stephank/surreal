@@ -5,12 +5,12 @@
 		* Created by Stéphan Kochen
 =============================================================================*/
 
-#if WIN32
+#if defined(WIN32)
 	#include "FFileManagerWindows.h"
 	typedef FFileManagerWindows FFileManagerNative;
 	#include "FMallocWindows.h"
 	typedef FMallocWindows FMallocNative;
-#elif __LINUX__
+#elif defined(__LINUX__) || defined(__APPLE__)
 	#include "FFileManagerLinux.h"
 	typedef FFileManagerLinux FFileManagerNative;
 	#include "FMallocAnsi.h"
