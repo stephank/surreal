@@ -14,17 +14,21 @@
 	Includes.
 -----------------------------------------------------------------------------*/
 
-#ifdef WIN32
-#include <windows.h>
+#if defined(WIN32)
+	#include <windows.h>
 #endif
 
 #include <SDL.h>
-#include <GL/gl.h>
-#ifdef WIN32
-#include "glext.h"
-#include "wglext.h"
+#if defined(WIN32)
+	#include <GL/gl.h>
+	#include "glext.h"
+	#include "wglext.h"
+#elif defined(__APPLE__)
+	#include <OpenGL/gl.h>
+	#include <OpenGL/glext.h>
 #else
-#include <GL/glext.h>
+	#include <GL/gl.h>
+	#include <GL/glext.h>
 #endif
 
 #define UTGLR_NO_APP_MALLOC
