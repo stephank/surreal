@@ -3061,7 +3061,7 @@ void UOpenGLRenderDevice::DrawComplexSurface(FSceneNode* Frame, FSurfaceInfo& Su
 		return;
 	}
 
-	clock(ComplexCycles);
+	cycle(ComplexCycles);
 
 	//Calculate UDot and VDot intermediates for complex surface
 	m_csUDot = Facet.MapCoords.XAxis | Facet.MapCoords.Origin;
@@ -3240,7 +3240,7 @@ void UOpenGLRenderDevice::DrawComplexSurface(FSceneNode* Frame, FSurfaceInfo& Su
 		glDepthFunc((GLenum)ZTrickFunc);
 	}
 
-	unclock(ComplexCycles);
+	uncycle(ComplexCycles);
 	unguard;
 }
 
@@ -3346,7 +3346,7 @@ void UOpenGLRenderDevice::PostDrawGouraud(FLOAT FogDistance) {
 void UOpenGLRenderDevice::DrawGouraudPolygonOld(FSceneNode* Frame, FTextureInfo& Info, FTransTexture** Pts, INT NumPts, DWORD PolyFlags, FSpanBuffer* Span) {
 	guard(UOpenGLRenderDevice::DrawGouraudPolygonOld);
 	UTGLR_DEBUG_CALL_COUNT(DrawGouraudPolygonOld);
-	clock(GouraudCycles);
+	cycle(GouraudCycles);
 
 	//Decide if should request near Z range hack projection
 	bool requestNearZRangeHackProjection = false;
@@ -3431,7 +3431,7 @@ void UOpenGLRenderDevice::DrawGouraudPolygonOld(FSceneNode* Frame, FTextureInfo&
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 #endif
 
-	unclock(GouraudCycles);
+	uncycle(GouraudCycles);
 	unguard;
 }
 
@@ -3864,7 +3864,7 @@ void UOpenGLRenderDevice::DrawTile(FSceneNode* Frame, FTextureInfo& Info, FLOAT 
 	else {
 		EndTileBuffering();
 
-		clock(TileCycles);
+		cycle(TileCycles);
 
 		if (NoAATiles) {
 			SetDisabledAAState();
@@ -3936,7 +3936,7 @@ void UOpenGLRenderDevice::DrawTile(FSceneNode* Frame, FTextureInfo& Info, FLOAT 
 
 		glEnd();
 
-		unclock(TileCycles);
+		uncycle(TileCycles);
 	}
 
 	unguard;
@@ -4486,7 +4486,7 @@ void UOpenGLRenderDevice::SetNoTextureNoCheck(INT Multi) {
 	guard(UOpenGLRenderDevice::SetNoTexture);
 
 	// Set small white texture.
-	clock(BindCycles);
+	cycle(BindCycles);
 
 	//Set texture
 	glBindTexture(GL_TEXTURE_2D, m_noTextureId);
@@ -4494,7 +4494,7 @@ void UOpenGLRenderDevice::SetNoTextureNoCheck(INT Multi) {
 	TexInfo[Multi].CurrentCacheID = TEX_CACHE_ID_NO_TEX;
 	TexInfo[Multi].pBind = NULL;
 
-	unclock(BindCycles);
+	uncycle(BindCycles);
 
 	unguard;
 }
@@ -4503,7 +4503,7 @@ void UOpenGLRenderDevice::SetAlphaTextureNoCheck(INT Multi) {
 	guard(UOpenGLRenderDevice::SetAlphaTexture);
 
 	// Set alpha gradient texture.
-	clock(BindCycles);
+	cycle(BindCycles);
 
 	//Set texture
 	glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
@@ -4511,7 +4511,7 @@ void UOpenGLRenderDevice::SetAlphaTextureNoCheck(INT Multi) {
 	TexInfo[Multi].CurrentCacheID = TEX_CACHE_ID_ALPHA_TEX;
 	TexInfo[Multi].pBind = NULL;
 
-	unclock(BindCycles);
+	uncycle(BindCycles);
 
 	unguard;
 }
@@ -4650,7 +4650,7 @@ void UOpenGLRenderDevice::SetTextureNoCheck(FTexInfo& Tex, FTextureInfo& Info, D
 	guard(UOpenGLRenderDevice::SetTexture);
 
 	// Make current.
-	clock(BindCycles);
+	cycle(BindCycles);
 
 	//Search for texture in cache
 	FCachedTexture *pBind;
@@ -4800,7 +4800,7 @@ void UOpenGLRenderDevice::SetTextureNoCheck(FTexInfo& Tex, FTextureInfo& Info, D
 	//Set texture
 	glBindTexture(GL_TEXTURE_2D, pBind->Id);
 
-	unclock(BindCycles);
+	uncycle(BindCycles);
 
 	// Account for all the impact on scale normalization.
 	Tex.UMult = pBind->UMult;
@@ -4855,7 +4855,7 @@ void UOpenGLRenderDevice::UploadTextureExec(FTextureInfo& Info, DWORD PolyFlags,
 	}
 
 	// Download the texture.
-	clock(ImageCycles);
+	cycle(ImageCycles);
 
 	if (pBind->texType == TEX_TYPE_PALETTED) {
 		glColorTableEXT(GL_TEXTURE_2D, GL_RGBA, 256, GL_RGBA, GL_UNSIGNED_BYTE, Info.Palette);
@@ -5114,7 +5114,7 @@ void UOpenGLRenderDevice::UploadTextureExec(FTextureInfo& Info, DWORD PolyFlags,
 		m_texComposeMemMark.Pop();
 	}
 
-	unclock(ImageCycles);
+	uncycle(ImageCycles);
 
 	//Restore palette index 0 for masked paletted textures
 	if (Info.Palette && (PolyFlags & PF_Masked)) {
@@ -7266,7 +7266,7 @@ void UOpenGLRenderDevice::EndGouraudPolygonBufferingNoCheck(void) {
 	//Shader state set when start buffering
 	//Default texture state set when start buffering
 
-	clock(GouraudCycles);
+	cycle(GouraudCycles);
 
 	//Set projection state
 	SetProjectionState(m_requestNearZRangeHackProjection);
@@ -7287,7 +7287,7 @@ void UOpenGLRenderDevice::EndGouraudPolygonBufferingNoCheck(void) {
 
 	BufferedVerts = 0;
 
-	unclock(GouraudCycles);
+	uncycle(GouraudCycles);
 }
 
 void UOpenGLRenderDevice::EndTileBufferingNoCheck(void) {
@@ -7302,7 +7302,7 @@ void UOpenGLRenderDevice::EndTileBufferingNoCheck(void) {
 	//Shader state set when start buffering
 	//Default texture state set when start buffering
 
-	clock(TileCycles);
+	cycle(TileCycles);
 
 	//Set color state
 	SetColorState();
@@ -7312,7 +7312,7 @@ void UOpenGLRenderDevice::EndTileBufferingNoCheck(void) {
 
 	BufferedTileVerts = 0;
 
-	unclock(TileCycles);
+	uncycle(TileCycles);
 }
 
 

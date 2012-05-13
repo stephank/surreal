@@ -108,7 +108,7 @@ public:
 	BYTE* Get( QWORD Id, FCacheItem*& Item, INT Alignment=DEFAULT_ALIGNMENT )
 	{	
 		guardSlow(FMemCache::Get);
-		clockSlow(GetCycles);
+		cycleSlow(GetCycles);
 #if DO_SLOW_CLOCK
 		NumGets++;
 #endif
@@ -128,11 +128,11 @@ public:
 				Item            = HashItem;
 				HashItem->Time  = Time;
 				HashItem->Cost += COST_INFINITE;
-				unclockSlow(GetCycles);
+				uncycleSlow(GetCycles);
 				return Align( HashItem->Data, Alignment );
 			}
 		}
-		unclockSlow(GetCycles);
+		uncycleSlow(GetCycles);
 		return NULL;
 		unguardSlow;
 	}

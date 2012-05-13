@@ -179,18 +179,18 @@ CORE_API void VARARGS appThrowf( const TCHAR* Fmt, ... );
 //
 // Normal timing.
 //
-#define clock(Timer)   {Timer -= appCycles();}
-#define unclock(Timer) {Timer += appCycles()-34;}
+#define cycle(Timer)   {Timer -= appCycles();}
+#define uncycle(Timer) {Timer += appCycles()-34;}
 
 //
 // Performance critical timing.
 //
 #if DO_CLOCK_SLOW
-	#define clockSlow(Timer)   {Timer-=appCycles();}
-	#define unclockSlow(Timer) {Timer+=appCycles();}
+	#define cycleSlow(Timer)   {Timer-=appCycles();}
+	#define uncycleSlow(Timer) {Timer+=appCycles();}
 #else
-	#define clockSlow(Timer)
-	#define unclockSlow(Timer)
+	#define cycleSlow(Timer)
+	#define uncycleSlow(Timer)
 #endif
 
 /*-----------------------------------------------------------------------------

@@ -588,7 +588,7 @@ class DLL_EXPORT UD3DRenderDevice : public URenderDevice
 	void DrawComplexSurface( FSceneNode* Frame, FSurfaceInfo& Surface, FSurfaceFacet& Facet )
 	{
 		guard(UD3DRenderDevice::DrawComplexSurface);
-		clock(Stats.SurfTime);
+		cycle(Stats.SurfTime);
 		Stats.Surfs++;
 
 		// Mutually exclusive effects.
@@ -828,13 +828,13 @@ class DLL_EXPORT UD3DRenderDevice : public URenderDevice
 		if( Surface.PolyFlags & PF_Masked )
 			Direct3DDevice->SetRenderState( D3DRENDERSTATE_ZFUNC, D3DCMP_LESSEQUAL );
 
-		unclock(Stats.SurfTime);
+		uncycle(Stats.SurfTime);
 		unguard;
 	}
 	void DrawGouraudPolygon( FSceneNode* Frame, FTextureInfo& Info, FTransTexture** Pts, INT NumPts, DWORD PolyFlags, FSpanBuffer* Span )
 	{
 		guard(UD3DRenderDevice::DrawGouraudPolygon);
-		clock(Stats.PolyTime);
+		cycle(Stats.PolyTime);
 		Stats.Polys++;
 
 		// Set up verts.
@@ -876,13 +876,13 @@ class DLL_EXPORT UD3DRenderDevice : public URenderDevice
 			Direct3DDevice->DrawPrimitive( D3DPT_TRIANGLEFAN, D3DFVF_TLVERTEX, Verts, NumPts, D3DDP_DONOTCLIP | D3DDP_DONOTLIGHT | D3DDP_DONOTUPDATEEXTENTS );
 			Direct3DDevice->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_MODULATE );
 		}
-		unclock(Stats.PolyTime);
+		uncycle(Stats.PolyTime);
 		unguard;
 	}
 	void DrawTile( FSceneNode* Frame, FTextureInfo& Info, FLOAT X, FLOAT Y, FLOAT XL, FLOAT YL, FLOAT U, FLOAT V, FLOAT UL, FLOAT VL, class FSpanBuffer* Span, FLOAT Z, FPlane Color, FPlane Fog, DWORD PolyFlags )
 	{
 		guard(UD3DRenderDevice::DrawTile);
-		clock(Stats.TileTime);
+		cycle(Stats.TileTime);
 		Stats.Tiles++;
 		if( Info.Palette && Info.Palette[128].A!=255 && !(PolyFlags&PF_Translucent) )
 			PolyFlags |= PF_Highlighted;
@@ -901,7 +901,7 @@ class DLL_EXPORT UD3DRenderDevice : public URenderDevice
 		Verts[3].dvSX = X + XL; Verts[3].dvSY = Y;      Verts[3].dvRHW = RZ; Verts[3].dvSZ = ProjectionMatrix._33 + ProjectionMatrix._43 * Verts[3].dvRHW; Verts[3].dvTU[u] = (U + UL) * Stages[0].UScale; Verts[3].dvTU[v] = (V     ) * Stages[0].VScale; Verts[3].dcColor = Clr;
 		Direct3DDevice->DrawPrimitive( D3DPT_TRIANGLEFAN, D3DFVF_TLVERTEX, Verts, 4, D3DDP_DONOTCLIP | D3DDP_DONOTLIGHT | D3DDP_DONOTUPDATEEXTENTS );
 
-		unclock(Stats.TileTime);
+		uncycle(Stats.TileTime);
 		unguard;
 	}
 	static HRESULT CALLBACK EnumModesCallback( DDSURFACEDESC2* Desc, void* Context )
@@ -1484,7 +1484,7 @@ class DLL_EXPORT UD3DRenderDevice : public URenderDevice
 
 			// Update texture data.
 			DWORD Cycles=0;
-			clock(Cycles);
+			cycle(Cycles);
 			IDirectDrawSurface4* LockSurface = ti->Pool->SystemSurface ? ti->Pool->SystemSurface : ti->Surface;
 			IDirectDrawSurface4* BltSurface  = ti->Surface;//Info.NumMips==1 ? ti->Surface : NULL;
 			ti->Filler->PixelFormat->Uploads++;
@@ -1519,7 +1519,7 @@ class DLL_EXPORT UD3DRenderDevice : public URenderDevice
 			if( ti->Pool->SystemSurface && !BltSurface && FAILED(h=ti->Texture->Load(ti->Pool->SystemTexture)) )
 				appErrorf(TEXT("Failed Load: %s"),*D3DError(h));
 			ti->Filler->EndUpload( this, ti, Info, PolyFlags );
-			unclock(Cycles);
+			uncycle(Cycles);
 			ti->Filler->PixelFormat->UploadCycles += Cycles;
 			if( Thrash )
 			{

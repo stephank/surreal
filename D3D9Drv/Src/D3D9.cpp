@@ -3961,7 +3961,7 @@ void UD3D9RenderDevice::DrawComplexSurface(FSceneNode* Frame, FSurfaceInfo& Surf
 
 	check(Surface.Texture);
 
-	clock(ComplexCycles);
+	cycle(ComplexCycles);
 
 	//Calculate UDot and VDot intermediates for complex surface
 	m_csUDot = Facet.MapCoords.XAxis | Facet.MapCoords.Origin;
@@ -4153,7 +4153,7 @@ void UD3D9RenderDevice::DrawComplexSurface(FSceneNode* Frame, FSurfaceInfo& Surf
 		m_d3dDevice->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
 	}
 
-	unclock(ComplexCycles);
+	uncycle(ComplexCycles);
 	unguard;
 }
 
@@ -4352,7 +4352,7 @@ void UD3D9RenderDevice::DrawGouraudPolygonOld(FSceneNode* Frame, FTextureInfo& I
 }
 #endif
 	guard(UD3D9RenderDevice::DrawGouraudPolygonOld);
-	clock(GouraudCycles);
+	cycle(GouraudCycles);
 
 	//Decide if should request near Z range hack projection
 	bool requestNearZRangeHackProjection = false;
@@ -4475,7 +4475,7 @@ void UD3D9RenderDevice::DrawGouraudPolygonOld(FSceneNode* Frame, FTextureInfo& I
 	m_d3dDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_SOLID);
 #endif
 
-	unclock(GouraudCycles);
+	uncycle(GouraudCycles);
 	unguard;
 }
 
@@ -4880,7 +4880,7 @@ void UD3D9RenderDevice::DrawTile(FSceneNode* Frame, FTextureInfo& Info, FLOAT X,
 
 		EndTileBuffering();
 
-		clock(TileCycles);
+		cycle(TileCycles);
 
 		if (NoAATiles) {
 			SetDisabledAAState();
@@ -4980,7 +4980,7 @@ void UD3D9RenderDevice::DrawTile(FSceneNode* Frame, FTextureInfo& Info, FLOAT X,
 		//Advance vertex buffer position
 		m_curVertexBufferPos += 4;
 
-		unclock(TileCycles);
+		uncycle(TileCycles);
 	}
 
 	unguard;
@@ -5735,7 +5735,7 @@ void UD3D9RenderDevice::SetNoTextureNoCheck(INT Multi) {
 	guard(UD3D9RenderDevice::SetNoTexture);
 
 	// Set small white texture.
-	clock(BindCycles);
+	cycle(BindCycles);
 
 	//Set texture
 	m_d3dDevice->SetTexture(Multi, m_pNoTexObj);
@@ -5746,7 +5746,7 @@ void UD3D9RenderDevice::SetNoTextureNoCheck(INT Multi) {
 	TexInfo[Multi].CurrentCacheID = TEX_CACHE_ID_NO_TEX;
 	TexInfo[Multi].pBind = NULL;
 
-	unclock(BindCycles);
+	uncycle(BindCycles);
 
 	unguard;
 }
@@ -5755,7 +5755,7 @@ void UD3D9RenderDevice::SetAlphaTextureNoCheck(INT Multi) {
 	guard(UD3D9RenderDevice::SetAlphaTexture);
 
 	// Set alpha gradient texture.
-	clock(BindCycles);
+	cycle(BindCycles);
 
 	//Set texture
 	m_d3dDevice->SetTexture(Multi, m_pAlphaTexObj);
@@ -5766,7 +5766,7 @@ void UD3D9RenderDevice::SetAlphaTextureNoCheck(INT Multi) {
 	TexInfo[Multi].CurrentCacheID = TEX_CACHE_ID_ALPHA_TEX;
 	TexInfo[Multi].pBind = NULL;
 
-	unclock(BindCycles);
+	uncycle(BindCycles);
 
 	unguard;
 }
@@ -5777,7 +5777,7 @@ void UD3D9RenderDevice::SetTextureNoCheck(DWORD texNum, FTexInfo& Tex, FTextureI
 	guard(UD3D9RenderDevice::SetTexture);
 
 	// Make current.
-	clock(BindCycles);
+	cycle(BindCycles);
 
 	bool isZeroPrefixCacheID = ((Tex.CurrentCacheID & 0xFFFFFFFF00000000) == 0) ? true : false;
 
@@ -5960,7 +5960,7 @@ void UD3D9RenderDevice::SetTextureNoCheck(DWORD texNum, FTexInfo& Tex, FTextureI
 	//Set texture
 	m_d3dDevice->SetTexture(texNum, pBind->pTexObj);
 
-	unclock(BindCycles);
+	uncycle(BindCycles);
 
 	// Account for all the impact on scale normalization.
 	Tex.UMult = pBind->UMult;
@@ -6021,7 +6021,7 @@ void UD3D9RenderDevice::SetTextureNoCheck(DWORD texNum, FTexInfo& Tex, FTextureI
 		}
 
 		// Download the texture.
-		clock(ImageCycles);
+		cycle(ImageCycles);
 
 		if (pBind->texType == TEX_TYPE_PALETTED) {
 //			glColorTableEXT(GL_TEXTURE_2D, GL_RGBA, 256, GL_RGBA, GL_UNSIGNED_BYTE, Info.Palette);
@@ -6182,7 +6182,7 @@ void UD3D9RenderDevice::SetTextureNoCheck(DWORD texNum, FTexInfo& Tex, FTextureI
 		}
 		unguard;
 
-		unclock(ImageCycles);
+		uncycle(ImageCycles);
 
 		//Restore palette index 0 for masked paletted textures
 		if (Info.Palette && (PolyFlags & PF_Masked)) {
@@ -8411,7 +8411,7 @@ void UD3D9RenderDevice::EndGouraudPolygonBufferingNoCheck(void) {
 	//Stream state set when start buffering
 	//Default texture state set when start buffering
 
-	clock(GouraudCycles);
+	cycle(GouraudCycles);
 
 	//Set projection state
 	SetProjectionState(m_requestNearZRangeHackProjection);
@@ -8441,7 +8441,7 @@ void UD3D9RenderDevice::EndGouraudPolygonBufferingNoCheck(void) {
 
 	BufferedVerts = 0;
 
-	unclock(GouraudCycles);
+	uncycle(GouraudCycles);
 }
 
 void UD3D9RenderDevice::EndTileBufferingNoCheck(void) {
@@ -8455,7 +8455,7 @@ void UD3D9RenderDevice::EndTileBufferingNoCheck(void) {
 	//Stream state set when start buffering
 	//Default texture state set when start buffering
 
-	clock(TileCycles);
+	cycle(TileCycles);
 
 	//Unlock vertexColor and texCoord0 buffers
 	UnlockVertexColorBuffer();
@@ -8469,7 +8469,7 @@ void UD3D9RenderDevice::EndTileBufferingNoCheck(void) {
 
 	BufferedTileVerts = 0;
 
-	unclock(TileCycles);
+	uncycle(TileCycles);
 }
 
 

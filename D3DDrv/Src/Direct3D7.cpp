@@ -740,7 +740,7 @@ class DLL_EXPORT UD3DRenderDevice : public URenderDevice
 	void DrawComplexSurface( FSceneNode* Frame, FSurfaceInfo& Surface, FSurfaceFacet& Facet )
 	{
 		guard(UD3DRenderDevice::DrawComplexSurface);
-		clock(Stats.SurfTime);
+		cycle(Stats.SurfTime);
 		Stats.Surfs++;
 
 		// Mutually exclusive effects.
@@ -1098,14 +1098,14 @@ class DLL_EXPORT UD3DRenderDevice : public URenderDevice
 		if( Surface.PolyFlags & PF_Masked )
 			Direct3DDevice7->SetRenderState( D3DRENDERSTATE_ZFUNC, D3DCMP_LESSEQUAL );
 
-		unclock(Stats.SurfTime);
+		uncycle(Stats.SurfTime);
 		unguard;
 	}
 
 	void DrawGouraudPolygon( FSceneNode* Frame, FTextureInfo& Info, FTransTexture** Pts, INT NumPts, DWORD PolyFlags, FSpanBuffer* Span )
 	{
 		guard(UD3DRenderDevice::DrawGouraudPolygon);
-		clock(Stats.PolyTime);
+		cycle(Stats.PolyTime);
 		Stats.Polys++;
 
 		PolyFlags &= ~PF_Memorized;
@@ -1147,7 +1147,7 @@ class DLL_EXPORT UD3DRenderDevice : public URenderDevice
 		}
 
 		Direct3DDevice7->DrawPrimitiveVB( D3DPT_TRIANGLEFAN, VertsTLWindow.VertexBuffer7, VertsTLWindow.Unlock(), NumPts, 0 );
-		unclock(Stats.PolyTime);
+		uncycle(Stats.PolyTime);
 		unguard;
 	}
 
@@ -1155,7 +1155,7 @@ class DLL_EXPORT UD3DRenderDevice : public URenderDevice
 	void DrawTile( FSceneNode* Frame, FTextureInfo& Info, FLOAT X, FLOAT Y, FLOAT XL, FLOAT YL, FLOAT U, FLOAT V, FLOAT UL, FLOAT VL, class FSpanBuffer* Span, FLOAT Z, FPlane Color, FPlane Fog, DWORD PolyFlags )
 	{
 		guard(UD3DRenderDevice::DrawTile);
-		clock(Stats.TileTime);
+		cycle(Stats.TileTime);
 		Stats.Tiles++;
 
 		PolyFlags &= ~PF_Memorized;
@@ -1177,7 +1177,7 @@ class DLL_EXPORT UD3DRenderDevice : public URenderDevice
 		VB[3].dvSX = X+XL; VB[3].dvSY = Y;    VB[3].dvRHW=RZ; VB[3].dvSZ=SZ; VB[3].dvTU[u]=(U + UL)*Stages[0].UScale; VB[3].dvTU[v]=(V     )*Stages[0].VScale; VB[3].dcColor=Clr;		
 		Direct3DDevice7->DrawPrimitiveVB( D3DPT_TRIANGLEFAN, VertsTLWindow.VertexBuffer7, VertsTLWindow.Unlock(), 4, 0 );
 
-		unclock(Stats.TileTime);
+		uncycle(Stats.TileTime);
 		unguard;
 	}
 	static HRESULT CALLBACK EnumModesCallback( DDSURFACEDESC2* Desc, void* Context )
@@ -1997,7 +1997,7 @@ class DLL_EXPORT UD3DRenderDevice : public URenderDevice
 
 			// Update texture data.
 			DWORD Cycles=0;
-			clock(Cycles);
+			cycle(Cycles);
 			ti->Filler->PixelFormat->Uploads++;
 			ti->Filler->BeginUpload( this, ti, Info, PolyFlags );
 			INT Count = Min(Info.NumMips-ti->FirstMip,ti->Surfaces7.Num());
@@ -2032,7 +2032,7 @@ class DLL_EXPORT UD3DRenderDevice : public URenderDevice
 			}
 			if( Info.NumMips!=1 && FAILED(h=Direct3DDevice7->Load(ti->Surfaces7(0),NULL,ti->Pool->SystemSurfaces7(0),NULL,0)) )
 				appErrorf(TEXT("Failed Load: %s"),*D3DError(h));
-			unclock(Cycles);
+			uncycle(Cycles);
 			ti->Filler->PixelFormat->UploadCycles += Cycles;
 			if( Thrash )
 			{
