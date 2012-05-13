@@ -29,10 +29,19 @@
 
 /* This is a set of defines to configure the SDL features */
 
+/* Threading is required by other subsystems. */
+#undef SDL_THREADS_DISABLED
+#define SDL_THREAD_PTHREAD 1
+#define SDL_THREAD_PTHREAD_RECURSIVE_MUTEX	1
+
+/* Timer is required by other subsystems. */
+#undef SDL_TIMERS_DISABLED
+#define SDL_TIMER_UNIX 1
+
 /* Useful headers */
 /* If we specified an SDK or have a post-PowerPC chip, then alloca.h exists. */
 #if ( (MAC_OS_X_VERSION_MIN_REQUIRED >= 1030) || (!defined(__POWERPC__)) )
-#define HAVE_ALLOCA_H  1
+# define HAVE_ALLOCA_H  1
 #endif
 #define HAVE_SYS_TYPES_H 1
 #define HAVE_STDIO_H 1
@@ -115,8 +124,8 @@
 
 /* Enable assembly routines */
 #define SDL_ASSEMBLY_ROUTINES 1
-#ifdef __ppc__
-#define SDL_ALTIVEC_BLITTERS 1
+#if defined(__ppc__)
+# define SDL_ALTIVEC_BLITTERS 1
 #endif
 
 #endif /* _SDL_config_macosx_h */

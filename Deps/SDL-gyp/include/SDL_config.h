@@ -48,13 +48,13 @@
 
 /* Configurations for platforms we support in Unreal Tournament. */
 #if defined(__WIN32__)
-#include "SDL_config_windows.h"
+# include "SDL_config_windows.h"
 #elif defined(__MACOSX__)
-#include "SDL_config_macosx.h"
+# include "SDL_config_macosx.h"
 #elif defined(__LINUX__)
-#include "SDL_config_linux.h"
+# include "SDL_config_linux.h"
 #else
-#error Unsupported platform for SDL gyp build
+# error Unsupported platform for SDL gyp build
 #endif
 
 #endif /* _SDL_config_h */

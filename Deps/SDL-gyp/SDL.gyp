@@ -15,7 +15,19 @@
 			["OS == 'win'", {
 				"defines": [ "_WINDOWS" ]
 			}],
-			["_type == 'shared_library'", {
+			["OS == 'mac'", {
+				"defines": [
+					"TARGET_API_CARBON",
+					"TARGET_API_MAC_OSX",
+					"_THREAD_SAFE"
+				],
+				"cflags": [
+					"-falign-loops=16",
+					"-force_cpusubtype_ALL",
+					"-fpascal-strings"
+				]
+			}],
+			["OS == 'linux' and _type == 'shared_library'", {
 				"cflags": [ "-fPIC" ]
 			}]
 		],
@@ -189,6 +201,41 @@
 								"sources": [
 									"<(sdl_dir)/src/main/windows/SDL_windows_main.c",
 									"<(sdl_dir)/src/main/windows/version.rc"
+								]
+							}]
+						]
+					}
+				}],
+				["OS == 'mac'", {
+					"libraries": [
+						"-framework Carbon",
+						"-framework Cocoa",
+						"-framework OpenGL",
+						"-framework IOKit"
+					],
+					"sources": [
+						"<(sdl_dir)/src/video/cocoa/SDL_cocoaclipboard.m",
+						"<(sdl_dir)/src/video/cocoa/SDL_cocoaevents.m",
+						"<(sdl_dir)/src/video/cocoa/SDL_cocoakeyboard.m",
+						"<(sdl_dir)/src/video/cocoa/SDL_cocoamodes.m",
+						"<(sdl_dir)/src/video/cocoa/SDL_cocoamouse.m",
+						"<(sdl_dir)/src/video/cocoa/SDL_cocoaopengl.m",
+						"<(sdl_dir)/src/video/cocoa/SDL_cocoashape.m",
+						"<(sdl_dir)/src/video/cocoa/SDL_cocoavideo.m",
+						"<(sdl_dir)/src/video/cocoa/SDL_cocoawindow.m",
+						"<(sdl_dir)/src/loadso/dlopen/SDL_sysloadso.c",
+						"<(sdl_dir)/src/thread/pthread/SDL_systhread.c",
+						"<(sdl_dir)/src/thread/pthread/SDL_syssem.c",
+						"<(sdl_dir)/src/thread/pthread/SDL_sysmutex.c",
+						"<(sdl_dir)/src/thread/pthread/SDL_syscond.c",
+						"<(sdl_dir)/src/timer/unix/SDL_systimer.c",
+						"<(sdl_dir)/src/file/cocoa/SDL_rwopsbundlesupport.m"
+					],
+					"direct_dependent_settings": {
+						"target_conditions": [
+							["_type == 'executable'", {
+								"sources": [
+									"<(sdl_dir)/src/main/dummy/SDL_dummy_main.c"
 								]
 							}]
 						]
